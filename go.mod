@@ -1,10 +1,12 @@
-module github.com/macformula/hilmatic
+module github.com/macformula/hil
 
 go 1.21.1
 
-require go.uber.org/zap v1.26.0
-
 require (
-	github.com/pkg/errors v0.9.1 // indirect
-	go.uber.org/multierr v1.10.0 // indirect
+	github.com/macformula/hilmatic v0.0.0-20231026151903-8e240ff55703
+	github.com/pkg/errors v0.9.1
+	go.uber.org/zap v1.26.0
+	gopkg.in/yaml.v3 v3.0.1
 )
+
+require go.uber.org/multierr v1.10.0 // indirect

@@ -2,7 +2,7 @@ package commander
 
 import (
 	"context"
-	"github.com/macformula/hilmatic/sequencer"
+	"github.com/macformula/hil/sequencer"
 	"go.uber.org/zap"
 )
 
@@ -18,13 +18,13 @@ func NewCommander(l *zap.Logger) *Commander {
 }
 
 func (c *Commander) Open(ctx context.Context) error {
-
+	return nil
 }
 
 func (c *Commander) StartTest(ctx context.Context) error {
-
+	return nil
 }
 
 func (c *Commander) Close(ctx context.Context) error {
-
+	return nil
 }

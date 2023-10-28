@@ -2,7 +2,7 @@ package sequencer
 
 import (
 	"context"
-	"github.com/macformula/hilmatic/utils"
+	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"sync"
