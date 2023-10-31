@@ -1,4 +1,4 @@
-package tracetest
+package main
 
 import (
 	"context"
@@ -29,11 +29,11 @@ func main() {
 		config.TracerDirectory,
 		config.CANInterface,
 		can.WithBusName(config.BusName),
-		can.WithTimeout(10*time.Second))
+		can.WithTimeout(5*time.Second))
 
 	tracer.StartTrace(ctx)
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	tracer.StopTrace()
 }
