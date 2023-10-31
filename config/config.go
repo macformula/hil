@@ -7,8 +7,9 @@ import (
 )
 
 type Config struct {
-	// TODO: Update config with actual useful configurations
-	TracerPath string `yaml:"tracerPath"`
+	TracerDirectory string `yaml:"tracerDirectory"`
+	CANInterface    string `yaml:"canInterface"`
+	BusName         string `yaml:"busName"`
 }
 
 func NewConfig(path string) (*Config, error) {
