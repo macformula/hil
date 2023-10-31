@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	// TODO: Update config with actual useful configurations
-	HostIP string `yaml:"hostIP"`
+	TracerPath string `yaml:"tracerPath"`
 }
 
 func NewConfig(path string) (*Config, error) {
