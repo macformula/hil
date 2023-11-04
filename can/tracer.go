@@ -32,8 +32,6 @@ type Tracer struct {
 	err          *utils.ResettableError
 	busName      string
 	fileType     string
-
-	// provide a directory, can interface, and OPTIONAL bus name (all provided by the config file)
 }
 
 func NewTracer(
@@ -94,8 +92,8 @@ func (t *Tracer) StartTrace(ctx context.Context) error {
 	t.stop = make(chan struct{})
 	frame := make(chan TimestampedFrame, _streamQueueLength)
 
-	go t.receive(frame, ctx)
-	go t.produce(frame, receiver, ctx)
+	go t.receiveData(frame, ctx)
+	go t.fetchData(frame, receiver, ctx)
 
 	return nil
 }
@@ -104,21 +102,27 @@ func (t *Tracer) StopTrace() error {
 	t.l.Info("sending stop signal")
 	close(t.stop)
 
+	if t.err != nil {
+		return errors.Wrap(t.err, "tracer error")
+	}
+
+	t.l.Info("getting file name")
 	file, err := t.getFile()
 	if err != nil {
 		return errors.Wrap(err, "get pointer to file")
 	}
 
+	t.l.Info("dumping to file")
 	err = t.dumpToFile(file)
 	if err != nil {
 		return errors.Wrap(err, "dump cached contents to file")
 	}
-	// TODO: add resettable error that may have come up
 
 	return nil
 }
 
-func (t *Tracer) produce(frame chan TimestampedFrame, receiver *socketcan.Receiver, ctx context.Context) {
+// fetchData fetches CAN frames from the socket and sends them over a buffered channel
+func (t *Tracer) fetchData(frameCh chan TimestampedFrame, receiver *socketcan.Receiver, ctx context.Context) {
 	ticker := time.NewTicker(_defaultTickPeriod)
 	timeFrame := TimestampedFrame{}
 
@@ -130,7 +134,7 @@ func (t *Tracer) produce(frame chan TimestampedFrame, receiver *socketcan.Receiv
 		case <-t.stop:
 			t.l.Info("stop signal received")
 			return
-		case <-time.After(_defaultTimeout):
+		case <-time.After(t.timeout):
 			t.l.Info("maximum trace time reached")
 			t.StopTrace()
 		case <-ticker.C:
@@ -138,14 +142,14 @@ func (t *Tracer) produce(frame chan TimestampedFrame, receiver *socketcan.Receiv
 				timeFrame.Frame = receiver.Frame()
 				timeFrame.Time = time.Now()
 
-				frame <- timeFrame
+				frameCh <- timeFrame
 			}
 		}
 	}
 }
 
-func (t *Tracer) receive(frame chan TimestampedFrame, ctx context.Context) {
-	receivedFrame := TimestampedFrame{}
+// receiveData listens on the buffered channel for incoming CAN frames, parses them, then caches them
+func (t *Tracer) receiveData(frameCh chan TimestampedFrame, ctx context.Context) {
 
 	for {
 		select {
@@ -155,16 +159,13 @@ func (t *Tracer) receive(frame chan TimestampedFrame, ctx context.Context) {
 		case <-t.stop:
 			t.l.Info("stop signal received")
 			return
-		case <-time.After(_defaultTimeout):
-			t.l.Info("maximum trace time reached")
-			t.StopTrace()
-		case <-frame:
-			frame <- receivedFrame
+		case receivedFrame := <-frameCh:
 			t.cachedData = append(t.cachedData, t.parseString(receivedFrame))
 		}
 	}
 }
 
+// parseString concatenates the frame components in a standardized format
 func (t *Tracer) parseString(data TimestampedFrame) string {
 	var builder strings.Builder
 
@@ -180,7 +181,7 @@ func (t *Tracer) parseString(data TimestampedFrame) string {
 
 	_, err = builder.WriteString(" Rx")
 	if err != nil {
-		t.err.Set(errors.Wrapf(err, "write receive"))
+		t.err.Set(errors.Wrapf(err, "write receiveData"))
 	}
 
 	_, err = builder.WriteString(" " + strconv.FormatUint(uint64(data.Frame.Length), 10))
@@ -188,16 +189,17 @@ func (t *Tracer) parseString(data TimestampedFrame) string {
 		t.err.Set(errors.Wrapf(err, "parse frame length"))
 	}
 
-	for _, v := range data.Frame.Data {
-		builder.WriteString(" " + strconv.FormatUint(uint64(v), 16))
+	for i := uint8(0); i < data.Frame.Length; i++ {
+		builder.WriteString(" " + strconv.FormatUint(uint64(data.Frame.Data[i]), 16))
 		if err != nil {
-			t.err.Set(errors.Wrapf(err, "parse frame cachedData"))
+			t.err.Set(errors.Wrapf(err, "parse frame cached data"))
 		}
 	}
 
 	return builder.String()
 }
 
+// dumpToFile writes all the frames to a passed in file
 func (t *Tracer) dumpToFile(file *os.File) error {
 	for _, value := range t.cachedData {
 		_, err := file.WriteString(value + "\n")
@@ -209,6 +211,7 @@ func (t *Tracer) dumpToFile(file *os.File) error {
 	return nil
 }
 
+// getFile makes the file name based on parameters provided
 func (t *Tracer) getFile() (*os.File, error) {
 	var file *os.File
 	var builder strings.Builder
@@ -220,17 +223,19 @@ func (t *Tracer) getFile() (*os.File, error) {
 
 	_, err = builder.WriteString(t.busName + "_")
 	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add busname to file name")
+		return &os.File{}, errors.Wrap(err, "add bus name to file name")
 	}
 
 	_, err = builder.WriteString(time.Now().Format(_nameDateFormat) + "_")
 	if err != nil {
 		return &os.File{}, errors.Wrap(err, "add date to file name")
 	}
+
 	_, err = builder.WriteString(time.Now().Format(_nameTimeFormat))
 	if err != nil {
 		return &os.File{}, errors.Wrap(err, "add time to file name")
 	}
+
 	_, err = builder.WriteString(t.fileType)
 	if err != nil {
 		return &os.File{}, errors.Wrap(err, "add file type to file name")

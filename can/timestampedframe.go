@@ -8,7 +8,7 @@ import (
 const (
 	_tracerFormat   = "15:04:05.0000"
 	_nameTimeFormat = "15.04.05"
-	_nameDateFormat = "2006.02.05"
+	_nameDateFormat = "2006.01.02"
 )
 
 type TimestampedFrame struct {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/macformula/hil/can"
 	"github.com/macformula/hil/config"
 	"go.uber.org/zap"
@@ -29,11 +30,14 @@ func main() {
 		config.TracerDirectory,
 		config.CANInterface,
 		can.WithBusName(config.BusName),
-		can.WithTimeout(5*time.Second))
+		can.WithTimeout(3*time.Second))
 
 	tracer.StartTrace(ctx)
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(5 * time.Second)
 
-	tracer.StopTrace()
+	err = tracer.StopTrace()
+	if err != nil {
+		logger.Error(fmt.Sprintf("error with tracer: %e", err))
+	}
 }
