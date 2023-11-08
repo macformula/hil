@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
+	"go.einride.tech/can"
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
 	"os"
@@ -14,9 +15,9 @@ import (
 
 const (
 	_defaultTimeout    = 30 * time.Minute
-	_defaultTickPeriod = 1 * time.Millisecond
 	_streamQueueLength = 10
 	_outputFileType    = ".asc"
+	_loggerName        = "can_tracer"
 )
 
 type TracerOption func(*Tracer)
@@ -25,11 +26,13 @@ type Tracer struct {
 	l          *zap.Logger
 	stop       chan struct{}
 	cachedData []string
+	err        *utils.ResettableError
+	isRunning  bool
+	receiver   *socketcan.Receiver
 
-	timeout      time.Duration
 	directory    string
 	canInterface string
-	err          *utils.ResettableError
+	timeout      time.Duration
 	busName      string
 	fileType     string
 }
@@ -38,18 +41,16 @@ func NewTracer(
 	l *zap.Logger,
 	directory string,
 	canInterface string,
-	options ...TracerOption,
-) *Tracer {
-
+	options ...TracerOption) *Tracer {
 	tracer := &Tracer{
-		l:            l.Named("can_tracer"),
+		l:            l.Named(_loggerName),
 		cachedData:   []string{},
 		err:          utils.NewResettaleError(),
 		timeout:      _defaultTimeout,
+		fileType:     _outputFileType,
 		canInterface: canInterface,
 		directory:    directory,
 		busName:      canInterface,
-		fileType:     _outputFileType,
 	}
 
 	for _, o := range options {
@@ -77,73 +78,105 @@ func WithFileType(fileType string) TracerOption {
 	}
 }
 
+// StartTrace starts receiving and caching CAN frames
 func (t *Tracer) StartTrace(ctx context.Context) error {
-	t.l.Info("received start command, opening bus connection")
+	t.l.Info("received start command")
+
+	t.stop = make(chan struct{})
+	frame := make(chan TimestampedFrame, _streamQueueLength)
+
+	err := t.open(ctx)
+	if err != nil {
+		return errors.Wrap(err, "opening socketcan connection")
+	}
+
+	go t.receiveData(frame, ctx)
+	go t.fetchData(frame, ctx)
+
+	t.l.Info("tracer is running")
+
+	t.isRunning = true
+
+	return nil
+}
+
+// StopTrace stops the receiving and caching frames, then dumps them to a file as long as the tracer is not stopped
+func (t *Tracer) StopTrace() error {
+	if t.isRunning {
+		t.l.Info("sending stop signal")
+
+		close(t.stop)
+
+		t.l.Info("getting file name")
+		file, err := t.getFile()
+		if err != nil {
+			return errors.Wrap(err, "get pointer to file")
+		}
+
+		t.l.Info("dumping to file")
+		err = t.dumpToFile(file)
+		if err != nil {
+			return errors.Wrap(err, "dump cached contents to file")
+		}
+
+		err = t.close()
+		if err != nil {
+			return errors.Wrap(err, "closing receiver")
+		}
+
+		t.cachedData = nil
+		t.isRunning = false
+	}
+
+	return nil
+}
+
+func (t *Tracer) open(ctx context.Context) error {
+	t.l.Info("creating socketcan connection")
 
 	conn, err := socketcan.DialContext(ctx, "can", t.canInterface)
 	if err != nil {
 		return errors.Wrap(err, "dial into socket")
 	}
 
-	receiver := socketcan.NewReceiver(conn)
+	t.receiver = socketcan.NewReceiver(conn)
 
-	t.l.Info("bus receiver created, starting tracer")
-
-	t.stop = make(chan struct{})
-	frame := make(chan TimestampedFrame, _streamQueueLength)
-
-	go t.receiveData(frame, ctx)
-	go t.fetchData(frame, receiver, ctx)
+	t.l.Info("can receiver created")
 
 	return nil
 }
 
-func (t *Tracer) StopTrace() error {
-	t.l.Info("sending stop signal")
-	close(t.stop)
-
-	if t.err != nil {
-		return errors.Wrap(t.err, "tracer error")
-	}
-
-	t.l.Info("getting file name")
-	file, err := t.getFile()
+func (t *Tracer) close() error {
+	err := t.receiver.Close()
 	if err != nil {
-		return errors.Wrap(err, "get pointer to file")
-	}
-
-	t.l.Info("dumping to file")
-	err = t.dumpToFile(file)
-	if err != nil {
-		return errors.Wrap(err, "dump cached contents to file")
+		return errors.Wrap(err, "close socketcan receiver")
 	}
 
 	return nil
+}
+
+func (t *Tracer) Error() error {
+	return t.err
 }
 
 // fetchData fetches CAN frames from the socket and sends them over a buffered channel
-func (t *Tracer) fetchData(frameCh chan TimestampedFrame, receiver *socketcan.Receiver, ctx context.Context) {
-	ticker := time.NewTicker(_defaultTickPeriod)
+func (t *Tracer) fetchData(frameCh chan TimestampedFrame, ctx context.Context) {
 	timeFrame := TimestampedFrame{}
 
-	for {
+	for t.receiver.Receive() {
 		select {
 		case <-ctx.Done():
 			t.l.Info("context deadline exceeded")
 			return
 		case <-t.stop:
-			t.l.Info("stop signal received")
+			t.l.Info("stop signal received, closing fetcher")
 			return
-		case <-time.After(t.timeout):
-			t.l.Info("maximum trace time reached")
-			t.StopTrace()
-		case <-ticker.C:
-			if receiver.Receive() {
-				timeFrame.Frame = receiver.Frame()
-				timeFrame.Time = time.Now()
+		default:
+			t.l.Debug("received message from receiver")
+			timeFrame.Frame = t.receiver.Frame()
+			timeFrame.Time = time.Now()
 
-				frameCh <- timeFrame
-			}
+			frameCh <- timeFrame
 		}
 	}
 }
@@ -151,14 +184,19 @@ func (t *Tracer) fetchData(frameCh chan TimestampedFrame, receiver *socketcan.Re
 // receiveData listens on the buffered channel for incoming CAN frames, parses them, then caches them
 func (t *Tracer) receiveData(frameCh chan TimestampedFrame, ctx context.Context) {
 
+	timeout := time.After(t.timeout)
+
 	for {
 		select {
 		case <-ctx.Done():
 			t.l.Info("context deadline exceeded")
 			return
 		case <-t.stop:
-			t.l.Info("stop signal received")
+			t.l.Info("stop signal received, closing receiver")
 			return
+		case <-timeout:
+			t.l.Info("maximum trace time reached")
+			t.StopTrace()
 		case receivedFrame := <-frameCh:
 			t.cachedData = append(t.cachedData, t.parseString(receivedFrame))
 		}
@@ -171,28 +209,28 @@ func (t *Tracer) parseString(data TimestampedFrame) string {
 
 	_, err := builder.WriteString(time.Now().Format(_tracerFormat))
 	if err != nil {
-		t.err.Set(errors.Wrapf(err, "parse frame time"))
+		t.err.Set(errors.Wrap(err, "parse frame time"))
 	}
 
 	_, err = builder.WriteString(" " + strconv.FormatUint(uint64(data.Frame.ID), 10))
 	if err != nil {
-		t.err.Set(errors.Wrapf(err, "parse frame id"))
+		t.err.Set(errors.Wrap(err, "parse frame id"))
 	}
 
 	_, err = builder.WriteString(" Rx")
 	if err != nil {
-		t.err.Set(errors.Wrapf(err, "write receiveData"))
+		t.err.Set(errors.Wrap(err, "write receiveData"))
 	}
 
 	_, err = builder.WriteString(" " + strconv.FormatUint(uint64(data.Frame.Length), 10))
 	if err != nil {
-		t.err.Set(errors.Wrapf(err, "parse frame length"))
+		t.err.Set(errors.Wrap(err, "parse frame length"))
 	}
 
 	for i := uint8(0); i < data.Frame.Length; i++ {
 		builder.WriteString(" " + strconv.FormatUint(uint64(data.Frame.Data[i]), 16))
 		if err != nil {
-			t.err.Set(errors.Wrapf(err, "parse frame cached data"))
+			t.err.Set(errors.Wrap(err, "parse frame cached data"))
 		}
 	}
 
@@ -247,4 +285,8 @@ func (t *Tracer) getFile() (*os.File, error) {
 	}
 
 	return file, nil
+}
+
+func (t *Tracer) frameCatcher(fr can.Frame) {
+
 }
