@@ -25,6 +25,7 @@ type TracerOption func(*Tracer)
 type Tracer struct {
 	l          *zap.Logger
 	stop       chan struct{}
+	frameCh    chan TimestampedFrame
 	cachedData []string
 	err        *utils.ResettableError
 	isRunning  bool
@@ -78,24 +79,38 @@ func WithFileType(fileType string) TracerOption {
 	}
 }
 
-// StartTrace starts receiving and caching CAN frames
-func (t *Tracer) StartTrace(ctx context.Context) error {
-	t.l.Info("received start command")
+func (t *Tracer) Open(ctx context.Context) error {
+	t.l.Info("creating socketcan connection")
 
-	t.stop = make(chan struct{})
-	frame := make(chan TimestampedFrame, _streamQueueLength)
-
-	err := t.open(ctx)
+	conn, err := socketcan.DialContext(ctx, "can", t.canInterface)
 	if err != nil {
-		return errors.Wrap(err, "opening socketcan connection")
+		return errors.Wrap(err, "dial into socket")
 	}
 
-	go t.receiveData(frame, ctx)
-	go t.fetchData(frame, ctx)
+	t.receiver = socketcan.NewReceiver(conn)
 
-	t.l.Info("tracer is running")
+	t.l.Info("can receiver created")
 
-	t.isRunning = true
+	t.frameCh = make(chan TimestampedFrame, _streamQueueLength)
+
+	go t.fetchData(ctx)
+
+	return nil
+}
+
+// StartTrace starts receiving and caching CAN frames
+func (t *Tracer) StartTrace(ctx context.Context) error {
+	if !t.isRunning {
+		t.l.Info("received start command")
+
+		t.stop = make(chan struct{})
+
+		go t.receiveData(ctx)
+
+		t.l.Info("tracer is running")
+
+		t.isRunning = true
+	}
 
 	return nil
 }
@@ -105,6 +120,7 @@ func (t *Tracer) StopTrace() error {
 	if t.isRunning {
 		t.l.Info("sending stop signal")
 
+		t.isRunning = false
 		close(t.stop)
 
 		t.l.Info("getting file name")
@@ -119,38 +135,18 @@ func (t *Tracer) StopTrace() error {
 			return errors.Wrap(err, "dump cached contents to file")
 		}
 
-		err = t.close()
-		if err != nil {
-			return errors.Wrap(err, "closing receiver")
-		}
-
 		t.cachedData = nil
-		t.isRunning = false
 	}
 
 	return nil
 }
-
-func (t *Tracer) open(ctx context.Context) error {
-	t.l.Info("creating socketcan connection")
-
-	conn, err := socketcan.DialContext(ctx, "can", t.canInterface)
-	if err != nil {
-		return errors.Wrap(err, "dial into socket")
-	}
-
-	t.receiver = socketcan.NewReceiver(conn)
-
-	t.l.Info("can receiver created")
-
-	return nil
-}
-
-func (t *Tracer) close() error {
+func (t *Tracer) Close() error {
 	err := t.receiver.Close()
 	if err != nil {
 		return errors.Wrap(err, "close socketcan receiver")
 	}
+
+	close(t.frameCh)
 
 	return nil
 }
@@ -160,7 +156,7 @@ func (t *Tracer) Error() error {
 }
 
 // fetchData fetches CAN frames from the socket and sends them over a buffered channel
-func (t *Tracer) fetchData(frameCh chan TimestampedFrame, ctx context.Context) {
+func (t *Tracer) fetchData(ctx context.Context) {
 	timeFrame := TimestampedFrame{}
 
 	for t.receiver.Receive() {
@@ -168,21 +164,26 @@ func (t *Tracer) fetchData(frameCh chan TimestampedFrame, ctx context.Context) {
 		case <-ctx.Done():
 			t.l.Info("context deadline exceeded")
 			return
-		case <-t.stop:
-			t.l.Info("stop signal received, closing fetcher")
-			return
+		case _, ok := <-t.frameCh:
+			if !ok {
+				t.l.Info("frame channel closed, exiting fetch routine")
+				return
+			}
 		default:
-			t.l.Debug("received message from receiver")
 			timeFrame.Frame = t.receiver.Frame()
 			timeFrame.Time = time.Now()
 
-			frameCh <- timeFrame
+			if t.isRunning {
+				t.l.Debug("received message from receiver")
+
+				t.frameCh <- timeFrame
+			}
 		}
 	}
 }
 
 // receiveData listens on the buffered channel for incoming CAN frames, parses them, then caches them
-func (t *Tracer) receiveData(frameCh chan TimestampedFrame, ctx context.Context) {
+func (t *Tracer) receiveData(ctx context.Context) {
 
 	timeout := time.After(t.timeout)
 
@@ -192,12 +193,12 @@ func (t *Tracer) receiveData(frameCh chan TimestampedFrame, ctx context.Context)
 			t.l.Info("context deadline exceeded")
 			return
 		case <-t.stop:
-			t.l.Info("stop signal received, closing receiver")
+			t.l.Info("stop signal received")
 			return
 		case <-timeout:
 			t.l.Info("maximum trace time reached")
 			t.StopTrace()
-		case receivedFrame := <-frameCh:
+		case receivedFrame := <-t.frameCh:
 			t.cachedData = append(t.cachedData, t.parseString(receivedFrame))
 		}
 	}

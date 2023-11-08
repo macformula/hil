@@ -32,6 +32,11 @@ func main() {
 		can.WithBusName(config.BusName),
 		can.WithTimeout(3*time.Second))
 
+	err = tracer.Open(ctx)
+	if err != nil {
+		logger.Error(fmt.Sprintf("error with opening tracer %e", err))
+	}
+
 	err = tracer.StartTrace(ctx)
 	if err != nil {
 		logger.Error(fmt.Sprintf("error with starting tracer %e", err))
@@ -56,6 +61,11 @@ func main() {
 	err = tracer.StopTrace()
 	if err != nil {
 		logger.Error(fmt.Sprintf("error with tracer: %e", err))
+	}
+
+	err = tracer.Close()
+	if err != nil {
+		logger.Error(fmt.Sprintf("error with closing tracer %e", err))
 	}
 
 	fmt.Printf("Error is: %v", tracer.Error())
