@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	TracerDirectory string `yaml:"tracerDirectory"`
-	CANInterface    string `yaml:"canInterface"`
+	CanInterface    string `yaml:"canInterface"`
 	BusName         string `yaml:"busName"`
 }
 

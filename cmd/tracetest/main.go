@@ -26,9 +26,9 @@ func main() {
 	defer logger.Sync()
 
 	tracer := can.NewTracer(
-		logger,
+		config.CanInterface,
 		config.TracerDirectory,
-		config.CANInterface,
+		logger,
 		can.WithBusName(config.BusName),
 		can.WithTimeout(3*time.Second))
 

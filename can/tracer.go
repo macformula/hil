@@ -15,9 +15,19 @@ import (
 
 const (
 	_defaultTimeout    = 30 * time.Minute
-	_streamQueueLength = 10
-	_outputFileType    = ".asc"
+	_frameBufferLength = 10
+	_defaultFileType   = ".asc"
 	_loggerName        = "can_tracer"
+
+	// format for 24-hour clock with minutes, seconds, and 4 digits
+	// of precision after decimal (period and colon delimiter)
+	_tracerFormat = "15:04:05.0000"
+
+	// format for 24-hour clock with minutes and seconds (period delimiter)
+	_nameTimeFormat = "15.04.05"
+
+	// format for year, month and day with two digits each (period delimiter)
+	_nameDateFormat = "2006.01.02"
 )
 
 type TracerOption func(*Tracer)
@@ -39,22 +49,22 @@ type Tracer struct {
 }
 
 func NewTracer(
-	l *zap.Logger,
-	directory string,
 	canInterface string,
-	options ...TracerOption) *Tracer {
+	directory string,
+	l *zap.Logger,
+	opts ...TracerOption) *Tracer {
 	tracer := &Tracer{
 		l:            l.Named(_loggerName),
 		cachedData:   []string{},
 		err:          utils.NewResettaleError(),
 		timeout:      _defaultTimeout,
-		fileType:     _outputFileType,
+		fileType:     _defaultFileType,
 		canInterface: canInterface,
 		directory:    directory,
 		busName:      canInterface,
 	}
 
-	for _, o := range options {
+	for _, o := range opts {
 		o(tracer)
 	}
 
@@ -73,12 +83,6 @@ func WithBusName(name string) TracerOption {
 	}
 }
 
-func WithFileType(fileType string) TracerOption {
-	return func(t *Tracer) {
-		t.fileType = fileType
-	}
-}
-
 func (t *Tracer) Open(ctx context.Context) error {
 	t.l.Info("creating socketcan connection")
 
@@ -91,7 +95,7 @@ func (t *Tracer) Open(ctx context.Context) error {
 
 	t.l.Info("can receiver created")
 
-	t.frameCh = make(chan TimestampedFrame, _streamQueueLength)
+	t.frameCh = make(chan TimestampedFrame, _frameBufferLength)
 
 	go t.fetchData(ctx)
 
@@ -174,8 +178,6 @@ func (t *Tracer) fetchData(ctx context.Context) {
 			timeFrame.Time = time.Now()
 
 			if t.isRunning {
-				t.l.Debug("received message from receiver")
-
 				t.frameCh <- timeFrame
 			}
 		}
@@ -198,6 +200,7 @@ func (t *Tracer) receiveData(ctx context.Context) {
 		case <-timeout:
 			t.l.Info("maximum trace time reached")
 			t.StopTrace()
+			return
 		case receivedFrame := <-t.frameCh:
 			t.cachedData = append(t.cachedData, t.parseString(receivedFrame))
 		}
