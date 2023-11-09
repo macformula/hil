@@ -35,6 +35,7 @@ func main() {
 	err = tracer.Open(ctx)
 	if err != nil {
 		logger.Error("open tracer", zap.Error(err))
+		return
 	}
 
 	err = tracer.StartTrace(ctx)

@@ -92,7 +92,7 @@ func WithBusName(name string) TracerOption {
 func (t *Tracer) Open(ctx context.Context) error {
 	t.l.Info("creating socketcan connection")
 
-	conn, err := socketcan.DialContext(ctx, "canlink", t.canInterface)
+	conn, err := socketcan.DialContext(ctx, "can", t.canInterface)
 	if err != nil {
 		return errors.Wrap(err, "dial into socket")
 	}
