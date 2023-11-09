@@ -83,6 +83,7 @@ func WithBusName(name string) TracerOption {
 	}
 }
 
+// Open opens a receiver and spawns a fetchData routine
 func (t *Tracer) Open(ctx context.Context) error {
 	t.l.Info("creating socketcan connection")
 
@@ -94,8 +95,6 @@ func (t *Tracer) Open(ctx context.Context) error {
 	t.receiver = socketcan.NewReceiver(conn)
 
 	t.l.Info("canlink receiver created")
-
-	t.frameCh = make(chan TimestampedFrame, _frameBufferLength)
 
 	go t.fetchData(ctx)
 
@@ -109,11 +108,13 @@ func (t *Tracer) StartTrace(ctx context.Context) error {
 
 		t.stop = make(chan struct{})
 
+		// IMPORTANT: frameCh must be open before isRunning is set
+		t.frameCh = make(chan TimestampedFrame, _frameBufferLength)
+		t.isRunning = true
+
 		go t.receiveData(ctx)
 
 		t.l.Info("tracer is running")
-
-		t.isRunning = true
 	}
 
 	return nil
@@ -124,8 +125,11 @@ func (t *Tracer) StopTrace() error {
 	if t.isRunning {
 		t.l.Info("sending stop signal")
 
+		// IMPORTANT: must set isRunning to false before closing frameCh
 		t.isRunning = false
+
 		close(t.stop)
+		close(t.frameCh)
 
 		t.l.Info("getting file name")
 		file, err := t.getFile()
@@ -144,17 +148,23 @@ func (t *Tracer) StopTrace() error {
 
 	return nil
 }
+
+// Close closes the receiver
 func (t *Tracer) Close() error {
-	err := t.receiver.Close()
+	err := t.StopTrace()
+	if err != nil {
+		return errors.Wrap(err, "stop trace")
+	}
+
+	err = t.receiver.Close()
 	if err != nil {
 		return errors.Wrap(err, "close socketcan receiver")
 	}
 
-	close(t.frameCh)
-
 	return nil
 }
 
+// Error returns the error set during trace execution
 func (t *Tracer) Error() error {
 	return t.err
 }
