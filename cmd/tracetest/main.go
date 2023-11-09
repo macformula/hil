@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
+	"time"
+
 	"github.com/macformula/hil/canlink"
 	"github.com/macformula/hil/config"
 	"go.uber.org/zap"
-	"time"
 )
 
 const (

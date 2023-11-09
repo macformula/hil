@@ -2,14 +2,15 @@ package canlink
 
 import (
 	"context"
-	"github.com/macformula/hil/utils"
-	"github.com/pkg/errors"
-	"go.einride.tech/can/pkg/socketcan"
-	"go.uber.org/zap"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/macformula/hil/utils"
+	"github.com/pkg/errors"
+	"go.einride.tech/can/pkg/socketcan"
+	"go.uber.org/zap"
 )
 
 const (

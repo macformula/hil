@@ -1,8 +1,9 @@
 package canlink
 
 import (
-	"go.einride.tech/can"
 	"time"
+
+	"go.einride.tech/can"
 )
 
 type TimestampedFrame struct {
