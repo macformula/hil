@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/macformula/hil/can"
+	"github.com/macformula/hil/canlink"
 	"github.com/macformula/hil/config"
 	"go.uber.org/zap"
 	"time"
@@ -25,12 +25,12 @@ func main() {
 	logger, err := cfg.Build()
 	defer logger.Sync()
 
-	tracer := can.NewTracer(
+	tracer := canlink.NewTracer(
 		config.CanInterface,
 		config.TracerDirectory,
 		logger,
-		can.WithBusName(config.BusName),
-		can.WithTimeout(3*time.Second))
+		canlink.WithBusName(config.BusName),
+		canlink.WithTimeout(3*time.Second))
 
 	err = tracer.Open(ctx)
 	if err != nil {

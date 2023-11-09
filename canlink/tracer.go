@@ -1,4 +1,4 @@
-package can
+package canlink
 
 import (
 	"context"
@@ -86,14 +86,14 @@ func WithBusName(name string) TracerOption {
 func (t *Tracer) Open(ctx context.Context) error {
 	t.l.Info("creating socketcan connection")
 
-	conn, err := socketcan.DialContext(ctx, "can", t.canInterface)
+	conn, err := socketcan.DialContext(ctx, "canlink", t.canInterface)
 	if err != nil {
 		return errors.Wrap(err, "dial into socket")
 	}
 
 	t.receiver = socketcan.NewReceiver(conn)
 
-	t.l.Info("can receiver created")
+	t.l.Info("canlink receiver created")
 
 	t.frameCh = make(chan TimestampedFrame, _frameBufferLength)
 

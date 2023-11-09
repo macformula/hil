@@ -1,4 +1,4 @@
-package can
+package canlink
 
 import (
 	"go.einride.tech/can"
