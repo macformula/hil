@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
-	"go.einride.tech/can"
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
 	"os"
@@ -289,8 +288,4 @@ func (t *Tracer) getFile() (*os.File, error) {
 	}
 
 	return file, nil
-}
-
-func (t *Tracer) frameCatcher(fr can.Frame) {
-
 }
