@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/macformula/hil/canlink"
 	"github.com/macformula/hil/config"
 	"go.uber.org/zap"
@@ -34,40 +33,39 @@ func main() {
 
 	err = tracer.Open(ctx)
 	if err != nil {
-		logger.Error(fmt.Sprintf("error with opening tracer %e", err))
+		logger.Error("open tracer", zap.Error(err))
 	}
 
 	err = tracer.StartTrace(ctx)
 	if err != nil {
-		logger.Error(fmt.Sprintf("error with starting tracer %e", err))
+		logger.Error("start trace", zap.Error(err))
 	}
 
 	time.Sleep(5 * time.Second)
 
 	err = tracer.StopTrace()
 	if err != nil {
-		logger.Error(fmt.Sprintf("error with tracer: %e", err))
+		logger.Error("stop trace", zap.Error(err))
 	}
 
 	time.Sleep(5 * time.Second)
 
 	err = tracer.StartTrace(ctx)
 	if err != nil {
-		logger.Error(fmt.Sprintf("error with starting tracer %e", err))
+		logger.Error("start trace", zap.Error(err))
 	}
 
 	time.Sleep(2 * time.Second)
 
 	err = tracer.StopTrace()
 	if err != nil {
-		logger.Error(fmt.Sprintf("error with tracer: %e", err))
+		logger.Error("stop trace", zap.Error(err))
 	}
 
 	err = tracer.Close()
 	if err != nil {
-		logger.Error(fmt.Sprintf("error with closing tracer %e", err))
+		logger.Error("close tracer", zap.Error(err))
 	}
 
-	fmt.Printf("Error is: %v", tracer.Error())
-
+	logger.Error("tracer error", zap.Error(tracer.Error()))
 }
