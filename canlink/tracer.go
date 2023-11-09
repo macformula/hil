@@ -30,8 +30,10 @@ const (
 	_filenameDateFormat = "2006.01.02"
 )
 
+// TracerOption is a type for functions operating on Tracer
 type TracerOption func(*Tracer)
 
+// Tracer listens on a CAN bus and records all traffic during a specified period
 type Tracer struct {
 	l          *zap.Logger
 	stop       chan struct{}
@@ -48,6 +50,7 @@ type Tracer struct {
 	fileType     string
 }
 
+// NewTracer returns a new Tracer
 func NewTracer(
 	canInterface string,
 	directory string,
@@ -71,12 +74,14 @@ func NewTracer(
 	return tracer
 }
 
+// WithTimeout sets the timeout for the Tracer
 func WithTimeout(timeout time.Duration) TracerOption {
 	return func(t *Tracer) {
 		t.timeout = timeout
 	}
 }
 
+// WithBusName sets the name of the bus for the Tracer
 func WithBusName(name string) TracerOption {
 	return func(t *Tracer) {
 		t.busName = name
@@ -183,13 +188,13 @@ func (t *Tracer) fetchData(ctx context.Context) {
 				t.l.Info("frame channel closed, exiting fetch routine")
 				return
 			}
-		default:
-			timeFrame.Frame = t.receiver.Frame()
-			timeFrame.Time = time.Now()
+		}
 
-			if t.isRunning {
-				t.frameCh <- timeFrame
-			}
+		timeFrame.Frame = t.receiver.Frame()
+		timeFrame.Time = time.Now()
+
+		if t.isRunning {
+			t.frameCh <- timeFrame
 		}
 	}
 }
