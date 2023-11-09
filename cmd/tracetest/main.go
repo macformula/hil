@@ -68,6 +68,7 @@ func main() {
 	if err != nil {
 		logger.Error("close tracer", zap.Error(err))
 	}
-
-	logger.Error("tracer error", zap.Error(tracer.Error()))
+	if tracer.Error() != nil {
+		logger.Error("tracer error", zap.Error(tracer.Error()))
+	}
 }
