@@ -21,13 +21,13 @@ const (
 
 	// format for 24-hour clock with minutes, seconds, and 4 digits
 	// of precision after decimal (period and colon delimiter)
-	_tracerFormat = "15:04:05.0000"
+	_messageTimeFormat = "15:04:05.0000"
 
 	// format for 24-hour clock with minutes and seconds (period delimiter)
-	_nameTimeFormat = "15.04.05"
+	_filenameTimeFormat = "15.04.05"
 
 	// format for year, month and day with two digits each (period delimiter)
-	_nameDateFormat = "2006.01.02"
+	_filenameDateFormat = "2006.01.02"
 )
 
 type TracerOption func(*Tracer)
@@ -211,7 +211,7 @@ func (t *Tracer) receiveData(ctx context.Context) {
 func (t *Tracer) parseString(data TimestampedFrame) string {
 	var builder strings.Builder
 
-	_, err := builder.WriteString(time.Now().Format(_tracerFormat))
+	_, err := builder.WriteString(time.Now().Format(_messageTimeFormat))
 	if err != nil {
 		t.err.Set(errors.Wrap(err, "parse frame time"))
 	}
@@ -268,12 +268,12 @@ func (t *Tracer) getFile() (*os.File, error) {
 		return &os.File{}, errors.Wrap(err, "add bus name to file name")
 	}
 
-	_, err = builder.WriteString(time.Now().Format(_nameDateFormat) + "_")
+	_, err = builder.WriteString(time.Now().Format(_filenameDateFormat) + "_")
 	if err != nil {
 		return &os.File{}, errors.Wrap(err, "add date to file name")
 	}
 
-	_, err = builder.WriteString(time.Now().Format(_nameTimeFormat))
+	_, err = builder.WriteString(time.Now().Format(_filenameTimeFormat))
 	if err != nil {
 		return &os.File{}, errors.Wrap(err, "add time to file name")
 	}
