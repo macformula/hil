@@ -3,7 +3,7 @@ canlink
 
 `canlink` contains utilities for managing CAN traffic for the duration of a HIL test. Currently supported is a CAN Tracer object to capture traffic during a test.
 
-Can Tracer
+CAN Tracer
 ---------------
 
 The CAN Tracer captures all traffic on a CAN bus 
@@ -57,3 +57,22 @@ Functional options are available of type _TracerOption_ if required.
         err = tracer.Close()
     }
     ```
+
+ ### High-Level Overview
+```mermaid
+sequenceDiagram
+    activate Tracer
+    Tracer->>+fetchData: Open()
+    activate fetchData
+    fetchData->>receiveData: StartTrace()
+    activate receiveData
+    receiveData->>fetchData: StopTrace()
+    deactivate receiveData
+    fetchData->>receiveData: StartTrace()
+    activate receiveData
+    receiveData->>fetchData: StopTrace()
+    deactivate receiveData
+    fetchData->>Tracer: Close()
+    deactivate fetchData
+    deactivate Tracer
+```
