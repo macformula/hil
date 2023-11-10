@@ -6,8 +6,8 @@ canlink
 Can Tracer
 ---------------
 
-The CAN Tracer captures all traffic on a particular CAN bus 
-during a test and dumps it into a specific file.
+The CAN Tracer captures all traffic on a CAN bus 
+during a test and dumps it into a file.
 
 ### Usage
 
