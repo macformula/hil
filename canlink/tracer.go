@@ -101,6 +101,9 @@ func (t *Tracer) Open(ctx context.Context) error {
 
 	t.l.Info("canlink receiver created")
 
+	// IMPORTANT: frameCh must be open before isRunning is set
+	t.frameCh = make(chan TimestampedFrame, _frameBufferLength)
+
 	go t.fetchData(ctx)
 
 	return nil
@@ -113,11 +116,9 @@ func (t *Tracer) StartTrace(ctx context.Context) error {
 
 		t.stop = make(chan struct{})
 
-		// IMPORTANT: frameCh must be open before isRunning is set
-		t.frameCh = make(chan TimestampedFrame, _frameBufferLength)
-		t.isRunning = true
-
 		go t.receiveData(ctx)
+
+		t.isRunning = true
 
 		t.l.Info("tracer is running")
 	}
@@ -134,7 +135,6 @@ func (t *Tracer) StopTrace() error {
 		t.isRunning = false
 
 		close(t.stop)
-		close(t.frameCh)
 
 		t.l.Info("getting file name")
 		file, err := t.getFile()
@@ -156,6 +156,8 @@ func (t *Tracer) StopTrace() error {
 
 // Close closes the receiver
 func (t *Tracer) Close() error {
+	close(t.frameCh)
+
 	err := t.StopTrace()
 	if err != nil {
 		return errors.Wrap(err, "stop trace")
@@ -170,12 +172,13 @@ func (t *Tracer) Close() error {
 }
 
 // Error returns the error set during trace execution
-func (t *Tracer) Error() error {
-	return t.err
+func (t *Tracer) Error() string {
+	return t.err.Error()
 }
 
 // fetchData fetches CAN frames from the socket and sends them over a buffered channel
 func (t *Tracer) fetchData(ctx context.Context) {
+
 	timeFrame := TimestampedFrame{}
 
 	for t.receiver.Receive() {
@@ -188,13 +191,13 @@ func (t *Tracer) fetchData(ctx context.Context) {
 				t.l.Info("frame channel closed, exiting fetch routine")
 				return
 			}
-		}
+		default:
+			timeFrame.Frame = t.receiver.Frame()
+			timeFrame.Time = time.Now()
 
-		timeFrame.Frame = t.receiver.Frame()
-		timeFrame.Time = time.Now()
-
-		if t.isRunning {
-			t.frameCh <- timeFrame
+			if t.isRunning {
+				t.frameCh <- timeFrame
+			}
 		}
 	}
 }

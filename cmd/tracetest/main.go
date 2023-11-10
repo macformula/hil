@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/pkg/errors"
 	"time"
 
 	"github.com/macformula/hil/canlink"
@@ -23,7 +24,6 @@ func main() {
 
 	cfg := zap.NewDevelopmentConfig()
 	logger, err := cfg.Build()
-	defer logger.Sync()
 
 	tracer := canlink.NewTracer(
 		config.CanInterface,
@@ -50,7 +50,7 @@ func main() {
 		logger.Error("stop trace", zap.Error(err))
 	}
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	err = tracer.StartTrace(ctx)
 	if err != nil {
@@ -68,7 +68,8 @@ func main() {
 	if err != nil {
 		logger.Error("close tracer", zap.Error(err))
 	}
-	if tracer.Error() != nil {
-		logger.Error("tracer error", zap.Error(tracer.Error()))
+
+	if tracer.Error() != "" {
+		logger.Error("tracer error", zap.Error(errors.New(tracer.Error())))
 	}
 }
