@@ -22,7 +22,7 @@ Functional options are available of type _TracerOption_ if required.
             "/opt/traces",
             logger,
             canlink.WithBusName("PT"),
-            canlink.WithTimeout(3*time.Second))
+            canlink.WithTimeout(5*time.Minute))
     }
     ```
 2) Open the Tracer using _Open()_
