@@ -2,15 +2,24 @@ package test
 
 import (
 	"context"
+	"time"
 )
 
-type ForeverState struct{}
+type RunForeverState struct{}
 
-func (d *ForeverState) Name() string {
-	return "forever_state"
+func (r *RunForeverState) Timeout() time.Duration {
+	return time.Second
 }
 
-func (d *ForeverState) Run(ctx context.Context) error {
+func (r *RunForeverState) Setup(_ context.Context) error {
+	return nil
+}
+
+func (r *RunForeverState) Name() string {
+	return "run_forever_state"
+}
+
+func (r *RunForeverState) Run(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
@@ -19,6 +28,6 @@ func (d *ForeverState) Run(ctx context.Context) error {
 	}
 }
 
-func (d *ForeverState) FatalError() error {
+func (r *RunForeverState) FatalError() error {
 	return nil
 }

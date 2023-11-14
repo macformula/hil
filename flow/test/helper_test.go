@@ -2,14 +2,15 @@ package test
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/macformula/hil/flow"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"testing"
-	"time"
 )
 
-func Setup_Sequencer(t *testing.T, logFileName string) (*flow.Sequencer, *zap.Logger) {
+func SetupSequencer(t *testing.T, logFileName string) (*flow.Sequencer, *zap.Logger) {
 	cfg := zap.NewDevelopmentConfig()
 	cfg.OutputPaths = []string{logFileName}
 	logger, err := cfg.Build()
@@ -31,7 +32,7 @@ func Setup_Sequencer(t *testing.T, logFileName string) (*flow.Sequencer, *zap.Lo
 				l.Error("subscription error", zap.Error(err1))
 			case p, ok := <-prog:
 				if !ok {
-
+					l.Error("progress channel closed")
 					return
 				}
 
