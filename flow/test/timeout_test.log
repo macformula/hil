@@ -1,0 +1,353 @@
+2023-12-05T17:50:18.144-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-05T17:50:18.144-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-05T17:50:18.144-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "do_nothing_state"}
+2023-12-05T17:50:18.144-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "20.000000%", "current_state": "do_nothing_state"}
+2023-12-05T17:50:18.144-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-05T17:50:18.144-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-05T17:50:18.144-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-05T17:50:18.144-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "run_forever_state"}
+2023-12-05T17:50:18.144-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "run_forever_state"}
+2023-12-05T17:50:19.146-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-05T17:50:19.146-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-05T17:50:19.146-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "60.000000%", "current_state": "do_nothing_state"}
+2023-12-05T17:50:19.146-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "80.000000%", "current_state": "do_nothing_state"}
+2023-12-05T17:50:19.146-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-05T17:50:19.146-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-05T17:50:19.146-0500	INFO	sequencer	flow/sequencer.go:130	sequence complete
+2023-12-05T17:50:19.146-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "80.000000%", "current_state": "do_nothing_state"}
+2023-12-05T17:50:19.146-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-05T17:50:19.146-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-05T17:50:19.146-0500	INFO	test/helper_test.go:48	state_duration	{"state": "run_forever_state", "duration (ms)": 1001}
+2023-12-05T17:50:19.146-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-05T17:50:19.146-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-05T17:50:19.146-0500	ERROR	test/sequencer_test.go:203	sequencer run	{"error": "run sequence: run (run_forever_state): context deadline exceeded", "errorVerbose": "context deadline exceeded\nrun (run_forever_state)\ngithub.com/macformula/hil/flow.(*Sequencer).runSequence\n\t/Users/sparent/OneDrive-McMaster/MACFE/macformula/hil/flow/sequencer.go:112\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/OneDrive-McMaster/MACFE/macformula/hil/flow/sequencer.go:64\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/OneDrive-McMaster/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197\nrun sequence\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/OneDrive-McMaster/MACFE/macformula/hil/flow/sequencer.go:66\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/OneDrive-McMaster/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197"}
+github.com/macformula/hil/flow/test.TestSequencer_Timeout
+	/Users/sparent/OneDrive-McMaster/MACFE/macformula/hil/flow/test/sequencer_test.go:203
+testing.tRunner
+	/usr/local/go/src/testing/testing.go:1595
+2023-12-05T17:50:19.146-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-05T17:50:19.146-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "do_nothing_state"}
+2023-12-05T17:50:19.146-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-05T17:50:19.146-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-05T17:50:19.146-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-05T17:50:19.146-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "20.000000%", "current_state": "do_nothing_state"}
+2023-12-05T17:50:19.146-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "setup_forever_state"}
+2023-12-05T17:50:19.146-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-05T17:50:19.146-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "setup_forever_state"}
+2023-12-05T17:50:20.147-0500	INFO	sequencer	flow/sequencer.go:130	sequence complete
+2023-12-05T17:50:20.147-0500	ERROR	test/sequencer_test.go:208	received fatal error	{"error": "setup (setup_forever_state): context deadline exceeded", "errorVerbose": "context deadline exceeded\nsetup (setup_forever_state)\ngithub.com/macformula/hil/flow.(*Sequencer).runSequence\n\t/Users/sparent/OneDrive-McMaster/MACFE/macformula/hil/flow/sequencer.go:97\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/OneDrive-McMaster/MACFE/macformula/hil/flow/sequencer.go:64\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/OneDrive-McMaster/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197"}
+github.com/macformula/hil/flow/test.TestSequencer_Timeout
+	/Users/sparent/OneDrive-McMaster/MACFE/macformula/hil/flow/test/sequencer_test.go:208
+testing.tRunner
+	/usr/local/go/src/testing/testing.go:1595
+2023-12-05T17:50:20.147-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "setup_forever_state"}
+2023-12-05T17:50:20.147-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-05T17:50:20.147-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-05T17:50:20.147-0500	INFO	test/helper_test.go:48	state_duration	{"state": "setup_forever_state", "duration (ms)": 0}
+2023-12-05T17:50:20.147-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-05T17:50:20.147-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-05T17:52:09.996-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "do_nothing_state"}
+2023-12-05T17:52:09.996-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-05T17:52:09.997-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-05T17:52:09.997-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-05T17:52:09.997-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-05T17:52:09.997-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "20.000000%", "current_state": "do_nothing_state"}
+2023-12-05T17:52:09.997-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "run_forever_state"}
+2023-12-05T17:52:09.997-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-05T17:52:09.997-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "run_forever_state"}
+2023-12-05T17:52:10.998-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-05T17:52:10.999-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-05T17:52:10.999-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "60.000000%", "current_state": "do_nothing_state"}
+2023-12-05T17:52:10.999-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "80.000000%", "current_state": "do_nothing_state"}
+2023-12-05T17:52:10.999-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-05T17:52:10.999-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-05T17:52:10.999-0500	INFO	sequencer	flow/sequencer.go:130	sequence complete
+2023-12-05T17:52:10.999-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "80.000000%", "current_state": "do_nothing_state"}
+2023-12-05T17:52:10.999-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-05T17:52:10.999-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-05T17:52:10.999-0500	INFO	test/helper_test.go:48	state_duration	{"state": "run_forever_state", "duration (ms)": 1001}
+2023-12-05T17:52:10.999-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-05T17:52:10.999-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-05T17:52:10.999-0500	ERROR	test/sequencer_test.go:203	sequencer run	{"error": "run sequence: run (run_forever_state): context deadline exceeded", "errorVerbose": "context deadline exceeded\nrun (run_forever_state)\ngithub.com/macformula/hil/flow.(*Sequencer).runSequence\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:112\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:64\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197\nrun sequence\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:66\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197"}
+github.com/macformula/hil/flow/test.TestSequencer_Timeout
+	/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:203
+testing.tRunner
+	/usr/local/go/src/testing/testing.go:1595
+2023-12-05T17:52:10.999-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-05T17:52:10.999-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-05T17:52:11.000-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "do_nothing_state"}
+2023-12-05T17:52:11.000-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "20.000000%", "current_state": "do_nothing_state"}
+2023-12-05T17:52:11.000-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-05T17:52:11.000-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-05T17:52:11.000-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-05T17:52:11.000-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "setup_forever_state"}
+2023-12-05T17:52:11.000-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "setup_forever_state"}
+2023-12-05T17:52:12.001-0500	INFO	sequencer	flow/sequencer.go:130	sequence complete
+2023-12-05T17:52:12.001-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "setup_forever_state"}
+2023-12-05T17:52:12.001-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-05T17:52:12.001-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-05T17:52:12.001-0500	ERROR	test/sequencer_test.go:208	received fatal error	{"error": "setup (setup_forever_state): context deadline exceeded", "errorVerbose": "context deadline exceeded\nsetup (setup_forever_state)\ngithub.com/macformula/hil/flow.(*Sequencer).runSequence\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:97\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:64\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197"}
+github.com/macformula/hil/flow/test.TestSequencer_Timeout
+	/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:208
+testing.tRunner
+	/usr/local/go/src/testing/testing.go:1595
+2023-12-05T17:52:12.001-0500	INFO	test/helper_test.go:48	state_duration	{"state": "setup_forever_state", "duration (ms)": 0}
+2023-12-05T17:52:12.001-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-05T17:52:12.001-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T02:49:22.845-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T02:49:22.845-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "do_nothing_state"}
+2023-12-08T02:49:22.847-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T02:49:22.847-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T02:49:22.847-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T02:49:22.847-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "20.000000%", "current_state": "do_nothing_state"}
+2023-12-08T02:49:22.847-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "run_forever_state"}
+2023-12-08T02:49:22.847-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T02:49:22.847-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "run_forever_state"}
+2023-12-08T02:49:23.848-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T02:49:23.849-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T02:49:23.848-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "60.000000%", "current_state": "do_nothing_state"}
+2023-12-08T02:49:23.849-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "80.000000%", "current_state": "do_nothing_state"}
+2023-12-08T02:49:23.849-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T02:49:23.849-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T02:49:23.849-0500	INFO	sequencer	flow/sequencer.go:130	sequence complete
+2023-12-08T02:49:23.849-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "80.000000%", "current_state": "do_nothing_state"}
+2023-12-08T02:49:23.849-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T02:49:23.849-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T02:49:23.849-0500	INFO	test/helper_test.go:48	state_duration	{"state": "run_forever_state", "duration (ms)": 1001}
+2023-12-08T02:49:23.849-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T02:49:23.849-0500	ERROR	test/sequencer_test.go:203	sequencer run	{"error": "run sequence: run (run_forever_state): context deadline exceeded", "errorVerbose": "context deadline exceeded\nrun (run_forever_state)\ngithub.com/macformula/hil/flow.(*Sequencer).runSequence\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:112\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:64\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197\nrun sequence\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:66\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197"}
+github.com/macformula/hil/flow/test.TestSequencer_Timeout
+	/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:203
+testing.tRunner
+	/usr/local/go/src/testing/testing.go:1595
+2023-12-08T02:49:23.849-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T02:49:23.849-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "do_nothing_state"}
+2023-12-08T02:49:23.849-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T02:49:23.849-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T02:49:23.849-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T02:49:23.850-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T02:49:23.850-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "20.000000%", "current_state": "do_nothing_state"}
+2023-12-08T02:49:23.850-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "setup_forever_state"}
+2023-12-08T02:49:23.850-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T02:49:23.850-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "setup_forever_state"}
+2023-12-08T02:49:24.851-0500	INFO	sequencer	flow/sequencer.go:130	sequence complete
+2023-12-08T02:49:24.851-0500	ERROR	test/sequencer_test.go:208	received fatal error	{"error": "setup (setup_forever_state): context deadline exceeded", "errorVerbose": "context deadline exceeded\nsetup (setup_forever_state)\ngithub.com/macformula/hil/flow.(*Sequencer).runSequence\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:97\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:64\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197"}
+github.com/macformula/hil/flow/test.TestSequencer_Timeout
+	/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:208
+testing.tRunner
+	/usr/local/go/src/testing/testing.go:1595
+2023-12-08T02:49:24.851-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "setup_forever_state"}
+2023-12-08T02:49:24.851-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T02:49:24.851-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T02:49:24.851-0500	INFO	test/helper_test.go:48	state_duration	{"state": "setup_forever_state", "duration (ms)": 0}
+2023-12-08T02:49:24.851-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T02:49:24.851-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T02:51:40.113-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T02:51:40.114-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T02:51:40.113-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "do_nothing_state"}
+2023-12-08T02:51:40.114-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "20.000000%", "current_state": "do_nothing_state"}
+2023-12-08T02:51:40.114-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T02:51:40.114-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T02:51:40.114-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T02:51:40.114-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "run_forever_state"}
+2023-12-08T02:51:40.114-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "run_forever_state"}
+2023-12-08T02:51:41.115-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T02:51:41.116-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T02:51:41.115-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "60.000000%", "current_state": "do_nothing_state"}
+2023-12-08T02:51:41.116-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "80.000000%", "current_state": "do_nothing_state"}
+2023-12-08T02:51:41.116-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T02:51:41.116-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T02:51:41.116-0500	INFO	sequencer	flow/sequencer.go:130	sequence complete
+2023-12-08T02:51:41.116-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "80.000000%", "current_state": "do_nothing_state"}
+2023-12-08T02:51:41.116-0500	ERROR	test/sequencer_test.go:203	sequencer run	{"error": "run sequence: run (run_forever_state): context deadline exceeded", "errorVerbose": "context deadline exceeded\nrun (run_forever_state)\ngithub.com/macformula/hil/flow.(*Sequencer).runSequence\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:112\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:64\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197\nrun sequence\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:66\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197"}
+github.com/macformula/hil/flow/test.TestSequencer_Timeout
+	/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:203
+testing.tRunner
+	/usr/local/go/src/testing/testing.go:1595
+2023-12-08T02:51:41.116-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T02:51:41.116-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T02:51:41.116-0500	INFO	test/helper_test.go:48	state_duration	{"state": "run_forever_state", "duration (ms)": 1001}
+2023-12-08T02:51:41.116-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T02:51:41.116-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T02:51:41.116-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "do_nothing_state"}
+2023-12-08T02:51:41.116-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T02:51:41.117-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T02:51:41.117-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T02:51:41.117-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T02:51:41.117-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "20.000000%", "current_state": "do_nothing_state"}
+2023-12-08T02:51:41.117-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "setup_forever_state"}
+2023-12-08T02:51:41.117-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T02:51:41.117-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "setup_forever_state"}
+2023-12-08T02:51:42.118-0500	INFO	sequencer	flow/sequencer.go:130	sequence complete
+2023-12-08T02:51:42.118-0500	ERROR	test/sequencer_test.go:208	received fatal error	{"error": "setup (setup_forever_state): context deadline exceeded", "errorVerbose": "context deadline exceeded\nsetup (setup_forever_state)\ngithub.com/macformula/hil/flow.(*Sequencer).runSequence\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:97\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:64\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197"}
+github.com/macformula/hil/flow/test.TestSequencer_Timeout
+	/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:208
+testing.tRunner
+	/usr/local/go/src/testing/testing.go:1595
+2023-12-08T02:51:42.118-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "setup_forever_state"}
+2023-12-08T02:51:42.118-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T02:51:42.118-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T02:51:42.118-0500	INFO	test/helper_test.go:48	state_duration	{"state": "setup_forever_state", "duration (ms)": 0}
+2023-12-08T02:51:42.118-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T02:51:42.118-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T03:03:01.791-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "do_nothing_state"}
+2023-12-08T03:03:01.791-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T03:03:01.793-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T03:03:01.793-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T03:03:01.793-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T03:03:01.793-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "20.000000%", "current_state": "do_nothing_state"}
+2023-12-08T03:03:01.793-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "run_forever_state"}
+2023-12-08T03:03:01.793-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T03:03:01.793-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "run_forever_state"}
+2023-12-08T03:03:02.794-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T03:03:02.795-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T03:03:02.794-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "60.000000%", "current_state": "do_nothing_state"}
+2023-12-08T03:03:02.795-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "80.000000%", "current_state": "do_nothing_state"}
+2023-12-08T03:03:02.795-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T03:03:02.795-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T03:03:02.795-0500	INFO	sequencer	flow/sequencer.go:130	sequence complete
+2023-12-08T03:03:02.795-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "80.000000%", "current_state": "do_nothing_state"}
+2023-12-08T03:03:02.795-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T03:03:02.795-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T03:03:02.795-0500	INFO	test/helper_test.go:48	state_duration	{"state": "run_forever_state", "duration (ms)": 1001}
+2023-12-08T03:03:02.795-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T03:03:02.795-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T03:03:02.795-0500	ERROR	test/sequencer_test.go:203	sequencer run	{"error": "run sequence: run (run_forever_state): context deadline exceeded", "errorVerbose": "context deadline exceeded\nrun (run_forever_state)\ngithub.com/macformula/hil/flow.(*Sequencer).runSequence\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:112\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:64\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197\nrun sequence\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:66\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197"}
+github.com/macformula/hil/flow/test.TestSequencer_Timeout
+	/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:203
+testing.tRunner
+	/usr/local/go/src/testing/testing.go:1595
+2023-12-08T03:03:02.795-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T03:03:02.795-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "do_nothing_state"}
+2023-12-08T03:03:02.795-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T03:03:02.796-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T03:03:02.796-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T03:03:02.796-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "20.000000%", "current_state": "do_nothing_state"}
+2023-12-08T03:03:02.796-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "setup_forever_state"}
+2023-12-08T03:03:02.796-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T03:03:02.796-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "setup_forever_state"}
+2023-12-08T03:03:03.797-0500	INFO	sequencer	flow/sequencer.go:130	sequence complete
+2023-12-08T03:03:03.797-0500	ERROR	test/sequencer_test.go:208	received fatal error	{"error": "setup (setup_forever_state): context deadline exceeded", "errorVerbose": "context deadline exceeded\nsetup (setup_forever_state)\ngithub.com/macformula/hil/flow.(*Sequencer).runSequence\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:97\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:64\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197"}
+github.com/macformula/hil/flow/test.TestSequencer_Timeout
+	/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:208
+testing.tRunner
+	/usr/local/go/src/testing/testing.go:1595
+2023-12-08T03:03:03.797-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "setup_forever_state"}
+2023-12-08T03:03:03.797-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T03:03:03.797-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T03:03:03.797-0500	INFO	test/helper_test.go:48	state_duration	{"state": "setup_forever_state", "duration (ms)": 0}
+2023-12-08T03:03:03.797-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T03:03:03.797-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T15:19:11.833-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:19:11.833-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "sleep_state"}
+2023-12-08T15:19:11.834-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "sleep_state"}
+2023-12-08T15:19:12.835-0500	INFO	sequencer	flow/sequencer.go:130	sequence complete
+2023-12-08T15:19:12.835-0500	ERROR	test/sequencer_test.go:226	expected error
+github.com/macformula/hil/flow/test.TestSequencer_EmptySequence
+	/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:226
+testing.tRunner
+	/usr/local/go/src/testing/testing.go:1595
+2023-12-08T15:19:12.835-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "sleep_state"}
+2023-12-08T15:19:12.836-0500	INFO	test/helper_test.go:48	state_duration	{"state": "sleep_state", "duration (ms)": 1001}
+2023-12-08T15:19:47.890-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:19:47.890-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "sleep_state"}
+2023-12-08T15:19:47.892-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "sleep_state"}
+2023-12-08T15:19:48.893-0500	INFO	sequencer	flow/sequencer.go:130	sequence complete
+2023-12-08T15:19:48.893-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "sleep_state"}
+2023-12-08T15:19:48.893-0500	INFO	test/helper_test.go:48	state_duration	{"state": "sleep_state", "duration (ms)": 1001}
+2023-12-08T15:20:36.648-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:20:36.649-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T15:20:36.649-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "do_nothing_state"}
+2023-12-08T15:20:36.649-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:20:36.649-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T15:20:36.649-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "20.000000%", "current_state": "do_nothing_state"}
+2023-12-08T15:20:36.650-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "run_forever_state"}
+2023-12-08T15:20:36.650-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:20:36.650-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "run_forever_state"}
+2023-12-08T15:20:37.650-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:20:37.650-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T15:20:37.650-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "60.000000%", "current_state": "do_nothing_state"}
+2023-12-08T15:20:37.650-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "80.000000%", "current_state": "do_nothing_state"}
+2023-12-08T15:20:37.650-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:20:37.651-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T15:20:37.651-0500	INFO	sequencer	flow/sequencer.go:130	sequence complete
+2023-12-08T15:20:37.651-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "80.000000%", "current_state": "do_nothing_state"}
+2023-12-08T15:20:37.651-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T15:20:37.651-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T15:20:37.651-0500	INFO	test/helper_test.go:48	state_duration	{"state": "run_forever_state", "duration (ms)": 1000}
+2023-12-08T15:20:37.651-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T15:20:37.651-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T15:20:37.651-0500	ERROR	test/sequencer_test.go:203	sequencer run	{"error": "run sequence: run (run_forever_state): context deadline exceeded", "errorVerbose": "context deadline exceeded\nrun (run_forever_state)\ngithub.com/macformula/hil/flow.(*Sequencer).runSequence\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:112\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:64\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197\nrun sequence\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:66\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197"}
+github.com/macformula/hil/flow/test.TestSequencer_Timeout
+	/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:203
+testing.tRunner
+	/usr/local/go/src/testing/testing.go:1595
+2023-12-08T15:20:37.651-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:20:37.651-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T15:20:37.651-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "do_nothing_state"}
+2023-12-08T15:20:37.651-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "20.000000%", "current_state": "do_nothing_state"}
+2023-12-08T15:20:37.651-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:20:37.651-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T15:20:37.651-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:20:37.651-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "setup_forever_state"}
+2023-12-08T15:20:37.651-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "setup_forever_state"}
+2023-12-08T15:20:38.652-0500	INFO	sequencer	flow/sequencer.go:130	sequence complete
+2023-12-08T15:20:38.652-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "setup_forever_state"}
+2023-12-08T15:20:38.652-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T15:20:38.652-0500	ERROR	test/sequencer_test.go:208	received fatal error	{"error": "setup (setup_forever_state): context deadline exceeded", "errorVerbose": "context deadline exceeded\nsetup (setup_forever_state)\ngithub.com/macformula/hil/flow.(*Sequencer).runSequence\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:97\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:64\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197"}
+github.com/macformula/hil/flow/test.TestSequencer_Timeout
+	/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:208
+testing.tRunner
+	/usr/local/go/src/testing/testing.go:1595
+2023-12-08T15:20:38.652-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T15:20:38.652-0500	INFO	test/helper_test.go:48	state_duration	{"state": "setup_forever_state", "duration (ms)": 0}
+2023-12-08T15:20:38.652-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T15:20:38.652-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T15:22:44.045-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:22:44.045-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T15:22:44.045-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "do_nothing_state"}
+2023-12-08T15:22:44.045-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "20.000000%", "current_state": "do_nothing_state"}
+2023-12-08T15:22:44.045-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:22:44.045-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T15:22:44.045-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:22:44.045-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "run_forever_state"}
+2023-12-08T15:22:44.045-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "run_forever_state"}
+2023-12-08T15:22:45.045-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:22:45.045-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T15:22:45.045-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "60.000000%", "current_state": "do_nothing_state"}
+2023-12-08T15:22:45.045-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "80.000000%", "current_state": "do_nothing_state"}
+2023-12-08T15:22:45.046-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:22:45.046-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T15:22:45.046-0500	INFO	sequencer	flow/sequencer.go:130	sequence complete
+2023-12-08T15:22:45.046-0500	ERROR	test/sequencer_test.go:203	sequencer run	{"error": "run sequence: run (run_forever_state): context deadline exceeded", "errorVerbose": "context deadline exceeded\nrun (run_forever_state)\ngithub.com/macformula/hil/flow.(*Sequencer).runSequence\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:112\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:64\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197\nrun sequence\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:66\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197"}
+github.com/macformula/hil/flow/test.TestSequencer_Timeout
+	/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:203
+testing.tRunner
+	/usr/local/go/src/testing/testing.go:1595
+2023-12-08T15:22:45.046-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "80.000000%", "current_state": "do_nothing_state"}
+2023-12-08T15:22:45.046-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T15:22:45.046-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T15:22:45.046-0500	INFO	test/helper_test.go:48	state_duration	{"state": "run_forever_state", "duration (ms)": 1000}
+2023-12-08T15:22:45.046-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T15:22:45.046-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T15:22:45.046-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "0.000000%", "current_state": "do_nothing_state"}
+2023-12-08T15:22:45.046-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:22:45.046-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T15:22:45.046-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:22:45.046-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "do_nothing_state"}
+2023-12-08T15:22:45.046-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "20.000000%", "current_state": "do_nothing_state"}
+2023-12-08T15:22:45.046-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "setup_forever_state"}
+2023-12-08T15:22:45.046-0500	DEBUG	sequencer	flow/sequencer.go:87	published progress	{"num_subs": 1}
+2023-12-08T15:22:45.046-0500	INFO	sequencer	flow/sequencer.go:89	starting next state	{"state": "setup_forever_state"}
+2023-12-08T15:22:46.047-0500	INFO	sequencer	flow/sequencer.go:130	sequence complete
+2023-12-08T15:22:46.047-0500	ERROR	test/sequencer_test.go:208	received fatal error	{"error": "setup (setup_forever_state): context deadline exceeded", "errorVerbose": "context deadline exceeded\nsetup (setup_forever_state)\ngithub.com/macformula/hil/flow.(*Sequencer).runSequence\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:97\ngithub.com/macformula/hil/flow.(*Sequencer).Run\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/sequencer.go:64\ngithub.com/macformula/hil/flow/test.TestSequencer_Timeout\n\t/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:201\ntesting.tRunner\n\t/usr/local/go/src/testing/testing.go:1595\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_arm64.s:1197"}
+github.com/macformula/hil/flow/test.TestSequencer_Timeout
+	/Users/sparent/Library/CloudStorage/OneDrive-McMasterUniversity/MACFE/macformula/hil/flow/test/sequencer_test.go:208
+testing.tRunner
+	/usr/local/go/src/testing/testing.go:1595
+2023-12-08T15:22:46.047-0500	INFO	test/helper_test.go:40	received progress update	{"completion": "40.000000%", "current_state": "setup_forever_state"}
+2023-12-08T15:22:46.047-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T15:22:46.047-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T15:22:46.047-0500	INFO	test/helper_test.go:48	state_duration	{"state": "setup_forever_state", "duration (ms)": 0}
+2023-12-08T15:22:46.047-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
+2023-12-08T15:22:46.047-0500	INFO	test/helper_test.go:48	state_duration	{"state": "do_nothing_state", "duration (ms)": 0}
