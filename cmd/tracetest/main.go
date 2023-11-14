@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/pkg/errors"
 	"time"
 
 	"github.com/macformula/hil/canlink"
@@ -69,7 +68,7 @@ func main() {
 		logger.Error("close tracer", zap.Error(err))
 	}
 
-	if tracer.Error() != "" {
-		logger.Error("tracer error", zap.Error(errors.New(tracer.Error())))
+	if tracer.Error() != nil {
+		logger.Error("tracer error", zap.Error(tracer.Error()))
 	}
 }
