@@ -126,7 +126,6 @@ func (s *Sequencer) runSequence(ctx context.Context) error {
 
 	// Send final update to signal that the sequence has completed
 	s.progress.Complete = true
-	s.progress.StateIndex++
 	_ = s.progressFeed.Send(s.progress)
 
 	return onceErr.Err()
