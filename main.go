@@ -4,9 +4,10 @@ import (
 	"sync"
 	"context"
 	"fmt"
-	"time"
+	// "time"
 
 	"github.com/macformula/hil/dispatcher"
+	// "github.com/macformula/hil/cli"
 )
 
 func main() {
@@ -28,14 +29,14 @@ func main() {
 			return
 		}
 	}()
-	time.Sleep(1 * time.Second)
-	cancel()
+	// time.Sleep(1 * time.Second)
+	// cancel()
 
-	time.Sleep(1 * time.Second)
-
-	if err := d.Close(ctx); err != nil {
-		fmt.Println("Error closing server:", err)
-	}
+	// time.Sleep(1 * time.Second)
+	
+	// if err := d.Close(ctx); err != nil {
+	// 	fmt.Println("Error closing server:", err)
+	// }
 
 	wg.Wait()
 }

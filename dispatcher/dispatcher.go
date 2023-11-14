@@ -6,7 +6,11 @@ import (
 	"net/http"
 	// "time"
 	"context"
+	// "os"
+	// "os/exec"
+	// "runtime"
 
+	"github.com/macformula/hil/cli"
 	"github.com/macformula/hil/orchestrator"
 	"go.uber.org/zap"
 )
@@ -30,56 +34,78 @@ func NewDispatcher(l *zap.Logger, port int) *Dispatcher {
 		port: port,
 		srv: server,
 		// stopChan: make(chan struct{}),
-		stop: false,
+		stop: true,
 	}
 }
 
 func (d *Dispatcher) Open(ctx context.Context) error {
-	d.stop = false
-	d.stopChan = make(chan struct{})
-	
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// can only set this up once
+	if d.stop {
+		d.stop = false
+		d.stopChan = make(chan struct{})
+		go d.setupCLI() // start cli
+
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			select {
+			case <-ctx.Done():
+				return
+			case <-d.stopChan:
+				return
+			default:
+				body, err := io.ReadAll(r.Body)
+				if err != nil {
+					http.Error(w, "Error reading request body", http.StatusBadRequest)
+					return
+				}
+
+				message := string(body) + " returning..."
+
+				fmt.Printf("Received a request with message: %s\n", message)
+
+				d.Trigger(ctx)
+
+				// Set status code
+				w.WriteHeader(http.StatusAccepted)
+				w.Write([]byte(message))
+			}
+		})
+
+		go func() {
+			// fmt.Printf("Listening on :%d...\n", d.port)
+			if err := d.srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				fmt.Println("Error:", err)
+			}
+		}()
+
+		// block until ctx expired or stop called
 		select {
 		case <-ctx.Done():
-			return
+			// Context is canceled, proceed to shutdown the server
+			d.Close(ctx)
 		case <-d.stopChan:
-			return
-		default:
-			body, err := io.ReadAll(r.Body)
-			if err != nil {
-				http.Error(w, "Error reading request body", http.StatusBadRequest)
-				return
-			}
-
-			message := string(body) + " returning..."
-
-			fmt.Printf("Received a request with message: %s\n", message)
-
-			d.Trigger(ctx)
-
-			// Set status code
-			w.WriteHeader(http.StatusAccepted)
-			w.Write([]byte(message))
+			// Stop signal received, immediately return
 		}
-	})
-
-	go func() {
-		fmt.Printf("Listening on :%d...\n", d.port)
-		if err := d.srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			fmt.Println("Error:", err)
-		}
-	}()
-
-	// block until ctx expired or stop called
-	select {
-	case <-ctx.Done():
-		// Context is canceled, proceed to shutdown the server
-		d.Close(ctx)
-	case <-d.stopChan:
-		// Stop signal received, immediately return
 	}
 
 	return nil
+}
+
+func (d *Dispatcher) setupCLI() {
+	items := make(map[string]func())
+	items["Pizza"] = func() { 
+		go d.setupCLI()
+		d.Open(context.TODO())
+	}
+	items["Sushi"] = func() { 
+		go d.setupCLI()
+		fmt.Println("At Sushi")
+	}
+	items["Burger"] = func() { 
+		go d.setupCLI()
+		fmt.Println("At Burger") 
+	}
+
+	cli.Start(items)
 }
 
 func (d *Dispatcher) Trigger(ctx context.Context) error {
