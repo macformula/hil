@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// State is a piece of logic that gets executed as a part of a Sequence of states
+// State is a set of logic that gets executed as a part of a Sequence.
 type State interface {
 	// Name of the state, should be in lower_snake_case
 	Name() string

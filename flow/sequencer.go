@@ -14,6 +14,7 @@ const (
 	_loggerName = "sequencer"
 )
 
+// Sequencer is responsible for managing the setup and execution of a Sequence.
 type Sequencer struct {
 	l            *zap.Logger
 	sequence     Sequence
@@ -26,6 +27,7 @@ type Sequencer struct {
 	fatalErr *utils.ResettableError
 }
 
+// NewSequencer returns a Sequencer object reference.
 func NewSequencer(l *zap.Logger) *Sequencer {
 	return &Sequencer{
 		l:            l.Named(_loggerName),
@@ -34,10 +36,13 @@ func NewSequencer(l *zap.Logger) *Sequencer {
 	}
 }
 
+// SubscribeToProgress subscribes to the progress of the Sequencer accross its Sequence runs.
+// The Progress channel gets updated whenever there is new information available.
 func (s *Sequencer) SubscribeToProgress(progCh chan Progress) event.Subscription {
 	return s.progressFeed.Subscribe(progCh)
 }
 
+// Run will run the sequence provided. FatalError must be called after Run to check for any non-recoverable errors.
 func (s *Sequencer) Run(ctx context.Context, seq Sequence) error {
 	if len(seq) == 0 {
 		return errors.New("sequence cannot be empty")
@@ -131,6 +136,8 @@ func (s *Sequencer) runSequence(ctx context.Context) error {
 	return onceErr.Err()
 }
 
+// FatalError indicates that there is an error that requires intervention.
+// The Sequencer will stop executing all remaining states in the Sequence if it encounters a fatal error.
 func (s *Sequencer) FatalError() error {
 	return s.fatalErr.Err()
 }
