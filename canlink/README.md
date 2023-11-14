@@ -66,11 +66,11 @@ sequenceDiagram
     activate fetchData
     fetchData->>receiveData: StartTrace()
     activate receiveData
-    receiveData->>fetchData: StopTrace()
+    fetchData->>receiveData: StopTrace()
     deactivate receiveData
     fetchData->>receiveData: StartTrace()
     activate receiveData
-    receiveData->>fetchData: StopTrace()
+    fetchData->>receiveData: StopTrace()
     deactivate receiveData
     fetchData->>Tracer: Close()
     deactivate fetchData
