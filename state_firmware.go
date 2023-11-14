@@ -18,7 +18,7 @@ func (f *Firmware) Name() string {
 }
 
 func (f *Firmware) Start(a App, ctx context.Context) error {
-
+	return nil
 }
 
 func (f *Firmware) FatalError() error {
