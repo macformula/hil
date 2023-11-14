@@ -7,13 +7,13 @@ import (
 )
 
 type Orchestrator struct {
-	l *zap.Logger
+	l     *zap.Logger
 	state State
 
 	s *flow.Sequencer
 	d []Dispatcher
 
-	testStart chan struct{}
+	testStart    chan struct{}
 	testComplete chan struct{}
 }
 
@@ -39,9 +39,10 @@ func NewOrchestrator(l *zap.Logger, opts ...Option) *Orchestrator {
 
 func (o *Orchestrator) Open(ctx context.Context) error {
 
-	for
-	go o.waitForStart(ctx)
+	return nil
+}
 
+func (o *Orchestrator) Start(ctx context.Context) error {
 	return nil
 }
 
@@ -57,7 +58,7 @@ func (o *Orchestrator) monitorDispatcher(ctx context.Context, d Dispatcher) {
 			select {
 			case <-ctx.Done():
 			case <-d.Start():
-				o.testStart <- struct {}{}
+				o.testStart <- struct{}{}
 			case <-o.testStart:
 			}
 		}
