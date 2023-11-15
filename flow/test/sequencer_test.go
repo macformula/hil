@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+// TestSequencer_Nominal tests the nominal sequence cases where no errors are returned and all states finish executing
+// by their required deadlines.
 func TestSequencer_Nominal(t *testing.T) {
 	seqs := []flow.Sequence{
 		{
@@ -66,7 +68,8 @@ func TestSequencer_Nominal(t *testing.T) {
 	time.Sleep(1 * time.Second)
 }
 
-func TestSequencer_FatalRunError(t *testing.T) {
+// TestSequencer_FatalError tests the case where a state returns a fatal error.
+func TestSequencer_FatalError(t *testing.T) {
 	tests := []struct {
 		seq                 flow.Sequence
 		expectedMaxStateIdx int
@@ -79,6 +82,32 @@ func TestSequencer_FatalRunError(t *testing.T) {
 		},
 		{
 			seq: flow.Sequence{
+				&SetupFatalErrorState{}, // Make sure the last two states do not run
+				&DoNothingState{},
+				&DoNothingState{},
+				&DoNothingState{},
+			},
+			expectedMaxStateIdx: 0,
+		},
+		{
+			seq: flow.Sequence{
+				&DoNothingState{},
+				&DoNothingState{},
+				&SetupFatalErrorState{}, // Make sure the last two states do not run
+				&DoNothingState{},
+				&DoNothingState{},
+				&DoNothingState{},
+			},
+			expectedMaxStateIdx: 2,
+		},
+		{
+			seq: flow.Sequence{
+				&RunFatalErrorState{}, // Make sure the last two states do not run
+			},
+			expectedMaxStateIdx: 0,
+		},
+		{
+			seq: flow.Sequence{
 				&RunFatalErrorState{}, // Make sure the last two states do not run
 				&DoNothingState{},
 				&DoNothingState{},
@@ -90,7 +119,7 @@ func TestSequencer_FatalRunError(t *testing.T) {
 			seq: flow.Sequence{
 				&DoNothingState{},
 				&DoNothingState{},
-				&RunFatalErrorState{}, // Make sure the last two states do not run
+				&SetupFatalErrorState{}, // Make sure the last two states do not run
 				&DoNothingState{},
 				&DoNothingState{},
 				&DoNothingState{},
@@ -148,6 +177,7 @@ func TestSequencer_FatalRunError(t *testing.T) {
 	time.Sleep(1 * time.Second)
 }
 
+// TestSequencer_Timeout tests the case where a run or setup call hangs forever.
 func TestSequencer_Timeout(t *testing.T) {
 	seqs := []flow.Sequence{
 		{

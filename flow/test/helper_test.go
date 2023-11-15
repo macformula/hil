@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// SetupSequencer is a helper function that is used in sequencer_test.go
 func SetupSequencer(t *testing.T, logFileName string) (*flow.Sequencer, *zap.Logger) {
 	cfg := zap.NewDevelopmentConfig()
 	cfg.OutputPaths = []string{logFileName}
