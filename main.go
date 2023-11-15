@@ -1,42 +1,39 @@
 package main
 
 import (
-	"sync"
 	"context"
 	"fmt"
-	// "time"
+	"sync"
+	// "fmt"
 
-	"github.com/macformula/hil/dispatcher"
-	// "github.com/macformula/hil/cli"
+	d "github.com/macformula/hil/dispatcher"
 )
 
 func main() {
 	var wg sync.WaitGroup
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	var g *d.GithubActions
+	//var mu sync.Mutex // Mutex to protect access to g
 
-	// Increment the wait group counter for each goroutine
 	wg.Add(1)
 
-	// Run Dispatcher and ANTHING ELSE as goroutines
-	d := dispatcher.NewDispatcher(nil, 8080)
+	ctx, _ := context.WithCancel(context.Background())
+	g = d.NewGithubActions(nil, 8080)
+
 	go func() {
 		defer wg.Done()
-		
-		if err := d.Open(ctx); err != nil {
-			fmt.Println("Error opening server:", err)
-			return
-		}
+
+		g.Start(ctx)
 	}()
-	// time.Sleep(1 * time.Second)
-	// cancel()
 
-	// time.Sleep(1 * time.Second)
-	
-	// if err := d.Close(ctx); err != nil {
-	// 	fmt.Println("Error closing server:", err)
-	// }
+	fmt.Println("passed first wait")
 
+	//mu.Lock()
+	signal := g.GetStartSignal(ctx)
+	//mu.Unlock()
+
+	for {
+		<-signal
+	}
 	wg.Wait()
 }
