@@ -5,8 +5,8 @@ import (
 	"sync"
 	// "fmt"
 
-	//d "github.com/macformula/hil/dispatcher"
-	test "github.com/macformula/hil/clitesting"
+	d "github.com/macformula/hil/dispatcher"
+	//test "github.com/macformula/hil/clitesting"
 )
 
 func main() {
@@ -30,7 +30,7 @@ func main() {
 
 	//mu.Lock()
 	//signalGithubActions := g.GetStartSignal(ctx)
-	test.Start()
+	d.Start()
 	//mu.Unlock()
 
 	//for {

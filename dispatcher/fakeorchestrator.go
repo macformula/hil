@@ -50,7 +50,7 @@ func (o *FakeOrchestrator) GetNumberStates() int {
 }
 
 func (o *FakeOrchestrator) Start() {
-	ticker := time.NewTicker(100 * time.Millisecond)
+	ticker := time.NewTicker(1 * time.Second)
 	f, err := tea.LogToFile("debug.log", "debug")
 	if err != nil {
 		fmt.Println("fatal:", err)

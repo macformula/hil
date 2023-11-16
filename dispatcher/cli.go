@@ -48,11 +48,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		for i := 0; i < p.CurrentState-1; i++ {
 			m.progressList[i].SetPercent(100)
 		}
-		cmd1 := m.progressList[p.CurrentState-1].SetPercent(float64(p.CurrentState / p.TotalStates))
-		//cmd1 := m.progressList[p.CurrentState-1].SetPercent(float64(p.StateIndex))
+		//cmd1 := m.progressList[p.CurrentState-1].SetPercent(float64(p.CurrentState / p.TotalStates))
+		cmd1 := m.progressList[p.CurrentState-1].SetPercent(float64(p.StateIndex))
 		cmd2 := m.progress.SetPercent(float64(p.CurrentState / p.TotalStates))
 		for i := 0; i < p.TotalStates; i++ {
-			log.Println(m.progressList[i].Percent())
+			log.Printf("progress list: state=%d, percent=%f", i, m.progressList[i].Percent())
 		}
 		//log.Println(m.progressList)
 		//cmd := m.progress.IncrPercent(0.25)
