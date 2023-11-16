@@ -61,22 +61,22 @@ func (o *FakeOrchestrator) Start() {
 	for {
 		select {
 		case <-ticker.C:
-			log.Println("here")
 			o.progress.StateIndex += 25
 
-			if o.progress.StateIndex >= 100 {
+			if o.progress.StateIndex > 100 {
 				o.progress.StateIndex = 0
-
-				if o.progress.CurrentState < o.progress.TotalStates {
-					o.progress.CurrentState++
-				}
+				o.progress.CurrentState++
 			}
 
-			if o.progress.CurrentState == o.progress.TotalStates && o.progress.StateIndex == 0 {
+			if o.progress.CurrentState > o.progress.TotalStates {
+				//o.progress.CurrentState = o.progress.TotalStates
+				o.progress.StateIndex = 100
+				o.progress.CurrentState--
 				log.Println("Reached the end of progress. Exiting.")
 				o.progressChan <- o.progress
 				return
 			}
+			log.Printf("here: %d, %d, %d", o.progress.CurrentState, o.progress.StateIndex, o.progress.TotalStates)
 			o.progressChan <- o.progress
 		}
 	}

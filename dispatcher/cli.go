@@ -42,15 +42,28 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case progressMsg:
 		log.Println("In progressMsg")
 		p := Progress(msg)
+		if p.CurrentState > p.TotalStates {
+			return m, nil
+		}
 		if p.TotalStates == 0 {
 			return m, checkProgressTick(m)
 		}
-		for i := 0; i < p.CurrentState-1; i++ {
-			m.progressList[i].SetPercent(100)
-		}
+		//for i := 0; i < p.CurrentState-1; i++ {
+		//	m.progressList[i].SetPercent(1.0)
+		//}
 		//cmd1 := m.progressList[p.CurrentState-1].SetPercent(float64(p.CurrentState / p.TotalStates))
-		cmd1 := m.progressList[p.CurrentState-1].SetPercent(float64(p.StateIndex))
-		cmd2 := m.progress.SetPercent(float64(p.CurrentState / p.TotalStates))
+		cmd1 := m.progressList[p.CurrentState-1].SetPercent(float64(p.StateIndex) / 100) // float64(p.StateIndex / 100) doesnt work tho....
+
+		var currentState int
+
+		if p.StateIndex == 100 {
+			currentState = p.CurrentState
+		} else {
+			currentState = p.CurrentState - 1
+		}
+
+		cmd2 := m.progress.SetPercent(float64(currentState) / float64(p.TotalStates))
+
 		for i := 0; i < p.TotalStates; i++ {
 			log.Printf("progress list: state=%d, percent=%f", i, m.progressList[i].Percent())
 		}
@@ -64,10 +77,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "enter":
-			if m.progress.Percent() == 1.0 {
-				cmd := m.progress.SetPercent(0)
-				return m, cmd
-			}
+			//if m.progress.Percent() == 1.0 {
+			//	cmd := m.progress.SetPercent(0)
+			//	return m, cmd
+			//}
 			i, ok := m.list.SelectedItem().(item)
 			if ok {
 				m.selected = i
@@ -75,8 +88,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			// Note that you can also use progress.Model.SetPercent to set the
 			// percentage value explicitly, too.
-			cmd := m.progress.IncrPercent(0.25)
-			return m, cmd
+			//cmd := m.progress.IncrPercent(0.25)
+			return m, nil
 			//return m, tea.Quit
 		}
 
