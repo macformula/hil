@@ -1,39 +1,43 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	// "fmt"
 
-	d "github.com/macformula/hil/dispatcher"
+	//d "github.com/macformula/hil/dispatcher"
+	test "github.com/macformula/hil/clitesting"
 )
 
 func main() {
 	var wg sync.WaitGroup
 
-	var g *d.GithubActions
+	//var g *d.GithubActions
 	//var mu sync.Mutex // Mutex to protect access to g
 
 	wg.Add(1)
 
-	ctx, _ := context.WithCancel(context.Background())
-	g = d.NewGithubActions(nil, 8080)
+	//ctx, _ := context.WithCancel(context.Background())
+	//g = d.NewGithubActions(nil, 8080)
 
 	go func() {
 		defer wg.Done()
 
-		g.Start(ctx)
+		//g.Start(ctx)
 	}()
 
 	fmt.Println("passed first wait")
 
 	//mu.Lock()
-	signal := g.GetStartSignal(ctx)
+	//signalGithubActions := g.GetStartSignal(ctx)
+	test.Start()
 	//mu.Unlock()
 
-	for {
-		<-signal
-	}
+	//for {
+	//	select {
+	//	case <-signalGithubActions:
+	//		fmt.Printf("Channel %s received a message!\n", "GithubActions")
+	//	}
+	//}
 	wg.Wait()
 }
