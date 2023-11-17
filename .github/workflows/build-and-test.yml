@@ -20,7 +20,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y can-utils
+          sudo apt-get install -y linux-modules-extra-$(uname -r)
 
+      # vcan needs linux-modules-extra: https://github.com/linux-can/can-utils/issues/46
       - name: Setup vcan0
         run: |
           sudo modprobe can
