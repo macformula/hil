@@ -2,6 +2,8 @@ package canlink
 
 import (
 	"context"
+	"encoding/json"
+	"go.uber.org/zap/zapcore"
 	"os"
 	"os/exec"
 	"testing"
@@ -18,7 +20,21 @@ func TestCanLinkIntegration(t *testing.T) {
 	canInterface := "vcan0"       // Update with the appropriate CAN interface
 
 	// Create a logger for the tracer
-	logger, _ := zap.NewDevelopment()
+	rawJSON, err := os.ReadFile("./canlink/config.json")
+	if err != nil {
+		panic(err)
+	}
+	var cfg zap.Config
+	if err := json.Unmarshal(rawJSON, &cfg); err != nil {
+		panic(err)
+	}
+
+	cfg.EncoderConfig.EncodeLevel = zapcore.LowercaseLevelEncoder
+	cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	cfg.EncoderConfig.EncodeDuration = zapcore.SecondsDurationEncoder
+	cfg.EncoderConfig.EncodeCaller = zapcore.FullCallerEncoder
+
+	logger := zap.Must(cfg.Build())
 	defer logger.Sync()
 
 	// Create a tracer instance with a timeout of 5 second
@@ -30,7 +46,7 @@ func TestCanLinkIntegration(t *testing.T) {
 	)
 
 	// Open the tracer
-	err := tracer.Open(context.Background())
+	err = tracer.Open(context.Background())
 	assert.NoError(t, err)
 
 	// Start the tracer

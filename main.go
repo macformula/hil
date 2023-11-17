@@ -16,7 +16,7 @@ func main() {
 	canInterface := "vcan0"         // Update with the appropriate CAN interface
 
 	fmt.Println("Starting program")
-	rawJSON, err := os.ReadFile("config.json")
+	rawJSON, err := os.ReadFile("./canlink/config.json")
 	if err != nil {
 		panic(err)
 	}
