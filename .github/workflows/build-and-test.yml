@@ -35,10 +35,13 @@ jobs:
         run: ls
 
       - name: Install dependencies
-        run: go get -d ./...
+        run: |
+          go get -d ./...
+          go mod tidy
 
       - name: Build go project
-        run: go build -v ./canlink
+        run: |
+          go build -v ./canlink
 
       - name: Run go test
         run: go test -v ./canlink
