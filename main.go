@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	testDirectory := "actual_log" // Update with the actual path
+	testDirectory := "./actual_log" // Update with the actual path
 	canInterface := "vcan0"       // Update with the appropriate CAN interface
 
 	// Create a logger for the tracer
@@ -29,7 +29,8 @@ func main() {
 	// Start the tracer
 	tracer.StartTrace(context.Background())
 	time.Sleep(5*time.Second)
-	// tracer.StopTrace()
 
-	// tracer.Close()
+	tracer.StopTrace()
+
+	tracer.Close()
 }

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"fmt"
 
 	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
@@ -261,6 +262,7 @@ func (t *Tracer) parseString(data TimestampedFrame) string {
 
 // dumpToFile writes all the frames to a passed in file
 func (t *Tracer) dumpToFile(file *os.File) error {
+	fmt.Println()
 	for _, value := range t.cachedData {
 		_, err := file.WriteString(value + "\n")
 		if err != nil {
