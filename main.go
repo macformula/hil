@@ -32,5 +32,5 @@ func main() {
 
 	tracer.StopTrace()
 
-	tracer.Close()
+	// tracer.Close()
 }
