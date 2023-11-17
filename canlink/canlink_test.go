@@ -20,7 +20,7 @@ func TestCanLinkIntegration(t *testing.T) {
 	canInterface := "vcan0"       // Update with the appropriate CAN interface
 
 	// Create a logger for the tracer
-	rawJSON, err := os.ReadFile("./canlink/config.json")
+	rawJSON, err := os.ReadFile("config.json")
 	if err != nil {
 		panic(err)
 	}
