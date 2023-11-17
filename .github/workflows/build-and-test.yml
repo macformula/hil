@@ -31,5 +31,8 @@ jobs:
           sudo ip link add dev vcan0 type vcan
           sudo ip link set up vcan0
 
+      - name: Build go project
+        run: go build
+
       - name: Run go test
         run: go test
