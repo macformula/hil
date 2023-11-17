@@ -1,0 +1,14 @@
+{
+  "level": "debug",
+  "outputPaths": ["can.asc"],
+  "errorOutputPaths": ["stderr"],
+  "encoding": "json",
+  "encoderConfig": {
+    "messageKey": "message",
+    "levelKey": "level",
+    "timeKey": "time",
+    "nameKey": "name",
+    "callerKey": "caller",
+    "levelEncoder": "lowercase"
+  }
+}
