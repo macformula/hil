@@ -38,7 +38,7 @@ jobs:
         run: go get -d ./...
 
       - name: Build go project
-        run: go build -v ./...
+        run: go build -v ./canlink
 
       - name: Run go test
         run: go test
