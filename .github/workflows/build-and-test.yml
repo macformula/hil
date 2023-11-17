@@ -33,9 +33,9 @@ jobs:
 
       - name: Where am I
         run: ls
-        
+
       - name: Install dependencies
-        run: go get .
+        run: go get -d ./...
 
       - name: Build go project
         run: go build -v ./...
