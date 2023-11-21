@@ -36,7 +36,7 @@ scp username@remote_host:/path/to/remote_file local_destination
 ### Utilities on our Raspberry Pi
 #### STLink
 
-STLink is used for programming and debugging STM32 microcontrollers. Connect your STM32 device to your computer using an appropriate interface and use the following commands:
+STLink is used for programming and debugging STM32 microcontrollers.
 
 To flash your development board with a compiled binary, run the following command. The *firmware.bin* must be built properly and sent over to the machine. 
 ```bash
