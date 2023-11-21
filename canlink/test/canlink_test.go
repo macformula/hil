@@ -1,8 +1,9 @@
-package canlink
+package test
 
 import (
 	"context"
 	"encoding/json"
+	"github.com/macformula/hil/canlink"
 	"go.uber.org/zap/zapcore"
 	"os"
 	"os/exec"
@@ -38,11 +39,11 @@ func TestCanLinkIntegration(t *testing.T) {
 	defer logger.Sync()
 
 	// Create a tracer instance with a timeout of 5 second
-	tracer := NewTracer(
+	tracer := canlink.NewTracer(
 		canInterface,
 		testDirectory,
 		logger,
-		WithTimeout(5*time.Second),
+		canlink.WithTimeout(5*time.Second),
 	)
 
 	// Open the tracer
@@ -72,7 +73,7 @@ func TestCanLinkIntegration(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Compare the generated log file with the expected log file
-	actualLogFile := testDirectory + "/" + canInterface + "_" + time.Now().Format(_filenameTimeFormat) + "_" + time.Now().Format(_filenameDateFormat)
+	actualLogFile := testDirectory + "/" + canInterface + "_" + time.Now().Format(canlink._filenameTimeFormat) + "_" + time.Now().Format(canlink._filenameDateFormat)
 	expectedLogFile := "expected_log.asc"
 
 	actualContent, err := os.ReadFile(actualLogFile)
