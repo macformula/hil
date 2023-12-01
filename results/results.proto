@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package ResultsProcessor;
+
+option go_package = ".client";
+
+service TagTunnel {
+  rpc SubmitTag (SubmitTagRequest) returns (SubmitTagReply) {}
+  rpc CompleteTest (google.protobuf.Empty) returns (CompleteTestReply) {}
+}
+
+message SubmitTagRequest {
+  string tag = 1;
+  oneof data {
+    string  value_str = 2;
+    int32   value_int = 3;
+    float   value_float = 4;
+    bool    value_bool = 5;
+  }
+}
+
+message SubmitTagReply {
+  bool success = 1;
+}
+
+message CompleteTestReply {
+  bool success = 1;
+}
