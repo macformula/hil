@@ -20,9 +20,6 @@ type Sequencer struct {
 	progress     Progress
 	progressFeed event.Feed
 
-	complete chan struct{}
-	stop     chan struct{}
-
 	fatalErr *utils.ResettableError
 }
 
@@ -56,9 +53,6 @@ func (s *Sequencer) Run(ctx context.Context, seq Sequence) error {
 		TotalStates:   len(seq),
 	}
 
-	s.stop = make(chan struct{})
-	s.complete = make(chan struct{})
-
 	err := s.runSequence(ctx, seq)
 	if err != nil {
 		return errors.Wrap(err, "run sequence")
@@ -75,7 +69,7 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
 		timeoutCtx context.Context
 		cancel     context.CancelFunc
 	)
-
+	x
 	for idx, state := range seq {
 		// Check stop before setting current state
 		s.progress.CurrentState = state
