@@ -20,10 +20,10 @@ func TestSequencer_Nominal(t *testing.T) {
 			&SleepState{1 * time.Second},
 		},
 		{
-			&SleepState{1 * time.Second},
-			&SleepState{1 * time.Second},
-			&SleepState{1 * time.Second},
-			&SleepState{1 * time.Second},
+			&SleepState{100 * time.Millisecond},
+			&SleepState{100 * time.Millisecond},
+			&SleepState{100 * time.Millisecond},
+			&SleepState{100 * time.Millisecond},
 		},
 		{
 			&DoNothingState{},
@@ -207,6 +207,21 @@ func TestSequencer_Timeout(t *testing.T) {
 		if err != nil {
 			l.Error("received fatal error", zap.Error(err))
 		}
+	}
+
+	// Give time to flush logger
+	time.Sleep(1 * time.Second)
+}
+
+// TestSequencer_Timeout tests the case where a run or setup call hangs forever.
+func TestSequencer_EmptySequence(t *testing.T) {
+	seq := flow.Sequence{}
+
+	sequencer, _ := SetupSequencer(t, "timeout_test.log")
+
+	err := sequencer.Run(context.Background(), seq)
+	if err == nil {
+		t.Error("expected error")
 	}
 
 	// Give time to flush logger
