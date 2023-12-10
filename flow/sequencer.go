@@ -17,7 +17,6 @@ const (
 // Sequencer is responsible for managing the setup and execution of a Sequence.
 type Sequencer struct {
 	l            *zap.Logger
-	sequence     Sequence
 	progress     Progress
 	progressFeed event.Feed
 
@@ -48,7 +47,6 @@ func (s *Sequencer) Run(ctx context.Context, seq Sequence) error {
 		return errors.New("sequence cannot be empty")
 	}
 
-	s.sequence = seq
 	s.progress = Progress{
 		CurrentState:  nil,
 		StateDuration: make([]time.Duration, len(seq)),
@@ -61,7 +59,7 @@ func (s *Sequencer) Run(ctx context.Context, seq Sequence) error {
 	s.stop = make(chan struct{})
 	s.complete = make(chan struct{})
 
-	err := s.runSequence(ctx)
+	err := s.runSequence(ctx, seq)
 	if err != nil {
 		return errors.Wrap(err, "run sequence")
 	}
@@ -69,7 +67,7 @@ func (s *Sequencer) Run(ctx context.Context, seq Sequence) error {
 	return nil
 }
 
-func (s *Sequencer) runSequence(ctx context.Context) error {
+func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
 	var (
 		startTime  = time.Time{}
 		nSubs      = 0
@@ -78,7 +76,7 @@ func (s *Sequencer) runSequence(ctx context.Context) error {
 		cancel     context.CancelFunc
 	)
 
-	for idx, state := range s.sequence {
+	for idx, state := range seq {
 		// Check stop before setting current state
 		s.progress.CurrentState = state
 		s.progress.StateIndex = idx
