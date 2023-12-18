@@ -69,7 +69,7 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
 		timeoutCtx context.Context
 		cancel     context.CancelFunc
 	)
-	x
+	
 	for idx, state := range seq {
 		// Check stop before setting current state
 		s.progress.CurrentState = state
