@@ -172,8 +172,8 @@ func (t *Tracer) Close() error {
 }
 
 // Error returns the error set during trace execution
-func (t *Tracer) Error() string {
-	return t.err.Error()
+func (t *Tracer) Error() error {
+	return t.err.Err()
 }
 
 // fetchData fetches CAN frames from the socket and sends them over a buffered channel
