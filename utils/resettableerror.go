@@ -14,12 +14,8 @@ func NewResettaleError() *ResettableError {
 	}
 }
 
-func (r *ResettableError) Error() string {
-	if r.err != nil {
-		return r.err.Error()
-	}
-
-	return ""
+func (r *ResettableError) Err() error {
+	return r.err
 }
 
 func (r *ResettableError) Set(err error) {
