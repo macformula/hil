@@ -50,7 +50,6 @@ func (s *Sequencer) Run(ctx context.Context, seq Sequence) error {
 		StateIndex:    0,
 		Complete:      false,
 		Sequence:      seq,
-		TotalStates:   len(seq),
 	}
 
 	err := s.runSequence(ctx, seq)
@@ -69,7 +68,7 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
 		timeoutCtx context.Context
 		cancel     context.CancelFunc
 	)
-	
+
 	for idx, state := range seq {
 		// Check stop before setting current state
 		s.progress.CurrentState = state
@@ -132,4 +131,8 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
 // The Sequencer will stop executing all remaining states in the Sequence if it encounters a fatal error.
 func (s *Sequencer) FatalError() error {
 	return s.fatalErr.Err()
+}
+
+func (s *Sequencer) ResetFatalError() {
+	s.fatalErr.Reset()
 }

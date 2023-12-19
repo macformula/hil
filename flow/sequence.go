@@ -12,5 +12,4 @@ type Progress struct {
 	Complete      bool
 	Sequence      Sequence
 	StateDuration []time.Duration
-	TotalStates   int
 }

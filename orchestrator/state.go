@@ -6,5 +6,5 @@ const (
 	Unknown State = iota
 	Idle
 	Running
-	Error
+	FatalError
 )
