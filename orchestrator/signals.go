@@ -27,9 +27,15 @@ type StartSignal struct {
 	Metadata map[string]string
 }
 
-type ResultSignal struct {
+type ResultsSignal struct {
 	TestId    TestId
 	IsPassing bool
 	// Should be of type Tag, will replace this later
 	FailedTags []string
 }
+
+type CancelTestSignal struct {
+	TestId TestId
+}
+
+type RecoverFromFatalSignal struct{}

@@ -77,7 +77,9 @@ func (o *Orchestrator) Run(ctx context.Context) error {
 
 			err := o.sequencer.Run(ctx, seq)
 			if err != nil {
-				// TODO: figure out how to manage errors
+				// This would be a fatal error unrelated to state logic
+				o.state = FatalError
+				o.fatalErr.Set(err)
 			}
 
 			err = o.sequencer.FatalError()
@@ -124,23 +126,23 @@ func (o *Orchestrator) monitorDispatcher(ctx context.Context, d Dispatcher) {
 
 			switch o.state {
 			case Idle, Running:
-				o.l.Info("test is not in fatal error state")
+				o.l.Info("orchestrator is not in fatal error state")
 			case FatalError:
 				o.recoverFatal <- struct{}{}
 			}
-		case seq := <-d.Start():
+		case startSignal := <-d.Start():
 			o.l.Info("start signal received")
 
 			switch o.state {
 			case Idle:
-				o.startSequence <- seq
+				o.startSequence <- startSignal.Seq
 			case Running:
 				o.l.Info("test is already running")
 			case FatalError:
 				o.l.Info("orchestrator is in fatal error state, must recover from fatal error")
 			}
-		case <-d.Quit():
-			o.l.Info("quit signal received")
+		case testId := <-d.CancelTest():
+			o.l.Info("cancel test signal received")
 
 			o.quit <- struct{}{}
 			return
