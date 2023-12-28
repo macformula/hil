@@ -1,12 +1,19 @@
+import pytest
+from jinja2 import Template, Environment, FileSystemLoader
 from tag import Tag
 from typing import Union
 import yaml
 import jsonschema
+import datetime
+import os
 
+# File paths
+TEMPLATE_FILE_PATH = "./results/server/tm.py.jinja"
 
 class ResultAccumulator:
     def __init__(self, tag_file_path: str, schema_file_path: str) -> None:
         self.__parse_args(tag_file_path, schema_file_path)
+        # print(self.tag_db)
         self.tag_submissions = {}
 
     def submit_tag(self, tag_id: str, value: any) ->Union[bool, KeyError]:
@@ -16,10 +23,6 @@ class ResultAccumulator:
             return is_passing, None
         except KeyError as e:
             return False, e
-    
-    def trigger_pytest(self):
-        for tag_id, tag in self.tag_db:
-            assert tag.is_passing(self.tag_submissions[tag_id])
 
     def __parse_args(self, tag_file_path: str, schema_file_path: str) -> None:
             self.tag_db = {}
@@ -60,3 +63,32 @@ class ResultAccumulator:
 
         # Validate against the schema
         jsonschema.validate(tags_data, schema)
+
+    @staticmethod
+    def load_template_from_file(file_path) -> Template:
+        """Loads a jinja template from a file"""
+        with open(file_path, 'r') as file:
+            template_content = file.read()
+        return Template(template_content)
+
+    def __generate_test_file(self, tag_ids: list) -> None:
+        """Creates file from tag submissions, runs tests on it, then deletes it"""
+        template = self.load_template_from_file(TEMPLATE_FILE_PATH)
+        test_file_content = template.render(tag_db=self.tag_db, tag_submissions=self.tag_submissions, tag_ids=tag_ids)
+
+        test_file_path = "results/server/temp_test_file.py"
+        with open(test_file_path, "w") as file:
+            file.write(test_file_content)
+
+        dt = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        html = f"--html=logs/pytest_report_{dt}.html"
+        pytest.main(["-v",  "--showlocals",
+            "--durations=10", test_file_path, html], plugins=[self])
+
+        os.remove(test_file_path)
+
+    def generate_and_run_tests(self) -> None:
+        """Wrapper for generate_test_file and pytest.main
+        the full RA tests w/ reports are run with this one"""
+        tag_ids = list(self.tag_submissions.keys())
+        self.__generate_test_file(tag_ids)
