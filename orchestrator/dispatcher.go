@@ -2,15 +2,15 @@ package orchestrator
 
 import (
 	"context"
-	"github.com/macformula/hil/flow"
 	"io"
 )
 
 type Dispatcher interface {
 	io.Closer
-	Open(ctx context.Context) error
-	Start() <-chan flow.Sequence
-	Quit() <-chan struct{}
+	Open(context.Context) error
+	Start() <-chan StartSignal
+	CancelTest() <-chan TestId
 	RecoverFromFatal() <-chan struct{}
-	Progress() chan flow.Progress
+	Status() chan<- StatusSignal
+	Results() chan<- ResultSignal
 }

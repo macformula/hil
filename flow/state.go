@@ -5,16 +5,23 @@ import (
 	"time"
 )
 
+// Sequence is a list of states that will be run in the order provided.
+type Sequence []State
+
 // State is a set of logic that gets executed as a part of a Sequence.
 type State interface {
-	// Name of the state, should be in lower_snake_case
+	// Name of the state, should be in lower_snake_case.
 	Name() string
-	// Setup will be called before run, an error here will result in a fatal error in the sequencer
+	// Setup will be called before Run.
 	Setup(ctx context.Context) error
-	// Run should be responsible for executing the main logic of the state
+	// Run should be responsible for executing the main logic of the State.
 	Run(ctx context.Context) error
-	// Timeout is the max duration of time the state will be allowed to run for
+	// SubmitResults will be called after Run. It returns the overall pass/fail, and the failed tags.
+	SubmitResults(ctx context.Context) (bool, []string, error)
+	// ContinueOnFail indicates whether the Sequencer should continue running next states if the State fails.
+	ContinueOnFail() bool
+	// Timeout is the max duration of time the state will be allowed to run for.
 	Timeout() time.Duration
-	// FatalError indicates that there is likely some hardware failure, or some other type of non-recoverable error
+	// FatalError indicates that there is likely some hardware failure, or some other type of non-recoverable error.
 	FatalError() error
 }
