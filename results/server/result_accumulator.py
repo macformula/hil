@@ -1,4 +1,3 @@
-
 from tag import Tag
 from typing import Union
 import yaml
@@ -49,7 +48,7 @@ class ResultAccumulator:
 
                     self.tag_db[tag_id] = newTag
 
-
+    
     def __validate_tags(self, tags_file_path, schema_file_path) -> bool:
         # Load YAML schema
         with open(schema_file_path, 'r') as schema_file:

@@ -1,6 +1,11 @@
 import yaml
 from jsonschema import validate
 
+# Paths to your YAML files
+tags_schema_yaml_path = "./results/server/schema/tags_schema.json"
+tags_yaml_path_good = "./results/server/good_tags.yaml"
+tags_yaml_path_bad = "./results/server/bad_tags.yaml"
+
 def validate_tags(tags_file_path, schema_file_path) -> bool:
     # Load YAML schema
     with open(schema_file_path, 'r') as schema_file:
@@ -18,10 +23,6 @@ def validate_tags(tags_file_path, schema_file_path) -> bool:
         print(f"Validation error: {e}")
         return False
 
-# Paths to your YAML files
-tags_schema_yaml_path = "tags_schema.json"
-tags_yaml_path_good = "good_tags.yaml"
-tags_yaml_path_bad = "bad_tags.yaml"
 
 # Validate the YAML data against the schema
 if validate_tags(tags_yaml_path_good, tags_schema_yaml_path):
