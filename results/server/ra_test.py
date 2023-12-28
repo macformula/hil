@@ -1,12 +1,13 @@
 from result_accumulator import ResultAccumulator
 
+
 class RATest:
     """Singleton type test class for ResultAccumulator
     This takes place of the main process (submit tags and run tests)
-    Note this same class is used within the jinja template to refer to the 
+    Note this same class is used within the jinja template to refer to the
     same submissions here
     TODO: submit tags and test them through gRPC"""
-    
+
     _ra = None
 
     @classmethod
@@ -39,5 +40,3 @@ if __name__ == "__main__":
     RATest.initialize_ra()
     ra = RATest.get_ra()
     ra.generate_and_run_tests()
-
-

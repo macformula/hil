@@ -17,7 +17,14 @@ class SubmitTagRequest(_message.Message):
     value_int: int
     value_float: float
     value_bool: bool
-    def __init__(self, tag: _Optional[str] = ..., value_str: _Optional[str] = ..., value_int: _Optional[int] = ..., value_float: _Optional[float] = ..., value_bool: bool = ...) -> None: ...
+    def __init__(
+        self,
+        tag: _Optional[str] = ...,
+        value_str: _Optional[str] = ...,
+        value_int: _Optional[int] = ...,
+        value_float: _Optional[float] = ...,
+        value_bool: bool = ...,
+    ) -> None: ...
 
 class SubmitTagReply(_message.Message):
     __slots__ = ["success"]

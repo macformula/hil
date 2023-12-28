@@ -16,15 +16,15 @@ class TagTunnelStub(object):
             channel: A grpc.Channel.
         """
         self.SubmitTag = channel.unary_unary(
-                '/ResultsProcessor.TagTunnel/SubmitTag',
-                request_serializer=results__pb2.SubmitTagRequest.SerializeToString,
-                response_deserializer=results__pb2.SubmitTagReply.FromString,
-                )
+            "/ResultsProcessor.TagTunnel/SubmitTag",
+            request_serializer=results__pb2.SubmitTagRequest.SerializeToString,
+            response_deserializer=results__pb2.SubmitTagReply.FromString,
+        )
         self.CompleteTest = channel.unary_unary(
-                '/ResultsProcessor.TagTunnel/CompleteTest',
-                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-                response_deserializer=results__pb2.CompleteTestReply.FromString,
-                )
+            "/ResultsProcessor.TagTunnel/CompleteTest",
+            request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            response_deserializer=results__pb2.CompleteTestReply.FromString,
+        )
 
 
 class TagTunnelServicer(object):
@@ -33,68 +33,93 @@ class TagTunnelServicer(object):
     def SubmitTag(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def CompleteTest(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
 
 def add_TagTunnelServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'SubmitTag': grpc.unary_unary_rpc_method_handler(
-                    servicer.SubmitTag,
-                    request_deserializer=results__pb2.SubmitTagRequest.FromString,
-                    response_serializer=results__pb2.SubmitTagReply.SerializeToString,
-            ),
-            'CompleteTest': grpc.unary_unary_rpc_method_handler(
-                    servicer.CompleteTest,
-                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                    response_serializer=results__pb2.CompleteTestReply.SerializeToString,
-            ),
+        "SubmitTag": grpc.unary_unary_rpc_method_handler(
+            servicer.SubmitTag,
+            request_deserializer=results__pb2.SubmitTagRequest.FromString,
+            response_serializer=results__pb2.SubmitTagReply.SerializeToString,
+        ),
+        "CompleteTest": grpc.unary_unary_rpc_method_handler(
+            servicer.CompleteTest,
+            request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            response_serializer=results__pb2.CompleteTestReply.SerializeToString,
+        ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'ResultsProcessor.TagTunnel', rpc_method_handlers)
+        "ResultsProcessor.TagTunnel", rpc_method_handlers
+    )
     server.add_generic_rpc_handlers((generic_handler,))
 
 
- # This class is part of an EXPERIMENTAL API.
+# This class is part of an EXPERIMENTAL API.
 class TagTunnel(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def SubmitTag(request,
+    def SubmitTag(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/ResultsProcessor.TagTunnel/SubmitTag',
+            "/ResultsProcessor.TagTunnel/SubmitTag",
             results__pb2.SubmitTagRequest.SerializeToString,
             results__pb2.SubmitTagReply.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
 
     @staticmethod
-    def CompleteTest(request,
+    def CompleteTest(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/ResultsProcessor.TagTunnel/CompleteTest',
+            "/ResultsProcessor.TagTunnel/CompleteTest",
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             results__pb2.CompleteTestReply.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
