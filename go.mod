@@ -4,7 +4,7 @@ go 1.21.1
 
 require (
 	github.com/ethereum/go-ethereum v1.13.5
-	github.com/google/uuid v1.3.1
+	github.com/google/uuid v1.3.0
 	github.com/pkg/errors v0.9.1
 	go.einride.tech/can v0.7.0
 	go.uber.org/zap v1.26.0

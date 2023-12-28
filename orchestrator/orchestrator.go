@@ -10,6 +10,10 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	_loggerName = "orchestrator"
+)
+
 type Orchestrator struct {
 	l     *zap.Logger
 	state State
@@ -25,23 +29,19 @@ type Orchestrator struct {
 	fatalErr *utils.ResettableError
 }
 
-type Option = func(*Orchestrator)
-
-func WithDispatcher(d Dispatcher) Option {
-	return func(o *Orchestrator) {
-		o.dispatchers = append(o.dispatchers, d)
-	}
-}
-
-func NewOrchestrator(l *zap.Logger, opts ...Option) *Orchestrator {
+func NewOrchestrator(l *zap.Logger, dispatchers ...Dispatcher) *Orchestrator {
 	ret := &Orchestrator{
-		l:        l,
-		state:    Idle,
-		fatalErr: utils.NewResettaleError(),
+		l:             l.Named(_loggerName),
+		state:         Idle,
+		fatalErr:      utils.NewResettaleError(),
+		sequencer:     flow.NewSequencer(l),
+		startSequence: make(chan flow.Sequence),
+		recoverFatal:  make(chan struct{}),
+		quit:          make(chan struct{}),
 	}
 
-	for _, opt := range opts {
-		opt(ret)
+	for _, d := range dispatchers {
+		ret.dispatchers = append(ret.dispatchers, d)
 	}
 
 	return ret
@@ -83,6 +83,9 @@ func (o *Orchestrator) Run(ctx context.Context) error {
 			err = o.sequencer.FatalError()
 			if err != nil {
 				o.fatalErr.Set(err)
+				o.state = FatalError
+			} else {
+				o.state = Idle
 			}
 		case <-o.recoverFatal:
 			o.state = Idle
@@ -96,7 +99,9 @@ func (o *Orchestrator) Run(ctx context.Context) error {
 
 func (o *Orchestrator) Close() error {
 	var resettableErr = utils.NewResettaleError()
-	// Setup dispatchers
+
+	o.l.Info("closing orchestrator")
+
 	for _, d := range o.dispatchers {
 		err := d.Close()
 		if err != nil {
