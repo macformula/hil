@@ -38,7 +38,7 @@ func SetupSequencer(t *testing.T, logFileName string) (*flow.Sequencer, *zap.Log
 				}
 
 				l.Info("received progress update",
-					zap.String("completion", fmt.Sprintf("%f%%", float64(p.StateIndex)*100/float64(p.TotalStates))),
+					zap.String("completion", fmt.Sprintf("%f%%", float64(p.StateIndex)*100/float64(len(p.Sequence)))),
 					zap.String("current_state", p.CurrentState.Name()),
 				)
 

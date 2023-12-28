@@ -62,15 +62,11 @@ func (s *Sequencer) Run(ctx context.Context, seq Sequence) error {
 
 func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
 	var (
-		startTime  = time.Time{}
-		nSubs      = 0
-		onceErr    = utils.NewResettaleError()
-		timeoutCtx context.Context
-		cancel     context.CancelFunc
+		onceErr = utils.NewResettaleError()
+		nSubs   = 0
 	)
 
 	for idx, state := range seq {
-		// Check stop before setting current state
 		s.progress.CurrentState = state
 		s.progress.StateIndex = idx
 
@@ -79,42 +75,10 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
 
 		s.l.Info("starting next state", zap.String("state", state.Name()))
 
-		startTime = time.Now()
+		continueRunning, err := s.runState(ctx, state)
 
-		timeoutCtx, cancel = context.WithTimeout(ctx, state.Timeout())
+		//TODO: figure out how to handle this error
 
-		err := state.Setup(timeoutCtx)
-		if err != nil {
-			s.fatalErr.Set(errors.Wrapf(err, "setup (%s)", state.Name()))
-
-			// cancel timeoutCtx, do not use defer here because of for loop
-			cancel()
-
-			break
-		}
-
-		// cancel timeoutCtx, do not use defer here because of for loop
-		cancel()
-
-		timeoutCtx, cancel = context.WithTimeout(ctx, state.Timeout())
-
-		err = state.Run(timeoutCtx)
-		if err != nil {
-			onceErr.Set(errors.Wrapf(err, "run (%s)", state.Name()))
-		}
-
-		// cancel timeoutCtx, do not use defer here because of for loop
-		cancel()
-
-		s.progress.StateDuration[idx] = time.Since(startTime)
-
-		err = state.FatalError()
-		if err != nil {
-			s.l.Info("encountered fatal error", zap.String("state", state.Name()), zap.Error(err))
-			s.fatalErr.Set(errors.Wrapf(err, "fatal error (%s)", state.Name()))
-
-			break
-		}
 	}
 
 	// Complete
@@ -125,6 +89,55 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
 	_ = s.progressFeed.Send(s.progress)
 
 	return onceErr.Err()
+}
+
+func (s *Sequencer) runState(ctx context.Context, state State) error {
+	var (
+		startTime  = time.Time{}
+		timeoutCtx context.Context
+		cancel     context.CancelFunc
+		regularErr = utils.NewResettaleError()
+	)
+
+	startTime = time.Now()
+
+	timeoutCtx, cancel = context.WithTimeout(ctx, state.Timeout())
+	defer cancel()
+
+	err := state.Setup(timeoutCtx)
+	if err != nil {
+		s.l.Error("received error during setup",
+			zap.String("state", state.Name()),
+			zap.Error(err))
+		// TODO: error encountered call to result processor
+
+	}
+
+	// Check for fatal error after setup
+	err = state.FatalError()
+	if err != nil {
+		s.fatalErr.Set()
+	}
+
+	timeoutCtx, cancel = context.WithTimeout(ctx, state.Timeout())
+
+	err = state.Run(timeoutCtx)
+	if err != nil {
+		onceErr.Set(errors.Wrapf(err, "run (%s)", state.Name()))
+	}
+
+	// cancel timeoutCtx, do not use defer here because of for loop
+	cancel()
+
+	s.progress.StateDuration[idx] = time.Since(startTime)
+
+	err = state.FatalError()
+	if err != nil {
+		s.l.Info("encountered fatal error", zap.String("state", state.Name()), zap.Error(err))
+		s.fatalErr.Set(errors.Wrapf(err, "fatal error (%s)", state.Name()))
+
+		break
+	}
 }
 
 // FatalError indicates that there is an error that requires intervention.
