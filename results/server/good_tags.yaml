@@ -1,0 +1,20 @@
+# TODO: make a schema for this
+PV001:
+  description: "Pre startup module voltage"
+  compareOp: "GELE"
+  lowerLimit: 95.5
+  upperLimit: 104.5
+  type: float
+  unit: V
+PV002:
+  description: "Pre startup pack voltage"
+  compareOp: "LOG"
+  upperLimit: 10
+  type: float
+  unit: "V"
+PV003:
+  description: Pre startup HVIL status
+  compareOp: "EQ"
+  expectedVal: "Hello"
+  type: string
+  unit: "V"
