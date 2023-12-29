@@ -17,7 +17,7 @@ type State interface {
 	// Run should be responsible for executing the main logic of the State.
 	Run(ctx context.Context) error
 	// GetResults will be called after Run. It returns a map of tag-value pairs.
-	GetResults(ctx context.Context) map[Tag]any
+	GetResults() map[Tag]any
 	// ContinueOnFail indicates whether the Sequencer should continue running next states if the State fails.
 	ContinueOnFail() bool
 	// Timeout is the max duration of time the state will be allowed to run for.
