@@ -96,3 +96,5 @@ class ResultAccumulator:
         the full RA tests w/ reports are run with this one"""
         tag_ids = list(self.tag_submissions.keys())
         self.__generate_test_file(tag_ids)
+        # reset cached submissions
+        self.tag_submissions = {}
