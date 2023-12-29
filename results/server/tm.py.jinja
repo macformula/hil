@@ -13,6 +13,39 @@ def tag_submissions():
 
 {% for tag_id in tag_ids %}
 def test_tag_{{ tag_id }}(tag_db, tag_submissions):
+    """
+    Test for {{ tag_id }}.
+
+    This test checks if the submitted value for the tag '{{ tag_id }}'
+    satisfies the conditions specified by the tag definition in the tag database.
+
+    Raises:
+        AssertionError: If the submitted value does not meet the conditions specified by the tag.
+
+    Condition:
+        {% set tag = tag_db[tag_id] %}
+        {% if tag.comp_op == "GELE" %}
+            The submitted value should be greater than or equal to {{ tag.lower_limit }}
+            and less than or equal to {{ tag.upper_limit }}.
+        {% elif tag.comp_op == "GTLT" %}
+            The submitted value should be greater than {{ tag.lower_limit }}
+            and less than {{ tag.upper_limit }}.
+        {% elif tag.comp_op == "EQ" %}
+            The submitted value should be equal to {{ tag.expected_val }}.
+        {% elif tag.comp_op == "GT" %}
+            The submitted value should be greater than {{ tag.lower_limit }}.
+        {% elif tag.comp_op == "GE" %}
+            The submitted value should be greater than or equal to {{ tag.lower_limit }}.
+        {% elif tag.comp_op == "LT" %}
+            The submitted value should be less than {{ tag.upper_limit }}.
+        {% elif tag.comp_op == "LE" %}
+            The submitted value should be less than or equal to {{ tag.upper_limit }}.
+        {% elif tag.comp_op == "LOG" %}
+            Always True.
+        {% else %}
+            Unsupported comparison operator.
+        {% endif %}
+    """
     tag = tag_db["{{ tag_id }}"]
     tag_value = tag_submissions["{{ tag_id }}"]
     print(f"value submitted: {tag_value}")

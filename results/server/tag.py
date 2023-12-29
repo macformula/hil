@@ -28,8 +28,8 @@ class Tag:
         self.type = type
         self.unit = unit
 
-    # Determines whether the value passes the give test tag
     def is_passing(self, value: any) -> bool:
+        "Determines whether the value passes the given test tag"
         if self.comp_op == "GELE":
             return self.__test_gele(value)
         elif self.comp_op == "GTLT":
@@ -49,32 +49,32 @@ class Tag:
         else:
             return False
 
-    # Greater than or Equal to & Less than or Equal to
     def __test_gele(self, value: any) -> bool:
+        """Greater than or equal to and less than or equal to"""
         return (value >= self.lower_limit) and (value <= self.upper_limit)
 
-    # Greater than & Less than
     def __test_gtlt(self, value: any):
+        """Greater than and less than"""
         return (value > self.lower_limit) and (value < self.upper_limit)
 
-    # Equal to
     def __test_equal(self, value: any):
+        """Check if the value is equal to the expected value"""
         return value == self.expected_val
 
-    # Greater than
     def __test_gt(self, value: any):
+        """Check if the value is greater than the lower limit"""
         return value > self.lower_limit
 
-    # Greater than or Equal to
     def __test_ge(self, value: any):
+        """Check if the value is greater than or equal to the lower limit"""
         return value >= self.lower_limit
 
-    # Less than
     def __test_lt(self, value: any):
+        """Check if the value is less than the upper limit"""
         return value < self.upper_limit
 
-    # Less than or equal to
     def __test_le(self, value: any):
+        """Check if the value is less than or equal to the upper limit"""
         return value <= self.upper_limit
 
     def __str__(self) -> str:

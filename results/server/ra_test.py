@@ -25,10 +25,6 @@ class RATest:
 
         b, err = cls._ra.submit_tag("PV003", "Hello")
 
-        if err is not None:
-            print("Tag does not exist:", err)
-        else:
-            print(b)
         # Should fail
         b, err = cls._ra.submit_tag("PV001", 1)
 
