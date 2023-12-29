@@ -31,7 +31,7 @@ type ResultsSignal struct {
 	TestId    TestId
 	IsPassing bool
 	// Should be of type Tag, will replace this later
-	FailedTags []string
+	FailedTags []flow.Tag
 }
 
 type CancelTestSignal struct {
