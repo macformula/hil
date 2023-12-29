@@ -21,14 +21,17 @@ type Sequencer struct {
 	progressFeed event.Feed
 
 	fatalErr *utils.ResettableError
+
+	rp ResultProcessorIface
 }
 
 // NewSequencer returns a Sequencer object reference.
-func NewSequencer(l *zap.Logger) *Sequencer {
+func NewSequencer(rp ResultProcessorIface, l *zap.Logger) *Sequencer {
 	return &Sequencer{
 		l:            l.Named(_loggerName),
 		progressFeed: event.Feed{},
 		fatalErr:     utils.NewResettaleError(),
+		rp:           rp,
 	}
 }
 
@@ -92,7 +95,6 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
 		if err != nil {
 			return errors.Wrap(err, "process results")
 		}
-		//TODO: figure out how to handle this error
 
 	}
 
@@ -170,7 +172,32 @@ func (s *Sequencer) runState(ctx context.Context, state State) error {
 	return regularErr.Err()
 }
 
-func (s *Sequencer) processResults(ctx context.Context, state State, err error) error {
-	// TODO: integrate ResultProcessor
+func (s *Sequencer) processResults(ctx context.Context, state State, regularErr error) error {
+	var statePassed = true
+
+	if regularErr != nil {
+		statePassed = false
+
+		err := s.rp.EncounteredError(regularErr)
+		if err != nil {
+			return errors.Wrap(err, "encountered error")
+		}
+	}
+
+	results := state.GetResults()
+
+	for tag, value := range results {
+		isPassing, err := s.rp.SubmitTag(ctx, tag.TagID, value)
+		if err != nil {
+			return errors.Wrap(err, "submit tag")
+		}
+
+		if !isPassing {
+			statePassed = false
+
+			s.fail
+		}
+	}
+
 	return nil
 }

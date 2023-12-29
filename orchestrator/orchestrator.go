@@ -18,9 +18,9 @@ type Orchestrator struct {
 	l     *zap.Logger
 	state State
 
-	sequencer   *flow.Sequencer
+	sequencer   Sequencer
 	dispatchers []Dispatcher
-	progSubs    []event.Subscription
+	progSub     event.Subscription
 
 	startSequence chan flow.Sequence
 	recoverFatal  chan struct{}
@@ -29,12 +29,12 @@ type Orchestrator struct {
 	fatalErr *utils.ResettableError
 }
 
-func NewOrchestrator(l *zap.Logger, dispatchers ...Dispatcher) *Orchestrator {
+func NewOrchestrator(l *zap.Logger, sequencer Sequencer, dispatchers ...Dispatcher) *Orchestrator {
 	ret := &Orchestrator{
 		l:             l.Named(_loggerName),
 		state:         Idle,
 		fatalErr:      utils.NewResettaleError(),
-		sequencer:     flow.NewSequencer(l),
+		sequencer:     sequencer,
 		startSequence: make(chan flow.Sequence),
 		recoverFatal:  make(chan struct{}),
 		quit:          make(chan struct{}),
@@ -58,9 +58,6 @@ func (o *Orchestrator) Open(ctx context.Context) error {
 		if err != nil {
 			return errors.Wrap(err, "dispatcher open")
 		}
-
-		// Subscribe all dispatchers to sequencer progress
-		o.progSubs = append(o.progSubs, o.sequencer.SubscribeToProgress(d.Progress()))
 
 		// Monitor Dispatcher signals
 		go o.monitorDispatcher(ctx, d)
@@ -111,9 +108,7 @@ func (o *Orchestrator) Close() error {
 		}
 	}
 
-	for _, sub := range o.progSubs {
-		sub.Unsubscribe()
-	}
+	o.progSub.Unsubscribe()
 
 	return nil
 }
@@ -141,7 +136,7 @@ func (o *Orchestrator) monitorDispatcher(ctx context.Context, d Dispatcher) {
 			case FatalError:
 				o.l.Info("orchestrator is in fatal error state, must recover from fatal error")
 			}
-		case testId := <-d.CancelTest():
+		case cancelTestSignal := <-d.CancelTest():
 			o.l.Info("cancel test signal received")
 
 			o.quit <- struct{}{}
