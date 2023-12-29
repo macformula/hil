@@ -6,6 +6,7 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
+
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
@@ -14,20 +15,22 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rresults.proto\x12\x10ResultsProcessor\x1a\x1bgoogle/protobuf/empty.proto\"~\n\x10SubmitTagRequest\x12\x0b\n\x03tag\x18\x01 \x01(\t\x12\x13\n\tvalue_str\x18\x02 \x01(\tH\x00\x12\x13\n\tvalue_int\x18\x03 \x01(\x05H\x00\x12\x15\n\x0bvalue_float\x18\x04 \x01(\x02H\x00\x12\x14\n\nvalue_bool\x18\x05 \x01(\x08H\x00\x42\x06\n\x04\x64\x61ta\"!\n\x0eSubmitTagReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\"$\n\x11\x43ompleteTestReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\x32\xaf\x01\n\tTagTunnel\x12S\n\tSubmitTag\x12\".ResultsProcessor.SubmitTagRequest\x1a .ResultsProcessor.SubmitTagReply\"\x00\x12M\n\x0c\x43ompleteTest\x12\x16.google.protobuf.Empty\x1a#.ResultsProcessor.CompleteTestReply\"\x00\x42\tZ\x07.clientb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
+    b'\n\rresults.proto\x12\x10ResultsProcessor\x1a\x1bgoogle/protobuf/empty.proto"~\n\x10SubmitTagRequest\x12\x0b\n\x03tag\x18\x01 \x01(\t\x12\x13\n\tvalue_str\x18\x02 \x01(\tH\x00\x12\x13\n\tvalue_int\x18\x03 \x01(\x05H\x00\x12\x15\n\x0bvalue_float\x18\x04 \x01(\x02H\x00\x12\x14\n\nvalue_bool\x18\x05 \x01(\x08H\x00\x42\x06\n\x04\x64\x61ta"!\n\x0eSubmitTagReply\x12\x0f\n\x07success\x18\x01 \x01(\x08"$\n\x11\x43ompleteTestReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\x32\xaf\x01\n\tTagTunnel\x12S\n\tSubmitTag\x12".ResultsProcessor.SubmitTagRequest\x1a .ResultsProcessor.SubmitTagReply"\x00\x12M\n\x0c\x43ompleteTest\x12\x16.google.protobuf.Empty\x1a#.ResultsProcessor.CompleteTestReply"\x00\x42\tZ\x07.clientb\x06proto3'
+)
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'results_pb2', _globals)
+_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, "results_pb2", _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
-  DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z\007.client'
-  _globals['_SUBMITTAGREQUEST']._serialized_start=64
-  _globals['_SUBMITTAGREQUEST']._serialized_end=190
-  _globals['_SUBMITTAGREPLY']._serialized_start=192
-  _globals['_SUBMITTAGREPLY']._serialized_end=225
-  _globals['_COMPLETETESTREPLY']._serialized_start=227
-  _globals['_COMPLETETESTREPLY']._serialized_end=263
-  _globals['_TAGTUNNEL']._serialized_start=266
-  _globals['_TAGTUNNEL']._serialized_end=441
+    DESCRIPTOR._options = None
+    DESCRIPTOR._serialized_options = b"Z\007.client"
+    _globals["_SUBMITTAGREQUEST"]._serialized_start = 64
+    _globals["_SUBMITTAGREQUEST"]._serialized_end = 190
+    _globals["_SUBMITTAGREPLY"]._serialized_start = 192
+    _globals["_SUBMITTAGREPLY"]._serialized_end = 225
+    _globals["_COMPLETETESTREPLY"]._serialized_start = 227
+    _globals["_COMPLETETESTREPLY"]._serialized_end = 263
+    _globals["_TAGTUNNEL"]._serialized_start = 266
+    _globals["_TAGTUNNEL"]._serialized_end = 441
 # @@protoc_insertion_point(module_scope)
