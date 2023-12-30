@@ -9,7 +9,9 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/orchestrator"
+	"go.uber.org/zap"
 	"io"
+	"log"
 	"os"
 )
 
@@ -20,14 +22,11 @@ type cliInterface interface {
 	CancelTest() chan orchestrator.CancelTestSignal
 	Status() chan orchestrator.StatusSignal
 	RecoverFromFatal() chan orchestrator.RecoverFromFatalSignal
+	Results() chan orchestrator.ResultsSignal
 }
 
-func newCli() *model {
-	items := []list.Item{
-		item{title: "All Tests", desc: "Run all Test Suites"},
-		item{title: "AMK Test Suite", desc: "Runs all tests regarding the motor"},
-		item{title: "BMS Test Suite", desc: "Runs all tests regarding the battery"},
-	}
+func newCli(l *zap.Logger) *model {
+	items := getItems()
 
 	status := orchestrator.StatusSignal{
 		OrchestratorState: orchestrator.Idle,
@@ -45,16 +44,26 @@ func newCli() *model {
 	llist.Title = "HIL"
 
 	model := model{
-		list:        llist,
-		startChan:   make(chan orchestrator.StartSignal),
-		resultsChan: make(chan orchestrator.ResultsSignal),
-		statusChan:  make(chan orchestrator.StatusSignal),
-		status:      status,
-		spinner:     sp,
-		results:     make([]result, showLastResults),
+		l:             l.Named(_loggerName),
+		list:          llist,
+		startChan:     make(chan orchestrator.StartSignal),
+		resultsChan:   make(chan orchestrator.ResultsSignal),
+		statusChan:    make(chan orchestrator.StatusSignal, 2),
+		statusSignal:  status,
+		currentScreen: status.OrchestratorState,
+		spinner:       sp,
+		results:       make([]result, showLastResults),
 	}
 
 	return &model
+}
+
+func getItems() []list.Item {
+	return []list.Item{
+		item{title: "All Tests", desc: "Run all Test Suites"},
+		item{title: "AMK Test Suite", desc: "Runs all tests regarding the motor"},
+		item{title: "BMS Test Suite", desc: "Runs all tests regarding the battery"},
+	}
 }
 
 func (c model) Close() error { // doesnt work
@@ -65,6 +74,8 @@ func (c model) Close() error { // doesnt work
 
 func (c model) Open(ctx context.Context) error {
 	go c.run()
+	go c.monitorDispatcher(ctx)
+
 	return nil
 }
 
@@ -95,4 +106,47 @@ func (c model) RecoverFromFatal() chan orchestrator.RecoverFromFatalSignal {
 
 func (c model) Status() chan orchestrator.StatusSignal {
 	return c.statusChan
+}
+
+func (c model) Results() chan orchestrator.ResultsSignal {
+	return c.resultsChan
+}
+
+func (c model) monitorDispatcher(ctx context.Context) {
+	for {
+		select {
+		case status := <-c.statusChan:
+			c.l.Info("status signal received")
+
+			c.statusSignal = status
+			c.currentScreen = status.OrchestratorState
+
+			log.Printf("%s Inside monitorDispatcher %s", status, status.OrchestratorState)
+
+			c.results = c.results[:0]
+			progress := status.Progress
+			for i, passed := range progress.StatePassed {
+				duration := progress.StateDuration[i]
+
+				desc := "Passed"
+				if !passed {
+					desc = "Failed"
+				}
+
+				c.results = append(c.results, result{
+					duration: duration,
+					desc:     desc,
+				})
+			}
+		case results := <-c.resultsChan:
+			c.l.Info("results signal received")
+
+			c.resultsSignal = results
+		case <-ctx.Done():
+			c.l.Info("context done signal received")
+
+			c.Close()
+			return
+		}
+	}
 }

@@ -10,10 +10,9 @@ import (
 	"github.com/macformula/hil/dispatcher/test"
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/orchestrator"
-	"log"
-	"math/rand"
-
 	"github.com/muesli/reflow/indent"
+	"go.uber.org/zap"
+	"log"
 	"time"
 )
 
@@ -42,30 +41,34 @@ type result struct {
 // toss Cli in here with its interface
 // rename model to cli and add signals here
 type model struct {
-	list        list.Model
-	Choice      int
-	Chosen      bool
-	Ticks       int
-	Frames      int
-	Progress    float64
-	Loaded      bool
-	Quitting    bool
-	status      orchestrator.StatusSignal
-	startChan   chan orchestrator.StartSignal
-	resultsChan chan orchestrator.ResultsSignal
-	statusChan  chan orchestrator.StatusSignal
-	recoverChan chan orchestrator.RecoverFromFatalSignal
-	cancelChan  chan orchestrator.CancelTestSignal
-	program     *tea.Program
-	spinner     spinner.Model
-	results     []result
-	testToRun   uuid.UUID
+	l             *zap.Logger
+	list          list.Model
+	Choice        int
+	Chosen        bool
+	Ticks         int
+	Frames        int
+	Progress      float64
+	Loaded        bool
+	Quitting      bool
+	statusSignal  orchestrator.StatusSignal
+	resultsSignal orchestrator.ResultsSignal
+	startChan     chan orchestrator.StartSignal
+	resultsChan   chan orchestrator.ResultsSignal
+	statusChan    chan orchestrator.StatusSignal
+	recoverChan   chan orchestrator.RecoverFromFatalSignal
+	cancelChan    chan orchestrator.CancelTestSignal
+	currentScreen orchestrator.State
+	program       *tea.Program
+	spinner       spinner.Model
+	results       []result
+	testToRun     uuid.UUID
 }
 
 func (c model) Init() tea.Cmd {
+	//f := runPretendProcess(c)
 	return tea.Batch(
 		c.spinner.Tick,
-		runPretendProcess,
+		//f,
 	)
 }
 
@@ -82,7 +85,7 @@ func (c model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Hand off the message and model to the appropriate update function for the
 	// appropriate view based on the current state.
-	switch c.status.OrchestratorState {
+	switch c.currentScreen {
 	case orchestrator.Idle:
 		return updateIdle(msg, c)
 	case orchestrator.Running:
@@ -101,7 +104,7 @@ func (c model) View() string {
 		return "\n  See you later!\n\n"
 	}
 
-	switch c.status.OrchestratorState {
+	switch c.currentScreen {
 	case orchestrator.Idle:
 		//fmt.Println("Idle state")
 		s = idleView(c)
@@ -143,9 +146,11 @@ func updateIdle(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 					Metadata: m.getMetaData(i),
 				}
 			}
-
-			return m, nil
+			m.currentScreen = orchestrator.Running
+			return m, m.spinner.Tick
 		}
+	default:
+		return m, nil
 	}
 
 	var cmd tea.Cmd
@@ -170,12 +175,9 @@ func updateRunning(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		var cmd tea.Cmd
 		m.spinner, cmd = m.spinner.Update(msg)
 		return m, cmd
-	case processFinishedMsg:
-		d := time.Duration(msg)
-		res := result{desc: "hi", duration: d}
-		log.Printf("%s Job finished in %s", res.desc, res.duration)
-		m.results = append(m.results[1:], res)
-		return m, runPretendProcess
+	case frameMsg: // doesnt hit this
+		log.Printf("%s Inside updateRunning %s", m.statusSignal, m.currentScreen)
+		return m, frame()
 	default:
 		return m, nil
 	}
@@ -205,10 +207,15 @@ func idleView(m model) string {
 type processFinishedMsg time.Duration
 
 // pretendProcess simulates a long-running process.
-func runPretendProcess() tea.Msg {
-	pause := time.Duration(rand.Int63n(899)+100) * time.Millisecond
-	time.Sleep(pause)
-	return processFinishedMsg(pause)
+func runPretendProcess(m model) tea.Cmd {
+	startTime := time.Now()
+	//status := <-m.statusChan
+	//m.status = status
+	endTime := time.Now()
+	elapsedTime := endTime.Sub(startTime)
+	return func() tea.Msg {
+		return processFinishedMsg(elapsedTime)
+	}
 }
 
 func runningView(m model) string {
