@@ -21,18 +21,21 @@ type Sequencer struct {
 	progressFeed event.Feed
 
 	fatalErr *utils.ResettableError
+
+	rp ResultProcessorIface
 }
 
 // NewSequencer returns a Sequencer object reference.
-func NewSequencer(l *zap.Logger) *Sequencer {
+func NewSequencer(rp ResultProcessorIface, l *zap.Logger) *Sequencer {
 	return &Sequencer{
 		l:            l.Named(_loggerName),
 		progressFeed: event.Feed{},
 		fatalErr:     utils.NewResettaleError(),
+		rp:           rp,
 	}
 }
 
-// SubscribeToProgress subscribes to the progress of the Sequencer accross its Sequence runs.
+// SubscribeToProgress subscribes to the progress of the Sequencer across its Sequence runs.
 // The Progress channel gets updated whenever there is new information available.
 func (s *Sequencer) SubscribeToProgress(progCh chan Progress) event.Subscription {
 	return s.progressFeed.Subscribe(progCh)
@@ -60,6 +63,17 @@ func (s *Sequencer) Run(ctx context.Context, seq Sequence) error {
 	return nil
 }
 
+// FatalError indicates that there is an error that requires intervention.
+// The Sequencer will stop executing all remaining states in the Sequence if it encounters a fatal error.
+func (s *Sequencer) FatalError() error {
+	return s.fatalErr.Err()
+}
+
+// ResetFatalError sets the fatal error to nil.
+func (s *Sequencer) ResetFatalError() {
+	s.fatalErr.Reset()
+}
+
 func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
 	var (
 		onceErr = utils.NewResettaleError()
@@ -75,9 +89,12 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
 
 		s.l.Info("starting next state", zap.String("state", state.Name()))
 
-		continueRunning, err := s.runState(ctx, state)
+		regularErr := s.runState(ctx, state)
 
-		//TODO: figure out how to handle this error
+		err := s.processResults(ctx, state, regularErr)
+		if err != nil {
+			return errors.Wrap(err, "process results")
+		}
 
 	}
 
@@ -93,9 +110,9 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
 
 func (s *Sequencer) runState(ctx context.Context, state State) error {
 	var (
-		startTime  = time.Time{}
 		timeoutCtx context.Context
 		cancel     context.CancelFunc
+		startTime  time.Time
 		regularErr = utils.NewResettaleError()
 	)
 
@@ -104,48 +121,83 @@ func (s *Sequencer) runState(ctx context.Context, state State) error {
 	timeoutCtx, cancel = context.WithTimeout(ctx, state.Timeout())
 	defer cancel()
 
+	s.l.Info("setting up state", zap.String("state", state.Name()))
+
+	// Set up the state for execution
 	err := state.Setup(timeoutCtx)
 	if err != nil {
 		s.l.Error("received error during setup",
 			zap.String("state", state.Name()),
 			zap.Error(err))
-		// TODO: error encountered call to result processor
 
+		regularErr.Set(errors.Wrapf(err, "setup (%s)", state.Name()))
 	}
 
 	// Check for fatal error after setup
 	err = state.FatalError()
 	if err != nil {
-		s.fatalErr.Set()
+		s.l.Error("encountered fatal error", zap.String("state", state.Name()), zap.Error(err))
+
+		s.fatalErr.Set(errors.Wrapf(err, "fatal error during setup (%s)", state.Name()))
+	}
+
+	// If we encounter an error during setup, do not call run.
+	if regularErr.Err() != nil {
+		s.progress.StateDuration = append(s.progress.StateDuration, time.Since(startTime))
+
+		return regularErr.Err()
 	}
 
 	timeoutCtx, cancel = context.WithTimeout(ctx, state.Timeout())
+	defer cancel()
 
+	s.l.Info("running state", zap.String("state", state.Name()))
+
+	// Run the state logic
 	err = state.Run(timeoutCtx)
 	if err != nil {
-		onceErr.Set(errors.Wrapf(err, "run (%s)", state.Name()))
+		regularErr.Set(errors.Wrapf(err, "run (%s)", state.Name()))
 	}
 
-	// cancel timeoutCtx, do not use defer here because of for loop
-	cancel()
+	s.progress.StateDuration = append(s.progress.StateDuration, time.Since(startTime))
 
-	s.progress.StateDuration[idx] = time.Since(startTime)
-
+	// Check for fatal error after run
 	err = state.FatalError()
 	if err != nil {
-		s.l.Info("encountered fatal error", zap.String("state", state.Name()), zap.Error(err))
-		s.fatalErr.Set(errors.Wrapf(err, "fatal error (%s)", state.Name()))
+		s.l.Error("encountered fatal error", zap.String("state", state.Name()), zap.Error(err))
 
-		break
+		s.fatalErr.Set(errors.Wrapf(err, "fatal error during run (%s)", state.Name()))
 	}
+
+	return regularErr.Err()
 }
 
-// FatalError indicates that there is an error that requires intervention.
-// The Sequencer will stop executing all remaining states in the Sequence if it encounters a fatal error.
-func (s *Sequencer) FatalError() error {
-	return s.fatalErr.Err()
-}
+func (s *Sequencer) processResults(ctx context.Context, state State, regularErr error) error {
+	var statePassed = true
 
-func (s *Sequencer) ResetFatalError() {
-	s.fatalErr.Reset()
+	if regularErr != nil {
+		statePassed = false
+
+		err := s.rp.EncounteredError(regularErr)
+		if err != nil {
+			return errors.Wrap(err, "encountered error")
+		}
+	}
+
+	results := state.GetResults()
+
+	for tag, value := range results {
+		isPassing, err := s.rp.SubmitTag(ctx, tag.TagID, value)
+		if err != nil {
+			return errors.Wrap(err, "submit tag")
+		}
+
+		if !isPassing {
+			statePassed = false
+
+			s.fail
+		}
+	}
+
+	return nil
 }

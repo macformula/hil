@@ -18,9 +18,9 @@ type Orchestrator struct {
 	l     *zap.Logger
 	state State
 
-	sequencer   *flow.Sequencer
+	sequencer   Sequencer
 	dispatchers []Dispatcher
-	progSubs    []event.Subscription
+	progSub     event.Subscription
 
 	startSequence chan flow.Sequence
 	recoverFatal  chan struct{}
@@ -29,12 +29,12 @@ type Orchestrator struct {
 	fatalErr *utils.ResettableError
 }
 
-func NewOrchestrator(l *zap.Logger, dispatchers ...Dispatcher) *Orchestrator {
+func NewOrchestrator(l *zap.Logger, sequencer Sequencer, dispatchers ...Dispatcher) *Orchestrator {
 	ret := &Orchestrator{
 		l:             l.Named(_loggerName),
 		state:         Idle,
 		fatalErr:      utils.NewResettaleError(),
-		sequencer:     flow.NewSequencer(l),
+		sequencer:     sequencer,
 		startSequence: make(chan flow.Sequence),
 		recoverFatal:  make(chan struct{}),
 		quit:          make(chan struct{}),
@@ -59,9 +59,6 @@ func (o *Orchestrator) Open(ctx context.Context) error {
 			return errors.Wrap(err, "dispatcher open")
 		}
 
-		// Subscribe all dispatchers to sequencer progress
-		o.progSubs = append(o.progSubs, o.sequencer.SubscribeToProgress(d.Progress()))
-
 		// Monitor Dispatcher signals
 		go o.monitorDispatcher(ctx, d)
 	}
@@ -77,7 +74,9 @@ func (o *Orchestrator) Run(ctx context.Context) error {
 
 			err := o.sequencer.Run(ctx, seq)
 			if err != nil {
-				// TODO: figure out how to manage errors
+				// This would be a fatal error unrelated to state logic
+				o.state = FatalError
+				o.fatalErr.Set(err)
 			}
 
 			err = o.sequencer.FatalError()
@@ -109,9 +108,7 @@ func (o *Orchestrator) Close() error {
 		}
 	}
 
-	for _, sub := range o.progSubs {
-		sub.Unsubscribe()
-	}
+	o.progSub.Unsubscribe()
 
 	return nil
 }
@@ -124,23 +121,23 @@ func (o *Orchestrator) monitorDispatcher(ctx context.Context, d Dispatcher) {
 
 			switch o.state {
 			case Idle, Running:
-				o.l.Info("test is not in fatal error state")
+				o.l.Info("orchestrator is not in fatal error state")
 			case FatalError:
 				o.recoverFatal <- struct{}{}
 			}
-		case seq := <-d.Start():
+		case startSignal := <-d.Start():
 			o.l.Info("start signal received")
 
 			switch o.state {
 			case Idle:
-				o.startSequence <- seq
+				o.startSequence <- startSignal.Seq
 			case Running:
 				o.l.Info("test is already running")
 			case FatalError:
 				o.l.Info("orchestrator is in fatal error state, must recover from fatal error")
 			}
-		case <-d.Quit():
-			o.l.Info("quit signal received")
+		case cancelTestSignal := <-d.CancelTest():
+			o.l.Info("cancel test signal received")
 
 			o.quit <- struct{}{}
 			return
