@@ -6,6 +6,9 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/google/uuid"
+	"github.com/macformula/hil/dispatcher/test"
+	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/orchestrator"
 	"log"
 	"math/rand"
@@ -49,13 +52,14 @@ type model struct {
 	Quitting    bool
 	status      orchestrator.StatusSignal
 	startChan   chan orchestrator.StartSignal
-	resultsChan chan orchestrator.ResultSignal
+	resultsChan chan orchestrator.ResultsSignal
 	statusChan  chan orchestrator.StatusSignal
-	recoverChan chan struct{}
-	cancelChan  chan orchestrator.TestId
+	recoverChan chan orchestrator.RecoverFromFatalSignal
+	cancelChan  chan orchestrator.CancelTestSignal
 	program     *tea.Program
 	spinner     spinner.Model
 	results     []result
+	testToRun   uuid.UUID
 }
 
 func (c model) Init() tea.Cmd {
@@ -127,11 +131,37 @@ func updateIdle(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		h, v := docStyle.GetFrameSize()
 		m.list.SetSize(msg.Width-h, msg.Height-v)
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "enter":
+			i, ok := m.list.SelectedItem().(item)
+			if ok {
+				m.testToRun = uuid.New()
+				m.startChan <- orchestrator.StartSignal{
+					TestId:   m.testToRun,
+					Seq:      m.getSequence(i),
+					Metadata: m.getMetaData(i),
+				}
+			}
+
+			return m, nil
+		}
 	}
 
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
 	return m, cmd
+}
+
+func (c model) getSequence(i item) flow.Sequence {
+	return test.DoNothingSequence
+}
+
+func (c model) getMetaData(i item) map[string]string {
+	metaData := make(map[string]string)
+	metaData["title"] = i.title
+	metaData["desc"] = i.desc
+	return metaData
 }
 
 func updateRunning(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
