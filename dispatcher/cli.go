@@ -7,13 +7,37 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
+	"github.com/lucasb-eyer/go-colorful"
 	"github.com/macformula/hil/dispatcher/test"
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/orchestrator"
 	"github.com/muesli/reflow/indent"
+	"github.com/muesli/termenv"
 	"go.uber.org/zap"
 	"log"
+	"strconv"
+	"strings"
 	"time"
+)
+
+type ScreenState int
+
+const (
+	Unknown ScreenState = iota
+	Idle
+	Running
+	FatalError
+	Results
+)
+
+const (
+	_timeAFK        = 10
+	showLastResults = 5
+)
+
+var (
+	term    = termenv.EnvColorProfile()
+	keyword = makeFgStyle("211")
 )
 
 type (
@@ -57,14 +81,15 @@ type model struct {
 	statusChan    chan orchestrator.StatusSignal
 	recoverChan   chan orchestrator.RecoverFromFatalSignal
 	cancelChan    chan orchestrator.CancelTestSignal
-	currentScreen orchestrator.State
+	currentScreen ScreenState
 	program       *tea.Program
 	spinner       spinner.Model
 	results       []result
 	testToRun     uuid.UUID
+	testItem      item
 }
 
-func (c model) Init() tea.Cmd {
+func (c *model) Init() tea.Cmd {
 	//f := runPretendProcess(c)
 	return tea.Batch(
 		c.spinner.Tick,
@@ -73,7 +98,7 @@ func (c model) Init() tea.Cmd {
 }
 
 // Main update function.
-func (c model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (c *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Make sure these keys always quit
 	if msg, ok := msg.(tea.KeyMsg); ok {
 		k := msg.String()
@@ -85,35 +110,40 @@ func (c model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Hand off the message and model to the appropriate update function for the
 	// appropriate view based on the current state.
+	log.Printf("%s Inside Main UPDATE %s, %p", c.resultsSignal, c.currentScreen, &c)
 	switch c.currentScreen {
-	case orchestrator.Idle:
+	case Idle:
 		return updateIdle(msg, c)
-	case orchestrator.Running:
+	case Running:
 		return updateRunning(msg, c)
-	case orchestrator.FatalError:
+	case FatalError:
 		return updateFatal(msg, c)
+	case Results:
+		return updateResults(msg, c)
 	default:
 		return updateIdle(msg, c)
 	}
 }
 
 // The main view, which just calls the appropriate sub-view
-func (c model) View() string {
+func (c *model) View() string {
 	var s string
 	if c.Quitting {
 		return "\n  See you later!\n\n"
 	}
 
 	switch c.currentScreen {
-	case orchestrator.Idle:
+	case Idle:
 		//fmt.Println("Idle state")
 		s = idleView(c)
-	case orchestrator.Running:
+	case Running:
 		//fmt.Println("Running state")
 		s = runningView(c)
-	case orchestrator.FatalError:
+	case FatalError:
 		//fmt.Println("FatalError state")
 		s = fatalView(c)
+	case Results:
+		s = resultsView(c)
 	default:
 		idleView(c)
 	}
@@ -129,7 +159,7 @@ func (i item) Title() string       { return i.title }
 func (i item) Description() string { return i.desc }
 func (i item) FilterValue() string { return i.title }
 
-func updateIdle(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
+func updateIdle(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		h, v := docStyle.GetFrameSize()
@@ -145,8 +175,9 @@ func updateIdle(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 					Seq:      m.getSequence(i),
 					Metadata: m.getMetaData(i),
 				}
+				m.testItem = i
 			}
-			m.currentScreen = orchestrator.Running
+			m.currentScreen = Running
 			return m, m.spinner.Tick
 		}
 	default:
@@ -169,7 +200,7 @@ func (c model) getMetaData(i item) map[string]string {
 	return metaData
 }
 
-func updateRunning(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
+func updateRunning(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case spinner.TickMsg:
 		var cmd tea.Cmd
@@ -183,7 +214,7 @@ func updateRunning(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	}
 }
 
-func updateFatal(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
+func updateFatal(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -195,11 +226,32 @@ func updateFatal(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func updateResults(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tickMsg:
+		log.Printf("%s Inside updateResults %s", m.statusSignal, m.currentScreen)
+		if m.Ticks == 0 {
+			m.currentScreen = Idle
+			return m, nil
+		}
+		m.Ticks--
+		return m, tick()
+	case tea.KeyMsg:
+		if msg.String() == "enter" {
+			m.currentScreen = Idle
+			return m, nil
+		}
+		return m, nil
+	default:
+		return m, tick()
+	}
+}
+
 // Sub-views
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
 
-func idleView(m model) string {
+func idleView(m *model) string {
 	return docStyle.Render(m.list.View())
 }
 
@@ -207,7 +259,7 @@ func idleView(m model) string {
 type processFinishedMsg time.Duration
 
 // pretendProcess simulates a long-running process.
-func runPretendProcess(m model) tea.Cmd {
+func runPretendProcess(m *model) tea.Cmd {
 	startTime := time.Now()
 	//status := <-m.statusChan
 	//m.status = status
@@ -218,7 +270,9 @@ func runPretendProcess(m model) tea.Cmd {
 	}
 }
 
-func runningView(m model) string {
+var helpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Render
+
+func runningView(m *model) string {
 	s := "\n" +
 		m.spinner.View() + " Doing some work...\n\n"
 
@@ -230,6 +284,8 @@ func runningView(m model) string {
 		}
 	}
 
+	s += helpStyle(fmt.Sprintf("\nCurrent test running %s\n", m.testItem.title))
+
 	if m.Quitting {
 		s += "\n"
 	}
@@ -237,6 +293,73 @@ func runningView(m model) string {
 	return indent.String(s, 1)
 }
 
-func fatalView(m model) string {
+func fatalView(m *model) string {
 	return fmt.Sprintf("fatalView")
+}
+
+func resultsView(m *model) string {
+	var builder strings.Builder
+	results := m.resultsSignal
+
+	builder.WriteString(fmt.Sprintf("Test ID: %s\n", results.TestId.ID))
+	builder.WriteString(fmt.Sprintf("Passing: %t\n", results.IsPassing))
+
+	if results.FailedTags != nil && len(results.FailedTags) > 0 {
+		builder.WriteString("Failed Tags:\n")
+		for _, tag := range results.FailedTags {
+			builder.WriteString(fmt.Sprintf("  Tag ID: %s\n", tag.TagID))
+			builder.WriteString(fmt.Sprintf("  Tag Description: %s\n", tag.TagDescription))
+			builder.WriteString(fmt.Sprintf("  Comparison Operator: %s\n", tag.ComparisonOperator))
+			builder.WriteString(fmt.Sprintf("  Lower Limit: %f\n", tag.LowerLimit))
+			builder.WriteString(fmt.Sprintf("  Upper Limit: %f\n", tag.UpperLimit))
+			builder.WriteString(fmt.Sprintf("  Expected Value: %v\n", tag.ExpectedValue))
+			builder.WriteString(fmt.Sprintf("  Unit: %s\n", tag.Unit))
+			builder.WriteString("\n")
+		}
+	} else {
+		builder.WriteString("No failed tags.\n")
+	}
+	builder.WriteString(fmt.Sprintf("\nProgram quits in %s seconds\n", colorFg(strconv.Itoa(m.Ticks), "79")))
+	builder.WriteString(helpStyle("\nPress enter to go back to Main Menu\n"))
+
+	return builder.String()
+}
+
+// Utils
+
+// Color a string's foreground with the given value.
+func colorFg(val, color string) string {
+	return termenv.String(val).Foreground(term.Color(color)).String()
+}
+
+// Return a function that will colorize the foreground of a given string.
+func makeFgStyle(color string) func(string) string {
+	return termenv.Style{}.Foreground(term.Color(color)).Styled
+}
+
+// Generate a blend of colors.
+func makeRamp(colorA, colorB string, steps float64) (s []string) {
+	cA, _ := colorful.Hex(colorA)
+	cB, _ := colorful.Hex(colorB)
+
+	for i := 0.0; i < steps; i++ {
+		c := cA.BlendLuv(cB, i/steps)
+		s = append(s, colorToHex(c))
+	}
+	return
+}
+
+// Convert a colorful.Color to a hexadecimal format compatible with termenv.
+func colorToHex(c colorful.Color) string {
+	return fmt.Sprintf("#%s%s%s", colorFloatToHex(c.R), colorFloatToHex(c.G), colorFloatToHex(c.B))
+}
+
+// Helper function for converting colors to hex. Assumes a value between 0 and
+// 1.
+func colorFloatToHex(f float64) (s string) {
+	s = strconv.FormatInt(int64(f*255), 16)
+	if len(s) == 1 {
+		s = "0" + s
+	}
+	return
 }
