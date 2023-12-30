@@ -105,10 +105,10 @@ func (c *CliDispatcher) monitorOrchestrator(ctx context.Context) {
 			c.l.Info("status signal received")
 
 			c.cli.Status() <- status
-		case result := <-c.results:
+		case results := <-c.results:
 			c.l.Info("results signal received")
 
-			c.cli.Results() <- result
+			c.cli.Results() <- results
 		case <-ctx.Done():
 			c.l.Info("context done signal received")
 
