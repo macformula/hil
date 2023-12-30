@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -23,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TagTunnelClient interface {
 	SubmitTag(ctx context.Context, in *SubmitTagRequest, opts ...grpc.CallOption) (*SubmitTagReply, error)
+	CompleteTest(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CompleteTestReply, error)
 }
 
 type tagTunnelClient struct {
@@ -42,11 +44,21 @@ func (c *tagTunnelClient) SubmitTag(ctx context.Context, in *SubmitTagRequest, o
 	return out, nil
 }
 
+func (c *tagTunnelClient) CompleteTest(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CompleteTestReply, error) {
+	out := new(CompleteTestReply)
+	err := c.cc.Invoke(ctx, "/ResultsProcessor.TagTunnel/CompleteTest", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TagTunnelServer is the server API for TagTunnel service.
 // All implementations must embed UnimplementedTagTunnelServer
 // for forward compatibility
 type TagTunnelServer interface {
 	SubmitTag(context.Context, *SubmitTagRequest) (*SubmitTagReply, error)
+	CompleteTest(context.Context, *emptypb.Empty) (*CompleteTestReply, error)
 	mustEmbedUnimplementedTagTunnelServer()
 }
 
@@ -56,6 +68,9 @@ type UnimplementedTagTunnelServer struct {
 
 func (UnimplementedTagTunnelServer) SubmitTag(context.Context, *SubmitTagRequest) (*SubmitTagReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubmitTag not implemented")
+}
+func (UnimplementedTagTunnelServer) CompleteTest(context.Context, *emptypb.Empty) (*CompleteTestReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CompleteTest not implemented")
 }
 func (UnimplementedTagTunnelServer) mustEmbedUnimplementedTagTunnelServer() {}
 
@@ -88,6 +103,24 @@ func _TagTunnel_SubmitTag_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TagTunnel_CompleteTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TagTunnelServer).CompleteTest(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ResultsProcessor.TagTunnel/CompleteTest",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TagTunnelServer).CompleteTest(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // TagTunnel_ServiceDesc is the grpc.ServiceDesc for TagTunnel service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -98,6 +131,10 @@ var TagTunnel_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SubmitTag",
 			Handler:    _TagTunnel_SubmitTag_Handler,
+		},
+		{
+			MethodName: "CompleteTest",
+			Handler:    _TagTunnel_CompleteTest_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
