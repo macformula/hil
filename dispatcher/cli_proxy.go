@@ -17,9 +17,9 @@ type cliInterface interface {
 	io.Closer
 	Open(context.Context) error
 	Start() chan orchestrator.StartSignal
-	CancelTest() chan orchestrator.TestId
+	CancelTest() chan orchestrator.CancelTestSignal
 	Status() chan orchestrator.StatusSignal
-	RecoverFromFatal() chan struct{}
+	RecoverFromFatal() chan orchestrator.RecoverFromFatalSignal
 }
 
 func newCli() *model {
@@ -30,7 +30,7 @@ func newCli() *model {
 	}
 
 	status := orchestrator.StatusSignal{
-		OrchestratorState: orchestrator.Running,
+		OrchestratorState: orchestrator.Idle,
 		TestId:            orchestrator.TestId{},
 		Progress:          flow.Progress{},
 		QueueLength:       0,
@@ -47,7 +47,7 @@ func newCli() *model {
 	model := model{
 		list:        llist,
 		startChan:   make(chan orchestrator.StartSignal),
-		resultsChan: make(chan orchestrator.ResultSignal),
+		resultsChan: make(chan orchestrator.ResultsSignal),
 		statusChan:  make(chan orchestrator.StatusSignal),
 		status:      status,
 		spinner:     sp,
@@ -57,7 +57,7 @@ func newCli() *model {
 	return &model
 }
 
-func (c model) Close() error {
+func (c model) Close() error { // doesnt work
 	c.Quitting = true
 	fmt.Println("quitting")
 	return nil
@@ -85,11 +85,11 @@ func (c model) run() {
 	}
 }
 
-func (c model) CancelTest() chan orchestrator.TestId {
+func (c model) CancelTest() chan orchestrator.CancelTestSignal {
 	return c.cancelChan
 }
 
-func (c model) RecoverFromFatal() chan struct{} {
+func (c model) RecoverFromFatal() chan orchestrator.RecoverFromFatalSignal {
 	return c.recoverChan
 }
 

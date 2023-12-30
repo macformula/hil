@@ -2,19 +2,21 @@ package main
 
 import (
 	"context"
+	"fmt"
 	dispatcher "github.com/macformula/hil/dispatcher"
-	"time"
+	"go.uber.org/zap"
 )
 
 func main() {
-	d := dispatcher.NewCliDispatcher()
+	d := dispatcher.NewCliDispatcher(zap.L())
 	err := d.Open(context.Background())
 	if err != nil {
 		return
 	}
-	d.Start()
+	start := d.Start()
 
-	time.Sleep(5 * time.Second)
+	fmt.Print(<-start)
+	//time.Sleep(5 * time.Second)
 	//d.Close()
 
 	//dt := time.Now()

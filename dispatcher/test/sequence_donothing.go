@@ -8,7 +8,6 @@ import (
 var DoNothingSequence = flow.Sequence{
 	&test.DoNothingState{},
 	&test.DoNothingState{},
-	&test.RunForeverState{},
 	&test.DoNothingState{},
 	&test.DoNothingState{},
 }
