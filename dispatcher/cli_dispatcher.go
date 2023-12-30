@@ -31,7 +31,7 @@ func NewCliDispatcher(l *zap.Logger) *CliDispatcher {
 		status:           make(chan orchestrator.StatusSignal),
 		cancelTest:       make(chan orchestrator.CancelTestSignal),
 		recoverFromFatal: make(chan orchestrator.RecoverFromFatalSignal),
-		cli:              newCli(),
+		cli:              newCli(zap.L()),
 	}
 }
 
@@ -49,6 +49,7 @@ func (c *CliDispatcher) Open(ctx context.Context) error {
 	c.cli.Start()
 
 	go c.monitorCli(ctx, c.cli)
+	go c.monitorOrchestrator(ctx)
 
 	return nil
 }
@@ -88,6 +89,26 @@ func (c *CliDispatcher) monitorCli(ctx context.Context, cli cliInterface) {
 			c.l.Info("cancel test signal received")
 
 			c.cancelTest <- cancelSignal
+		case <-ctx.Done():
+			c.l.Info("context done signal received")
+
+			c.Close()
+			return
+		}
+	}
+}
+
+func (c *CliDispatcher) monitorOrchestrator(ctx context.Context) {
+	for {
+		select {
+		case status := <-c.status:
+			c.l.Info("status signal received")
+
+			c.cli.Status() <- status
+		case result := <-c.results:
+			c.l.Info("results signal received")
+
+			c.cli.Results() <- result
 		case <-ctx.Done():
 			c.l.Info("context done signal received")
 
