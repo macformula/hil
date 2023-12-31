@@ -15,8 +15,8 @@ class ResultAccumulator:
     def __init__(self, tag_file_path: str, schema_file_path: str) -> None:
         # Generate tag database from yaml file
         self.__parse_args(tag_file_path, schema_file_path)
-        self.tag_submissions: dict[str, any] = {} # tag_id -> value cache
-        self.error_submissions: list[str] = [] # list of cached errors
+        self.tag_submissions: dict[str, any] = {}  # tag_id -> value cache
+        self.error_submissions: list[str] = []  # list of cached errors
 
     def submit_tag(self, tag_id: str, value: any) -> Union[bool, KeyError]:
         """On tag submissions"""
@@ -26,13 +26,13 @@ class ResultAccumulator:
             return is_passing, None
         except KeyError as e:
             return False, e
-        
+
     def submit_error(self, error: str) -> None:
         """On error submissions"""
         self.error_submissions.append(error)
 
     def __parse_args(self, tag_file_path: str, schema_file_path: str) -> None:
-        self.tag_db: dict[str, Tag] = {} # tag_id -> Tag
+        self.tag_db: dict[str, Tag] = {}  # tag_id -> Tag
         with open(tag_file_path) as f:
             tags_yaml = yaml.load(f, Loader=yaml.FullLoader)
 
@@ -81,7 +81,10 @@ class ResultAccumulator:
         """Creates file from tag submissions, runs tests on it, then deletes it"""
         template = self.load_template_from_file(TEMPLATE_FILE_PATH)
         test_file_content = template.render(
-            tag_db=self.tag_db, tag_submissions=self.tag_submissions, tag_ids=tag_ids
+            tag_db=self.tag_db,
+            tag_submissions=self.tag_submissions,
+            tag_ids=tag_ids,
+            error_submissions=self.error_submissions,
         )
 
         test_file_path = "results/server/temp_test_file.py"
@@ -111,4 +114,3 @@ class ResultAccumulator:
         self.error_submissions = []
 
         return has_errors
-    

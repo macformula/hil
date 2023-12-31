@@ -1,13 +1,16 @@
 import sys
+
 sys.path.append("./results/server")
 from result_accumulator import ResultAccumulator
 
 TAG_FILE_PATH = "./results/server/good_tags.yaml"
 SCHEMA_FILE_PATH = "./results/server/schema/tags_schema.json"
 
+
 class RATest:
     """Test class to run ResultAccumulator tests without server.
-    Change jinja path to demo: TEMPLATE_FILE_PATH = "./results/server/demo/demo.py.jinja"""
+    Change jinja path to demo: TEMPLATE_FILE_PATH = "./results/server/demo/demo.py.jinja
+    """
 
     _ra = None
 
@@ -19,7 +22,6 @@ class RATest:
 
     @classmethod
     def initialize_ra(cls):
-
         cls._ra = ResultAccumulator(TAG_FILE_PATH, SCHEMA_FILE_PATH)
 
         b, err = cls._ra.submit_tag("PV003", "Hello")

@@ -6,15 +6,15 @@ def tag_submissions():
 
 @pytest.fixture
 def errors():
-    return ra.error_submissions
+    return {{ error_submissions }}
 
 def test_overall(errors):
     """Overall pass/fail"""
-    if ra.error_submissions:
-        print(f"Errors: {ra.error_submissions}")
+    if error_submissions:
+        print(f"Errors: {error_submissions}")
     else:
         print("No Errors Encountered!")
-    assert not ra.error_submissions
+    assert not error_submissions
 
 {% for tag_id in tag_ids %}
 def test_{{ tag_id }}(tag_submissions):
