@@ -8,7 +8,7 @@ import datetime
 import os
 
 # File paths
-TEMPLATE_FILE_PATH = "./results/server/demo.py.jinja"
+TEMPLATE_FILE_PATH = "./results/server/tm.py.jinja"
 
 
 class ResultAccumulator:
