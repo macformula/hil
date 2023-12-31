@@ -1,14 +1,25 @@
 import grpc
 from concurrent import futures
 from proto import results_pb2_grpc
+from proto import results_pb2
+from result_accumulator import ResultAccumulator
 
 
 class TagTunnel(results_pb2_grpc.TagTunnel):
+    def __init__(self):
+        self.ra = ResultAccumulator(
+            "./results/server/good_tags.yaml",
+            "./results/server/schema/tags_schema.json")
+
     def SubmitTag(self, request, context):
-        pass
+        # get the value of the oneof entry that is actually set
+        value = getattr(request, request.WhichOneof("data"))
+        success, _ = self.ra.submit_tag(request.tag, value)
+        return results_pb2.SubmitTagReply(success=success)
 
     def CompleteTest(self, request, context):
-        pass
+        self.ra.generate_and_run_tests()
+        return results_pb2.CompleteTestReply(success=True)
 
 
 def serve():

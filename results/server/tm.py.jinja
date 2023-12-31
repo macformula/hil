@@ -1,18 +1,11 @@
 import pytest
-from ra_test import RATest
-
-ra = RATest.get_ra()
-
-@pytest.fixture
-def tag_db():
-    return ra.tag_db
 
 @pytest.fixture
 def tag_submissions():
-    return ra.tag_submissions
+    return {{ tag_submissions }}
 
 {% for tag_id in tag_ids %}
-def test_tag_{{ tag_id }}(tag_db, tag_submissions):
+def test_tag_{{ tag_id }}(tag_submissions):
     """
     Test for {{ tag_id }}.
 
@@ -46,9 +39,10 @@ def test_tag_{{ tag_id }}(tag_db, tag_submissions):
             Unsupported comparison operator.
         {% endif %}
     """
-    tag = tag_db["{{ tag_id }}"]
-    tag_value = tag_submissions["{{ tag_id }}"]
-    print(f"value submitted: {tag_value}")
-    print(tag)
-    assert tag.is_passing(tag_value)
+
+    {% set tag = tag_db[tag_id] %}
+    {% set tag_value = tag_submissions[tag_id] %}
+    print(f"value submitted: {{tag_value}}")
+    print("""{{tag}}""")
+    assert {{ tag.is_passing(tag_value) }}
 {% endfor %}
