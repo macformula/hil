@@ -9,13 +9,19 @@ class TagTunnel(results_pb2_grpc.TagTunnel):
     def __init__(self):
         self.ra = ResultAccumulator(
             "./results/server/good_tags.yaml",
-            "./results/server/schema/tags_schema.json")
+            "./results/server/schema/tags_schema.json",
+        )
 
     def SubmitTag(self, request, context):
         # get the value of the oneof entry that is actually set
         value = getattr(request, request.WhichOneof("data"))
         success, _ = self.ra.submit_tag(request.tag, value)
         return results_pb2.SubmitTagReply(success=success)
+
+    def SubmitError(self, request, context):
+        """TODO: implement"""
+        self.ra.submit_error(request.error)
+        return results_pb2.SubmitErrorReply(success=True)
 
     def CompleteTest(self, request, context):
         self.ra.generate_and_run_tests()

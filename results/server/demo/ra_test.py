@@ -1,12 +1,16 @@
+import sys
+
+sys.path.append("./results/server")
 from result_accumulator import ResultAccumulator
+
+TAG_FILE_PATH = "./results/server/good_tags.yaml"
+SCHEMA_FILE_PATH = "./results/server/schema/tags_schema.json"
 
 
 class RATest:
-    """Singleton type test class for ResultAccumulator
-    This takes place of the main process (submit tags and run tests)
-    Note this same class is used within the jinja template to refer to the
-    same submissions here
-    TODO: submit tags and test them through gRPC"""
+    """Test class to run ResultAccumulator tests without server.
+    Change jinja path to demo: TEMPLATE_FILE_PATH = "./results/server/demo/demo.py.jinja
+    """
 
     _ra = None
 
@@ -18,16 +22,13 @@ class RATest:
 
     @classmethod
     def initialize_ra(cls):
-        TAG_FILE_PATH = "./results/server/good_tags.yaml"
-        SCHEMA_FILE_PATH = "./results/server/schema/tags_schema.json"
-
         cls._ra = ResultAccumulator(TAG_FILE_PATH, SCHEMA_FILE_PATH)
 
         b, err = cls._ra.submit_tag("PV003", "Hello")
 
         # Should fail
         b, err = cls._ra.submit_tag("PV001", 1)
-
+        # cls._ra.submit_error("Error1")
         # Should pass
         # b, err = cls._ra.submit_tag("PV001", 96)
 
