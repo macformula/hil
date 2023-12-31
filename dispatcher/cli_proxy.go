@@ -22,6 +22,7 @@ type cliInterface interface {
 	Status() chan orchestrator.StatusSignal
 	RecoverFromFatal() chan orchestrator.RecoverFromFatalSignal
 	Results() chan orchestrator.ResultsSignal
+	Quit() chan struct{}
 }
 
 func newCli(l *zap.Logger) *model {
@@ -33,15 +34,18 @@ func newCli(l *zap.Logger) *model {
 	llist.Title = "HIL"
 
 	model := model{
-		l:             l.Named(_loggerName),
-		list:          llist,
-		startChan:     make(chan orchestrator.StartSignal),
-		resultsChan:   make(chan orchestrator.ResultsSignal),
-		statusChan:    make(chan orchestrator.StatusSignal, 2),
-		currentScreen: Idle,
-		spinner:       sp,
-		results:       make([]result, showLastResults),
-		Ticks:         _timeAFK,
+		l:                     l.Named(_loggerName),
+		list:                  llist,
+		startChan:             make(chan orchestrator.StartSignal),
+		resultsChan:           make(chan orchestrator.ResultsSignal),
+		statusChan:            make(chan orchestrator.StatusSignal, 2),
+		cancelChan:            make(chan orchestrator.CancelTestSignal),
+		currentScreen:         Idle,
+		spinner:               sp,
+		results:               make([]result, showLastResults),
+		currentRunningResults: make([]result, showLastResults),
+		quit:                  make(chan struct{}),
+		Ticks:                 _timeAFK,
 	}
 
 	return &model
@@ -77,7 +81,7 @@ func (c *model) run() {
 	defer f.Close()
 
 	p := tea.NewProgram(c, tea.WithAltScreen())
-	c.program = p
+	//c.program = p
 
 	if _, err := p.Run(); err != nil {
 		fmt.Println("Error running program:", err)
@@ -101,6 +105,10 @@ func (c *model) Results() chan orchestrator.ResultsSignal {
 	return c.resultsChan
 }
 
+func (c *model) Quit() chan struct{} {
+	return c.quit
+}
+
 func (c *model) monitorDispatcher(ctx context.Context) {
 	for {
 		select {
@@ -108,12 +116,23 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 			c.l.Info("status signal received")
 
 			c.statusSignal = status
-			c.currentScreen = ScreenState(status.OrchestratorState)
+			//c.currentScreen = screenState(status.OrchestratorState)
+			c.currentRunningTestId = status.TestId
+
+			// handle if orchestrator idle
 
 			log.Printf("%s Inside monitorDispatcher %s, %p", status, status.OrchestratorState, &c)
 
+			c.currentRunningResults = make([]result, showLastResults)
 			c.results = make([]result, showLastResults)
 			progress := status.Progress
+
+			if status.OrchestratorState == orchestrator.Idle || status.OrchestratorState == orchestrator.FatalError {
+				c.orchestratorWorking = false
+				continue
+			}
+			c.orchestratorWorking = true
+			// populate currentRunningResults
 			for i, passed := range progress.StatePassed {
 				duration := progress.StateDuration[i]
 
@@ -122,16 +141,25 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 					desc = "Failed"
 				}
 
-				c.results = append(c.results[1:], result{
+				c.currentRunningResults = append(c.currentRunningResults[1:], result{
 					duration: duration,
 					desc:     desc,
 				})
+
+				if c.currentRunningTestId == c.testToRun {
+					c.results = append(c.results[1:], result{
+						duration: duration,
+						desc:     desc,
+					})
+				}
 			}
 		case results := <-c.resultsChan:
 			c.l.Info("results signal received")
 
 			c.resultsSignal = results
-			c.currentScreen = Results
+			if results.TestId == c.testToRun {
+				c.currentScreen = Results
+			}
 			c.Ticks = _timeAFK
 			c.results = make([]result, showLastResults)
 
