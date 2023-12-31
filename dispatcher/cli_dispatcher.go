@@ -74,6 +74,10 @@ func (c *CliDispatcher) Results() chan<- orchestrator.ResultsSignal {
 	return c.results
 }
 
+func (c *CliDispatcher) Quit() chan struct{} {
+	return c.cli.Quit()
+}
+
 func (c *CliDispatcher) monitorCli(ctx context.Context, cli cliInterface) {
 	for {
 		select {

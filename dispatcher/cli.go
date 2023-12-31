@@ -20,73 +20,38 @@ import (
 	"time"
 )
 
-type ScreenState int
-
-const (
-	Unknown ScreenState = iota
-	Idle
-	Running
-	FatalError
-	Results
-)
-
-const (
-	_timeAFK        = 10
-	showLastResults = 5
-)
-
-var (
-	term    = termenv.EnvColorProfile()
-	keyword = makeFgStyle("211")
-)
-
-type (
-	tickMsg  struct{}
-	frameMsg struct{}
-)
-
-func tick() tea.Cmd {
-	return tea.Tick(time.Second, func(time.Time) tea.Msg {
-		return tickMsg{}
-	})
-}
-
-func frame() tea.Cmd {
-	return tea.Tick(time.Second/60, func(time.Time) tea.Msg {
-		return frameMsg{}
-	})
-}
-
-type result struct {
-	duration time.Duration
-	desc     string
-}
-
-// toss Cli in here with its interface
-// rename model to cli and add signals here
 type model struct {
-	l             *zap.Logger
-	list          list.Model
-	Choice        int
-	Chosen        bool
-	Ticks         int
-	Frames        int
-	Progress      float64
-	Loaded        bool
-	Quitting      bool
+	l *zap.Logger
+
+	list    list.Model
+	spinner spinner.Model
+
+	Choice   int
+	Chosen   bool
+	Ticks    int
+	Frames   int
+	Progress float64
+	Loaded   bool
+	Quitting bool
+
 	statusSignal  orchestrator.StatusSignal
 	resultsSignal orchestrator.ResultsSignal
-	startChan     chan orchestrator.StartSignal
-	resultsChan   chan orchestrator.ResultsSignal
-	statusChan    chan orchestrator.StatusSignal
-	recoverChan   chan orchestrator.RecoverFromFatalSignal
-	cancelChan    chan orchestrator.CancelTestSignal
-	currentScreen ScreenState
-	program       *tea.Program
-	spinner       spinner.Model
-	results       []result
-	testToRun     uuid.UUID
-	testItem      item
+
+	startChan   chan orchestrator.StartSignal
+	resultsChan chan orchestrator.ResultsSignal
+	statusChan  chan orchestrator.StatusSignal
+	recoverChan chan orchestrator.RecoverFromFatalSignal
+	cancelChan  chan orchestrator.CancelTestSignal
+	quit        chan struct{} // temporary
+
+	//program       *tea.Program
+	currentScreen         screenState
+	results               []result
+	currentRunningResults []result
+	currentRunningTestId  orchestrator.TestId // change this to Test_id
+	testToRun             orchestrator.TestId
+	testItem              item
+	orchestratorWorking   bool
 }
 
 func (c *model) Init() tea.Cmd {
@@ -102,8 +67,9 @@ func (c *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Make sure these keys always quit
 	if msg, ok := msg.(tea.KeyMsg); ok {
 		k := msg.String()
-		if k == "q" || k == "esc" || k == "ctrl+c" {
+		if k == "q" || k == "esc" {
 			c.Quitting = true
+			c.quit <- struct{}{}
 			return c, tea.Quit
 		}
 	}
@@ -150,15 +116,6 @@ func (c *model) View() string {
 	return indent.String("\n"+s+"\n\n", 2)
 }
 
-type item struct {
-	title string
-	desc  string
-}
-
-func (i item) Title() string       { return i.title }
-func (i item) Description() string { return i.desc }
-func (i item) FilterValue() string { return i.title }
-
 func updateIdle(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -172,14 +129,23 @@ func updateIdle(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 				m.testToRun = uuid.New()
 				m.startChan <- orchestrator.StartSignal{
 					TestId:   m.testToRun,
-					Seq:      m.getSequence(i),
-					Metadata: m.getMetaData(i),
+					Seq:      getSequence(i),
+					Metadata: getMetaData(i),
 				}
 				m.testItem = i
 			}
 			m.currentScreen = Running
+			m.results = make([]result, showLastResults)
 			return m, m.spinner.Tick
+		case "ctrl+c":
+			m.Quitting = true
+			m.quit <- struct{}{}
+			return m, tea.Quit
 		}
+	case spinner.TickMsg:
+		var cmd tea.Cmd
+		m.spinner, cmd = m.spinner.Update(msg)
+		return m, cmd
 	default:
 		return m, nil
 	}
@@ -189,26 +155,25 @@ func updateIdle(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (c model) getSequence(i item) flow.Sequence {
-	return test.DoNothingSequence
-}
-
-func (c model) getMetaData(i item) map[string]string {
-	metaData := make(map[string]string)
-	metaData["title"] = i.title
-	metaData["desc"] = i.desc
-	return metaData
-}
-
 func updateRunning(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case spinner.TickMsg:
 		var cmd tea.Cmd
 		m.spinner, cmd = m.spinner.Update(msg)
 		return m, cmd
-	case frameMsg: // doesnt hit this
-		log.Printf("%s Inside updateRunning %s", m.statusSignal, m.currentScreen)
-		return m, frame()
+	//case frameMsg: // doesnt hit this
+	//	log.Printf("%s Inside updateRunning %s", m.statusSignal, m.currentScreen)
+	//	return m, frame()
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c":
+			m.currentScreen = Idle
+			m.cancelChan <- orchestrator.CancelTestSignal{TestId: m.testToRun}
+			m.testToRun = orchestrator.TestId{}
+			return m, nil
+		default:
+			return m, nil
+		}
 	default:
 		return m, nil
 	}
@@ -229,10 +194,10 @@ func updateFatal(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 func updateResults(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tickMsg:
-		log.Printf("%s Inside updateResults %s", m.statusSignal, m.currentScreen)
+		//log.Printf("%s Inside updateResults %s", m.statusSignal, m.currentScreen)
 		if m.Ticks == 0 {
 			m.currentScreen = Idle
-			return m, nil
+			return m, m.spinner.Tick
 		}
 		m.Ticks--
 		return m, tick()
@@ -249,12 +214,6 @@ func updateResults(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 
 // Sub-views
 
-var docStyle = lipgloss.NewStyle().Margin(1, 2)
-
-func idleView(m *model) string {
-	return docStyle.Render(m.list.View())
-}
-
 // processFinishedMsg is sent when a pretend process completes.
 type processFinishedMsg time.Duration
 
@@ -270,11 +229,13 @@ func runPretendProcess(m *model) tea.Cmd {
 	}
 }
 
-var helpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Render
+func idleView(m *model) string {
+	return lipgloss.JoinHorizontal(lipgloss.Top, docStyle.Render(m.list.View()), "\n"+currentRunningTestView(m))
+}
 
 func runningView(m *model) string {
 	s := "\n" +
-		m.spinner.View() + " Doing some work...\n\n"
+		m.spinner.View() + " Work relevant to you...\n\n"
 
 	for _, res := range m.results {
 		if res.duration == 0 {
@@ -284,13 +245,43 @@ func runningView(m *model) string {
 		}
 	}
 
-	s += helpStyle(fmt.Sprintf("\nCurrent test running %s\n", m.testItem.title))
+	s += helpStyle(fmt.Sprintf("\nCurrent test running: %s\n", m.testItem.title))
+	s += helpStyle(fmt.Sprintf("\nTest_ID: %s\n", m.testToRun.String()))
+	s += helpStyle(fmt.Sprintf("\nCtrl+c to cancel the test\n"))
 
 	if m.Quitting {
 		s += "\n"
 	}
 
-	return indent.String(s, 1)
+	return lipgloss.JoinHorizontal(lipgloss.Top, indent.String(s, 1), currentRunningTestView(m))
+}
+
+func currentRunningTestView(m *model) string {
+	s := "\n" + m.spinner.View()
+
+	if m.orchestratorWorking {
+		s += " Orchestrator doing some work...\n\n"
+	} else {
+		s += " Orchestrator currently idle...\n\n"
+	}
+
+	for _, res := range m.currentRunningResults {
+		if res.duration == 0 {
+			s += "........................\n"
+		} else {
+			s += fmt.Sprintf("%s Job finished in %s\n", res.desc, res.duration)
+		}
+	}
+
+	s += helpStyle(fmt.Sprintf("\nCurrent test running: %s\n", "Unknown name for now"))
+	s += helpStyle(fmt.Sprintf("\nTest_ID: %s\n", m.currentRunningTestId.String()))
+	s += helpStyle(fmt.Sprintf("\nQueue length: %d\n", m.statusSignal.QueueLength))
+
+	if m.Quitting {
+		s += "\n"
+	}
+
+	return docStyle.Render(s)
 }
 
 func fatalView(m *model) string {
@@ -301,7 +292,7 @@ func resultsView(m *model) string {
 	var builder strings.Builder
 	results := m.resultsSignal
 
-	builder.WriteString(fmt.Sprintf("Test ID: %s\n", results.TestId.ID))
+	builder.WriteString(fmt.Sprintf("Test ID: %s\n", results.TestId.String()))
 	builder.WriteString(fmt.Sprintf("Passing: %t\n", results.IsPassing))
 
 	if results.FailedTags != nil && len(results.FailedTags) > 0 {
@@ -325,7 +316,63 @@ func resultsView(m *model) string {
 	return builder.String()
 }
 
-// Utils
+// NEW UTILS FILE FOR THIS
+const (
+	_timeAFK        = 10
+	showLastResults = 5
+)
+
+var (
+	term    = termenv.EnvColorProfile()
+	keyword = makeFgStyle("211")
+)
+
+var docStyle = lipgloss.NewStyle().Margin(1, 2)
+var helpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Render
+
+type item struct {
+	title string
+	desc  string
+}
+
+func (i item) Title() string       { return i.title }
+func (i item) Description() string { return i.desc }
+func (i item) FilterValue() string { return i.title }
+
+type (
+	tickMsg  struct{}
+	frameMsg struct{}
+)
+
+type result struct {
+	duration time.Duration
+	desc     string
+}
+
+// Utils Functions
+
+func tick() tea.Cmd {
+	return tea.Tick(time.Second, func(time.Time) tea.Msg {
+		return tickMsg{}
+	})
+}
+
+func frame() tea.Cmd {
+	return tea.Tick(time.Second/60, func(time.Time) tea.Msg {
+		return frameMsg{}
+	})
+}
+
+func getSequence(i item) flow.Sequence {
+	return test.DoNothingSequence
+}
+
+func getMetaData(i item) map[string]string {
+	metaData := make(map[string]string)
+	metaData["title"] = i.title
+	metaData["desc"] = i.desc
+	return metaData
+}
 
 // Color a string's foreground with the given value.
 func colorFg(val, color string) string {
