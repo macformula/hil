@@ -187,7 +187,14 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 	if s.regularErr.Err() != nil {
 		statePassed = false
 
-		err := s.rp.EncounteredError(s.regularErr.Err())
+		err := s.rp.EncounteredError(ctx, s.regularErr.Err())
+		if err != nil {
+			return false, errors.Wrap(err, "encountered error")
+		}
+	}
+
+	if s.fatalErr.Err() != nil {
+		err := s.rp.EncounteredError(ctx, s.fatalErr.Err())
 		if err != nil {
 			return false, errors.Wrap(err, "encountered error")
 		}
@@ -208,7 +215,7 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 	}
 
 	switch {
-	// If encoutered fatal error, should not continue.
+	// If encountered fatal error, should not continue.
 	case state.FatalError() != nil:
 		continueSequence = false
 	// If state passed and did not get any regular errors, continue sequence.
