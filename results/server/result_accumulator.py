@@ -1,5 +1,5 @@
 import pytest
-from jinja2 import Template, Environment, FileSystemLoader
+from jinja2 import Template
 from tag import Tag
 from typing import Union
 import yaml
@@ -8,25 +8,31 @@ import datetime
 import os
 
 # File paths
-TEMPLATE_FILE_PATH = "./results/server/tm.py.jinja"
+TEMPLATE_FILE_PATH = "./results/server/demo.py.jinja"
 
 
 class ResultAccumulator:
     def __init__(self, tag_file_path: str, schema_file_path: str) -> None:
+        # Generate tag database from yaml file
         self.__parse_args(tag_file_path, schema_file_path)
-        # print(self.tag_db)
-        self.tag_submissions = {}
+        self.tag_submissions: dict[str, any] = {} # tag_id -> value cache
+        self.error_submissions: list[str] = [] # list of cached errors
 
     def submit_tag(self, tag_id: str, value: any) -> Union[bool, KeyError]:
+        """On tag submissions"""
         try:
-            is_passing = self.tag_db[tag_id].is_passing(value)
+            is_passing: bool = self.tag_db[tag_id].is_passing(value)
             self.tag_submissions[tag_id] = value
             return is_passing, None
         except KeyError as e:
             return False, e
+        
+    def submit_error(self, error: str) -> None:
+        """On error submissions"""
+        self.error_submissions.append(error)
 
     def __parse_args(self, tag_file_path: str, schema_file_path: str) -> None:
-        self.tag_db = {}
+        self.tag_db: dict[str, Tag] = {} # tag_id -> Tag
         with open(tag_file_path) as f:
             tags_yaml = yaml.load(f, Loader=yaml.FullLoader)
 
@@ -91,10 +97,18 @@ class ResultAccumulator:
 
         os.remove(test_file_path)
 
-    def generate_and_run_tests(self) -> None:
-        """Wrapper for generate_test_file and pytest.main
-        the full RA tests w/ reports are run with this one"""
+    def generate_and_run_tests(self) -> bool:
+        """On CompleteTest submissions
+        - Wrapper for generate_test_file and pytest.main.
+        the full RA tests w/ reports are run with this one
+
+        returns overall pass/fail"""
         tag_ids = list(self.tag_submissions.keys())
         self.__generate_test_file(tag_ids)
+        has_errors = len(self.error_submissions) > 0
         # reset cached submissions
         self.tag_submissions = {}
+        self.error_submissions = []
+
+        return has_errors
+    
