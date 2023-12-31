@@ -1,5 +1,5 @@
 # Error Handling
-This document goes over error handling in the `State > Sequencer > Orchestrator > Dispatcher` chain.
+This document goes over error handling in the `State > Sequencer > Orchestrator > DispatcherIface` chain.
 
 ## Regular Errors
 
@@ -15,4 +15,4 @@ This document goes over error handling in the `State > Sequencer > Orchestrator 
 - Result processor will receive encountered error signal
 - Will NOT continue to run the sequence
 - Orchestrator goes into a `FatalError` state
-- Any dispatcher must send the `RecoverFromFatal` signal to the orchestrator
+- Any dispatcher must send the `RecoverFromFatal` signal to the orchestrator to return to idle

@@ -2,6 +2,7 @@ package hil
 
 import (
 	"context"
+	"errors"
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/utils"
 	"time"
@@ -24,6 +25,8 @@ func (f Firmware) Name() string {
 func (f Firmware) Setup(ctx context.Context) error {
 	//TODO implement me
 	panic("implement me")
+
+	return errors.New("divisor cant be 0")
 }
 
 func (f Firmware) Run(ctx context.Context) error {
