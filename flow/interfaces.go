@@ -2,11 +2,17 @@ package flow
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"time"
 )
 
-// Sequence is a list of states that will be run in the order provided.
-type Sequence []State
+// ResultProcessorIface will be used to get pass/fail statuses on tags.
+type ResultProcessorIface interface {
+	Open(context.Context) error
+	SubmitTag(ctx context.Context, tagId string, value any) (bool, error)
+	CompleteTest(ctx context.Context, testId uuid.UUID) (bool, error)
+	EncounteredError(ctx context.Context, err error) error
+}
 
 // State is a set of logic that gets executed as a part of a Sequence.
 type State interface {

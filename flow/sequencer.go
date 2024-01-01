@@ -20,9 +20,12 @@ type Sequencer struct {
 	progress     Progress
 	progressFeed event.Feed
 
-	fatalErr *utils.ResettableError
+	fatalErr   *utils.ResettableError
+	regularErr *utils.ResettableError
 
 	rp ResultProcessorIface
+
+	failedTags []Tag
 }
 
 // NewSequencer returns a Sequencer object reference.
@@ -88,14 +91,18 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
 		s.l.Debug("published progress", zap.Int("num_subs", nSubs))
 
 		s.l.Info("starting next state", zap.String("state", state.Name()))
+		s.runState(ctx, state)
 
-		regularErr := s.runState(ctx, state)
-
-		err := s.processResults(ctx, state, regularErr)
+		s.l.Info("processing results", zap.String("state", state.Name()))
+		continueSequence, err := s.processResults(ctx, state)
 		if err != nil {
 			return errors.Wrap(err, "process results")
 		}
 
+		if !continueSequence {
+			s.l.Info("stopping sequence execution early")
+			break
+		}
 	}
 
 	// Complete
@@ -108,12 +115,11 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
 	return onceErr.Err()
 }
 
-func (s *Sequencer) runState(ctx context.Context, state State) error {
+func (s *Sequencer) runState(ctx context.Context, state State) {
 	var (
 		timeoutCtx context.Context
 		cancel     context.CancelFunc
 		startTime  time.Time
-		regularErr = utils.NewResettaleError()
 	)
 
 	startTime = time.Now()
@@ -130,7 +136,7 @@ func (s *Sequencer) runState(ctx context.Context, state State) error {
 			zap.String("state", state.Name()),
 			zap.Error(err))
 
-		regularErr.Set(errors.Wrapf(err, "setup (%s)", state.Name()))
+		s.regularErr.Set(errors.Wrapf(err, "setup (%s)", state.Name()))
 	}
 
 	// Check for fatal error after setup
@@ -141,11 +147,11 @@ func (s *Sequencer) runState(ctx context.Context, state State) error {
 		s.fatalErr.Set(errors.Wrapf(err, "fatal error during setup (%s)", state.Name()))
 	}
 
-	// If we encounter an error during setup, do not call run.
-	if regularErr.Err() != nil {
+	// If we encounter an error during setup, return early and do not call run.
+	if s.regularErr.Err() != nil || s.fatalErr.Err() != nil {
 		s.progress.StateDuration = append(s.progress.StateDuration, time.Since(startTime))
 
-		return regularErr.Err()
+		return
 	}
 
 	timeoutCtx, cancel = context.WithTimeout(ctx, state.Timeout())
@@ -156,7 +162,7 @@ func (s *Sequencer) runState(ctx context.Context, state State) error {
 	// Run the state logic
 	err = state.Run(timeoutCtx)
 	if err != nil {
-		regularErr.Set(errors.Wrapf(err, "run (%s)", state.Name()))
+		s.regularErr.Set(errors.Wrapf(err, "run (%s)", state.Name()))
 	}
 
 	s.progress.StateDuration = append(s.progress.StateDuration, time.Since(startTime))
@@ -169,18 +175,28 @@ func (s *Sequencer) runState(ctx context.Context, state State) error {
 		s.fatalErr.Set(errors.Wrapf(err, "fatal error during run (%s)", state.Name()))
 	}
 
-	return regularErr.Err()
+	return
 }
 
-func (s *Sequencer) processResults(ctx context.Context, state State, regularErr error) error {
-	var statePassed = true
+func (s *Sequencer) processResults(ctx context.Context, state State) (bool, error) {
+	var (
+		statePassed      = true
+		continueSequence bool
+	)
 
-	if regularErr != nil {
+	if s.regularErr.Err() != nil {
 		statePassed = false
 
-		err := s.rp.EncounteredError(regularErr)
+		err := s.rp.EncounteredError(ctx, s.regularErr.Err())
 		if err != nil {
-			return errors.Wrap(err, "encountered error")
+			return false, errors.Wrap(err, "encountered error")
+		}
+	}
+
+	if s.fatalErr.Err() != nil {
+		err := s.rp.EncounteredError(ctx, s.fatalErr.Err())
+		if err != nil {
+			return false, errors.Wrap(err, "encountered error")
 		}
 	}
 
@@ -189,15 +205,28 @@ func (s *Sequencer) processResults(ctx context.Context, state State, regularErr 
 	for tag, value := range results {
 		isPassing, err := s.rp.SubmitTag(ctx, tag.TagID, value)
 		if err != nil {
-			return errors.Wrap(err, "submit tag")
+			return false, errors.Wrap(err, "submit tag")
 		}
 
 		if !isPassing {
 			statePassed = false
-
-			s.fail
+			s.failedTags = append(s.failedTags, tag)
 		}
 	}
 
-	return nil
+	switch {
+	// If encountered fatal error, should not continue.
+	case state.FatalError() != nil:
+		continueSequence = false
+	// If state passed and did not get any regular errors, continue sequence.
+	case statePassed && (s.regularErr.Err() == nil):
+		continueSequence = true
+	// If state encountered error or did not pass, but continue on fail is true, continue sequence.
+	case state.ContinueOnFail():
+		continueSequence = true
+	default:
+		continueSequence = false
+	}
+
+	return continueSequence, nil
 }
