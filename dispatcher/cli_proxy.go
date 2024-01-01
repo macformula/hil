@@ -125,6 +125,10 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 			c.results = make([]result, showLastResults)
 			progress := status.Progress
 
+			if c.currentScreen == FatalError && status.OrchestratorState != orchestrator.FatalError {
+				c.currentScreen = Idle
+			}
+
 			if status.OrchestratorState == orchestrator.Idle {
 				c.orchestratorWorking = false
 				continue

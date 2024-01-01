@@ -161,9 +161,6 @@ func updateRunning(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 		var cmd tea.Cmd
 		m.spinner, cmd = m.spinner.Update(msg)
 		return m, cmd
-	//case frameMsg: // doesnt hit this
-	//	log.Printf("%s Inside updateRunning %s", m.statusSignal, m.currentScreen)
-	//	return m, frame()
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
@@ -181,6 +178,8 @@ func updateRunning(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 
 func updateFatal(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case spinner.TickMsg:
+		return m, m.spinner.Tick
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
@@ -194,7 +193,7 @@ func updateFatal(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	return m, nil
+	return m, m.spinner.Tick
 }
 
 func updateResults(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
