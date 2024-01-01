@@ -40,7 +40,7 @@ type model struct {
 	startChan   chan orchestrator.StartSignal
 	resultsChan chan orchestrator.ResultsSignal
 	statusChan  chan orchestrator.StatusSignal
-	recoverChan chan orchestrator.RecoverFromFatalSignal
+	fatalChan   chan orchestrator.RecoverFromFatalSignal
 	cancelChan  chan orchestrator.CancelTestSignal
 	quit        chan struct{} // temporary
 
@@ -184,7 +184,13 @@ func updateFatal(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
-
+			m.currentScreen = Idle
+			m.fatalChan <- orchestrator.RecoverFromFatalSignal{}
+			return m, m.spinner.Tick
+		case "ctrl+c":
+			m.Quitting = true
+			m.quit <- struct{}{}
+			return m, tea.Quit
 		}
 	}
 
@@ -204,7 +210,7 @@ func updateResults(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		if msg.String() == "enter" {
 			m.currentScreen = Idle
-			return m, nil
+			return m, m.spinner.Tick
 		}
 		return m, nil
 	default:
@@ -285,7 +291,9 @@ func currentRunningTestView(m *model) string {
 }
 
 func fatalView(m *model) string {
-	return fmt.Sprintf("fatalView")
+	s := "\n"
+	s += helpStyle(fmt.Sprintf("\nHit \"enter\" to send the fatal recovery signal (ONLY DO THIS IF YOU FIXED THE PROBLEM)\n"))
+	return s
 }
 
 func resultsView(m *model) string {
