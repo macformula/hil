@@ -78,6 +78,10 @@ func (c *CliDispatcher) Quit() chan struct{} {
 	return c.cli.Quit()
 }
 
+func (c *CliDispatcher) Name() string {
+	return "CliDispatcher"
+}
+
 func (c *CliDispatcher) monitorCli(ctx context.Context, cli cliInterface) {
 	for {
 		select {
@@ -93,6 +97,10 @@ func (c *CliDispatcher) monitorCli(ctx context.Context, cli cliInterface) {
 			c.l.Info("cancel test signal received")
 
 			c.cancelTest <- cancelSignal
+		case fatalSignal := <-cli.RecoverFromFatal():
+			c.l.Info("fatal recovery signal received")
+			
+			c.recoverFromFatal <- fatalSignal
 		case <-ctx.Done():
 			c.l.Info("context done signal received")
 

@@ -40,6 +40,7 @@ func newCli(l *zap.Logger) *model {
 		resultsChan:           make(chan orchestrator.ResultsSignal),
 		statusChan:            make(chan orchestrator.StatusSignal, 2),
 		cancelChan:            make(chan orchestrator.CancelTestSignal),
+		fatalChan:             make(chan orchestrator.RecoverFromFatalSignal),
 		currentScreen:         Idle,
 		spinner:               sp,
 		results:               make([]result, showLastResults),
@@ -94,7 +95,7 @@ func (c *model) CancelTest() chan orchestrator.CancelTestSignal {
 }
 
 func (c *model) RecoverFromFatal() chan orchestrator.RecoverFromFatalSignal {
-	return c.recoverChan
+	return c.fatalChan
 }
 
 func (c *model) Status() chan orchestrator.StatusSignal {
@@ -116,10 +117,7 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 			c.l.Info("status signal received")
 
 			c.statusSignal = status
-			//c.currentScreen = screenState(status.OrchestratorState)
 			c.currentRunningTestId = status.TestId
-
-			// handle if orchestrator idle
 
 			log.Printf("%s Inside monitorDispatcher %s, %p", status, status.OrchestratorState, &c)
 
@@ -127,8 +125,12 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 			c.results = make([]result, showLastResults)
 			progress := status.Progress
 
-			if status.OrchestratorState == orchestrator.Idle || status.OrchestratorState == orchestrator.FatalError {
+			if status.OrchestratorState == orchestrator.Idle {
 				c.orchestratorWorking = false
+				continue
+			} else if status.OrchestratorState == orchestrator.FatalError {
+				c.orchestratorWorking = false
+				c.currentScreen = FatalError
 				continue
 			}
 			c.orchestratorWorking = true

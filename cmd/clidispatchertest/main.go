@@ -24,12 +24,21 @@ func main() {
 	mutex <- struct{}{}
 	go mimicProgress(d)
 
+	time.Sleep(10 * time.Second)
+	// give fatal error status
+	d.Status() <- orchestrator.StatusSignal{
+		OrchestratorState: orchestrator.FatalError,
+		TestId:            orchestrator.TestId{},
+		Progress:          flow.Progress{},
+		QueueLength:       1,
+		FatalError:        nil,
+	}
 	<-d.Quit()
 	time.Sleep(1 * time.Second)
 }
 
 // waits on start signal, then sends 3 progress and a results
-func mimicProgress(d orchestrator.Dispatcher) {
+func mimicProgress(d orchestrator.DispatcherIface) {
 	start := d.Start()
 	cancel := d.CancelTest()
 
@@ -43,7 +52,7 @@ func mimicProgress(d orchestrator.Dispatcher) {
 	}
 }
 
-func mimicRunning(d orchestrator.Dispatcher, signal orchestrator.StartSignal) {
+func mimicRunning(d orchestrator.DispatcherIface, signal orchestrator.StartSignal) {
 	<-mutex
 	progress1 := flow.Progress{
 		CurrentState:  &test.DoNothingState{},
