@@ -39,3 +39,5 @@ type CancelTestSignal struct {
 }
 
 type RecoverFromFatalSignal struct{}
+
+type ShutdownSignal struct{}
