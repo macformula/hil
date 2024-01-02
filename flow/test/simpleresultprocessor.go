@@ -3,20 +3,34 @@ package test
 import (
 	"context"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
-type simpleResultProcessor struct {
+const (
+	_loggerName = "simpleresultprocessor"
+)
+
+type SimpleResultProcessor struct {
 	submissions     map[string]any
 	overallPassFail bool
+	l               *zap.Logger
 }
 
-func (s simpleResultProcessor) Open(ctx context.Context) error {
+func NewSimpleResultProcessor(l *zap.Logger) *SimpleResultProcessor {
+	return &SimpleResultProcessor{
+		l: l.Named(_loggerName),
+	}
+}
+
+func (s *SimpleResultProcessor) Open(ctx context.Context) error {
+	s.l.Info("simple result processor open")
 	s.submissions = make(map[string]any)
 
 	return nil
 }
 
-func (s simpleResultProcessor) SubmitTag(ctx context.Context, tagId string, value any) (bool, error) {
+func (s *SimpleResultProcessor) SubmitTag(ctx context.Context, tagId string, value any) (bool, error) {
+	s.l.Info("simple result processor submit tag", zap.String("tagId", tagId), zap.Any("value", value))
 	s.submissions[tagId] = value
 
 	if tagId == "FAIL" {
@@ -28,11 +42,11 @@ func (s simpleResultProcessor) SubmitTag(ctx context.Context, tagId string, valu
 	return true, nil
 }
 
-func (s simpleResultProcessor) CompleteTest(ctx context.Context, testId uuid.UUID) (bool, error) {
+func (s *SimpleResultProcessor) CompleteTest(ctx context.Context, testId uuid.UUID) (bool, error) {
 	return s.overallPassFail, nil
 }
 
-func (s simpleResultProcessor) EncounteredError(ctx context.Context, err error) error {
+func (s *SimpleResultProcessor) EncounteredError(ctx context.Context, err error) error {
 	s.overallPassFail = false
 	return nil
 }
