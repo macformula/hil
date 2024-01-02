@@ -3,6 +3,7 @@ package orchestrator
 import (
 	"context"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/google/uuid"
 	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
 	"sync"
@@ -13,8 +14,8 @@ import (
 )
 
 const (
-	_loggerName = "orchestrator"
-	_maxTestQueueLen
+	_loggerName      = "orchestrator"
+	_maxTestQueueLen = 10
 )
 
 type Orchestrator struct {
@@ -24,22 +25,26 @@ type Orchestrator struct {
 
 	sequencer   SequencerIface
 	dispatchers []DispatcherIface
-	progSub     event.Subscription
-	progCh      chan flow.Progress
+
+	progSub  event.Subscription
+	progCh   chan flow.Progress
+	progress flow.Progress
 
 	testQueue []StartSignal
 
-	startSignal     chan StartSignal
-	resultsSig      chan ResultsSignal
-	statusSig       chan StatusSignal
+	shutdownSig     chan ShutdownSignal
 	recoverFatalSig chan RecoverFromFatalSignal
+
+	resultFeed event.Feed
+	resultSubs []event.Subscription
+
+	statusFeed event.Feed
+	statusSubs []event.Subscription
 
 	cancelCurrentTest context.CancelFunc
 
-	status  StatusSignal
-	results ResultsSignal
-
 	testQueueMtx sync.Mutex
+	progressMtx  sync.Mutex
 
 	fatalErr *utils.ResettableError
 }
@@ -47,14 +52,21 @@ type Orchestrator struct {
 func NewOrchestrator(s SequencerIface, l *zap.Logger, dispatchers ...DispatcherIface) *Orchestrator {
 	ret := &Orchestrator{
 		l:               l.Named(_loggerName),
-		fatalErr:        utils.NewResettaleError(),
+		state:           Idle,
+		currentTest:     uuid.Nil,
 		sequencer:       s,
+		progress:        flow.Progress{},
 		testQueue:       make([]StartSignal, 0),
-		startSignal:     make(chan StartSignal),
-		resultsSig:      make(chan ResultsSignal),
-		statusSig:       make(chan StatusSignal),
+		shutdownSig:     make(chan ShutdownSignal),
 		recoverFatalSig: make(chan RecoverFromFatalSignal),
 		progCh:          make(chan flow.Progress),
+		testQueueMtx:    sync.Mutex{},
+		progressMtx:     sync.Mutex{},
+		fatalErr:        utils.NewResettaleError(),
+	}
+
+	ret.cancelCurrentTest = func() {
+		ret.l.Error("cancel current test func not set")
 	}
 
 	for _, d := range dispatchers {
@@ -72,12 +84,20 @@ func (o *Orchestrator) Open(ctx context.Context) error {
 	// Subscribe to sequencer progress
 	o.progSub = o.sequencer.SubscribeToProgress(o.progCh)
 
+	go o.monitorProgress(ctx)
+
+	o.resultSubs = make([]event.Subscription, len(o.dispatchers))
+	o.statusSubs = make([]event.Subscription, len(o.dispatchers))
+
 	// Setup dispatchers
-	for _, d := range o.dispatchers {
+	for i, d := range o.dispatchers {
 		err := d.Open(ctx)
 		if err != nil {
 			return errors.Wrap(err, "dispatcher open")
 		}
+
+		o.resultSubs[i] = o.resultFeed.Subscribe(d.Results())
+		o.statusSubs[i] = o.statusFeed.Subscribe(d.Status())
 
 		// Monitor DispatcherIface signals
 		go o.monitorDispatcher(ctx, d)
@@ -87,21 +107,61 @@ func (o *Orchestrator) Open(ctx context.Context) error {
 }
 
 func (o *Orchestrator) Run(ctx context.Context) error {
-	const _checkForStartSignalPeriod = 20 * time.Millisecond
+	const _checkForStartSignalPeriod = 100 * time.Millisecond
 
 	for {
 		select {
 		case <-time.After(_checkForStartSignalPeriod):
+		case <-o.shutdownSig:
+			return nil
 		case <-o.recoverFatalSig:
 			o.sequencer.ResetFatalError()
+			o.fatalErr.Reset()
 			o.state = Idle
+			o.statusUpdate()
 		}
 
-		startSig, ok := o.dequeueNextTest()
-		if !ok {
+		if o.state == FatalError {
 			continue
 		}
 
+		// Attempt to dequeue next test, if no test queued continue.
+		startSig, ok := o.dequeueNextTest()
+		if !ok {
+			if o.state == Running {
+				o.state = Idle
+				o.statusUpdate()
+			}
+
+			continue
+		}
+
+		o.currentTest = startSig.TestId
+
+		ctx, o.cancelCurrentTest = context.WithCancel(ctx)
+
+		o.state = Running
+		o.statusUpdate()
+
+		isPassing, failedTags, err := o.sequencer.Run(ctx, startSig.Seq, o.currentTest)
+		if err != nil {
+			o.l.Error("sequencer run", zap.Error(errors.Wrap(err, "run")))
+		}
+
+		o.resultFeed.Send(ResultsSignal{
+			TestId:     o.currentTest,
+			IsPassing:  isPassing,
+			FailedTags: failedTags,
+		})
+
+		err = o.sequencer.FatalError()
+		if err != nil {
+			o.l.Error("sequencer fatal error", zap.Error(err))
+
+			o.fatalErr.Set(err)
+			o.state = FatalError
+			o.statusUpdate()
+		}
 	}
 }
 
@@ -110,11 +170,14 @@ func (o *Orchestrator) Close() error {
 
 	o.l.Info("closing orchestrator")
 
-	for _, d := range o.dispatchers {
+	for i, d := range o.dispatchers {
 		err := d.Close()
 		if err != nil {
 			resettableErr.Set(errors.Wrap(err, "dispatcher close"))
 		}
+
+		o.resultSubs[i].Unsubscribe()
+		o.statusSubs[i].Unsubscribe()
 	}
 
 	o.progSub.Unsubscribe()
@@ -161,7 +224,14 @@ func (o *Orchestrator) monitorDispatcher(ctx context.Context, d DispatcherIface)
 				continue
 			}
 
-			go o.removeTestFromQueue(cancelTestSignal.TestId)
+			o.removeTestFromQueue(cancelTestSignal.TestId)
+		case <-d.Shutdown():
+			o.l.Info("received shutdown signal",
+				zap.String("dispatcher", d.Name()))
+
+			o.shutdownSig <- ShutdownSignal{}
+
+			return
 		case <-ctx.Done():
 			o.l.Info("context done signal received")
 
@@ -170,26 +240,71 @@ func (o *Orchestrator) monitorDispatcher(ctx context.Context, d DispatcherIface)
 	}
 }
 
+func (o *Orchestrator) monitorProgress(ctx context.Context) {
+	for {
+		select {
+		case progress := <-o.progCh:
+			o.progressMtx.Lock()
+			o.progress = progress
+			o.progressMtx.Unlock()
+
+			o.statusUpdate()
+		case <-ctx.Done():
+			return
+		case <-o.shutdownSig:
+			return
+		}
+	}
+}
+
 func (o *Orchestrator) addTestToQueue(startSig StartSignal) {
 	o.testQueueMtx.Lock()
 	defer o.testQueueMtx.Unlock()
+
 	o.testQueue = append(o.testQueue, startSig)
+
+	o.statusUpdate()
 }
 
 func (o *Orchestrator) removeTestFromQueue(testId TestId) {
+	o.testQueueMtx.Lock()
+	defer o.testQueueMtx.Unlock()
+
 	for i := 0; i < len(o.testQueue); i++ {
 		if o.testQueue[i].TestId == testId {
-			o.testQueueMtx.Lock()
 			o.testQueue = append(o.testQueue[:i], o.testQueue[i+1:]...)
-			o.testQueueMtx.Unlock()
 			return
 		}
 	}
 
+	o.statusUpdate()
 }
 
 func (o *Orchestrator) dequeueNextTest() (StartSignal, bool) {
 	o.testQueueMtx.Lock()
 	defer o.testQueueMtx.Unlock()
 
+	if len(o.testQueue) == 0 {
+		return StartSignal{}, false
+	}
+
+	nextTest := o.testQueue[0]
+	o.testQueue = o.testQueue[1:]
+
+	o.statusUpdate()
+
+	return nextTest, true
+}
+
+func (o *Orchestrator) statusUpdate() {
+	o.progressMtx.Lock()
+	defer o.progressMtx.Unlock()
+
+	o.statusFeed.Send(StatusSignal{
+		OrchestratorState: o.state,
+		TestId:            o.currentTest,
+		Progress:          o.progress,
+		QueueLength:       len(o.testQueue),
+		FatalError:        o.fatalErr.Err(),
+	})
 }

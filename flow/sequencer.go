@@ -2,6 +2,7 @@ package flow
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"time"
 
 	"github.com/ethereum/go-ethereum/event"
@@ -45,25 +46,27 @@ func (s *Sequencer) SubscribeToProgress(progCh chan Progress) event.Subscription
 }
 
 // Run will run the sequence provided. FatalError must be called after Run to check for any non-recoverable errors.
-func (s *Sequencer) Run(ctx context.Context, seq Sequence) error {
+func (s *Sequencer) Run(ctx context.Context, seq Sequence, testId uuid.UUID) (bool, []Tag, error) {
 	if len(seq) == 0 {
-		return errors.New("sequence cannot be empty")
+		return false, nil, errors.New("sequence cannot be empty")
 	}
 
 	s.progress = Progress{
 		CurrentState:  nil,
 		StateDuration: make([]time.Duration, len(seq)),
+		StatePassed:   make([]bool, len(seq)),
 		StateIndex:    0,
-		Complete:      false,
 		Sequence:      seq,
 	}
 
-	err := s.runSequence(ctx, seq)
+	s.failedTags = []Tag{}
+
+	isPassing, err := s.runSequence(ctx, seq, testId)
 	if err != nil {
-		return errors.Wrap(err, "run sequence")
+		return false, s.failedTags, errors.Wrap(err, "run sequence")
 	}
 
-	return nil
+	return isPassing, s.failedTags, nil
 }
 
 // FatalError indicates that there is an error that requires intervention.
@@ -77,26 +80,22 @@ func (s *Sequencer) ResetFatalError() {
 	s.fatalErr.Reset()
 }
 
-func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
-	var (
-		onceErr = utils.NewResettaleError()
-		nSubs   = 0
-	)
-
+func (s *Sequencer) runSequence(ctx context.Context, seq Sequence, testId uuid.UUID) (bool, error) {
 	for idx, state := range seq {
 		s.progress.CurrentState = state
 		s.progress.StateIndex = idx
 
-		nSubs = s.progressFeed.Send(s.progress)
-		s.l.Debug("published progress", zap.Int("num_subs", nSubs))
+		_ = s.progressFeed.Send(s.progress)
 
 		s.l.Info("starting next state", zap.String("state", state.Name()))
+
 		s.runState(ctx, state)
 
 		s.l.Info("processing results", zap.String("state", state.Name()))
+
 		continueSequence, err := s.processResults(ctx, state)
 		if err != nil {
-			return errors.Wrap(err, "process results")
+			return false, errors.Wrap(err, "process results")
 		}
 
 		if !continueSequence {
@@ -105,14 +104,14 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
 		}
 	}
 
-	// Complete
 	s.l.Info("sequence complete")
 
-	// Send final update to signal that the sequence has completed
-	s.progress.Complete = true
-	_ = s.progressFeed.Send(s.progress)
+	passingTest, err := s.rp.CompleteTest(ctx, testId)
+	if err != nil {
+		return false, errors.Wrap(err, "complete test")
+	}
 
-	return onceErr.Err()
+	return passingTest, nil
 }
 
 func (s *Sequencer) runState(ctx context.Context, state State) {
@@ -207,6 +206,8 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 		if err != nil {
 			return false, errors.Wrap(err, "submit tag")
 		}
+
+		s.progress.StatePassed = append(s.progress.StatePassed, isPassing)
 
 		if !isPassing {
 			statePassed = false
