@@ -109,8 +109,9 @@ class ResultAccumulator:
         dt = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         html_file_name = f"pytest_report_{dt}.html"
         html_cli_arg = f"--html=logs/{html_file_name}"
+        html = f"--html=logs/pytest_report_{dt}.html"
         pytest.main(
-            ["-v", "--showlocals", "--durations=10", test_file_path, html_cli_arg],
+            ["-v", "--showlocals", "--durations=10", test_file_path, html],
             plugins=[self],
         )
 
@@ -126,11 +127,11 @@ class ResultAccumulator:
         returns overall pass/fail"""
         tag_ids = list(self.tag_submissions.keys())
         html_file_name, dt = self.__generate_test_file(tag_ids)
-        
+
         has_errors = len(self.error_submissions) > 0
         overall_pass_fail = self.all_tags_passing and (not has_errors)
 
-        self.__update_historic_tests(test_id, dt)
+        self.__update_historic_tests(test_id, dt, overall_pass_fail)
         self.__generate_index_html(html_file_name)
         self.__commit_to_github_pages()
 
@@ -141,23 +142,23 @@ class ResultAccumulator:
 
         return overall_pass_fail
 
-    def __update_historic_tests(self, test_id: str, dt: str) -> None:
+    def __update_historic_tests(self, test_id: str, dt: str, test_passed: bool) -> None:
         # Replace the following line with your logic to determine test pass/fail
         new_test = {
             "testId": test_id,
-            "testPassed": self.overall_pass_fail(),
+            "testPassed": test_passed,
             "date": dt
         }
 
         # Load existing tests from the JSON file
-        with open(self.historic_test_fp, 'r') as file:
+        with open(self.historic_tests_fp, 'r') as file:
             existing_tests = json.load(file)
 
         # Append the new test to the existing tests
         existing_tests.append(new_test)
 
         # Save the updated list back to the JSON file
-        with open(self.historic_test_fp, 'w') as file:
+        with open(self.historic_tests_fp, 'w') as file:
             json.dump(existing_tests, file, indent=2)
 
     def __generate_index_html(self, html_file_name):
@@ -167,7 +168,3 @@ class ResultAccumulator:
     def __commit_to_github_pages(self):
         #TODO: Implement me
         return
-
-    def overall_pass_fail(self) -> bool:
-        # Implement me
-        return False

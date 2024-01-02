@@ -3,11 +3,11 @@ from generated import results_pb2
 from result_accumulator import ResultAccumulator
 
 class TagTunnel(results_pb2_grpc.TagTunnel):
-    def __init__(self, tags_fp, tags_schema_fp): #historic_test_fp
+    def __init__(self, tags_fp: str, tags_schema_fp: str, historic_tests_fp: str): #historic_test_fp
         self.ra = ResultAccumulator(
             tags_fp,
             tags_schema_fp,
-            "historic_test_fp"
+            historic_tests_fp
         )
     
     def CompleteTest(self, request, context):

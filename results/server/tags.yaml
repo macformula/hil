@@ -9,6 +9,7 @@ PV001:
 PV002:
   description: "Pre startup pack voltage"
   compareOp: "LT"
+  upperLimit: 400
   type: float
   unit: "V"
 PV003:
