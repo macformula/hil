@@ -2,7 +2,10 @@ package hil
 
 import (
 	"context"
+	"errors"
+	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/utils"
+	"time"
 )
 
 const (
@@ -10,18 +13,42 @@ const (
 )
 
 type Firmware struct {
-	err utils.ResettableError
+	err       utils.ResettableError
+	FcFlashed bool
 }
 
-func (f *Firmware) Name() string {
-	return _stateName
+func (f Firmware) Name() string {
+	//TODO implement me
+	panic("implement me")
 }
 
-func (f *Firmware) Start(a App, ctx context.Context) error {
-	return nil
+func (f Firmware) Setup(ctx context.Context) error {
+	//TODO implement me
+	panic("implement me")
+
+	return errors.New("divisor cant be 0")
 }
 
-func (f *Firmware) FatalError() error {
+func (f Firmware) Run(ctx context.Context) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f Firmware) GetResults() map[flow.Tag]any {
+	panic("implement me")
+}
+
+func (f Firmware) ContinueOnFail() bool {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f Firmware) Timeout() time.Duration {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f Firmware) FatalError() error {
 	//TODO implement me
 	panic("implement me")
 }
