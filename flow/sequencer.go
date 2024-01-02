@@ -63,8 +63,8 @@ func (s *Sequencer) Run(ctx context.Context, seq Sequence, testId uuid.UUID) (bo
 
 	s.progress = Progress{
 		CurrentState:  nil,
-		StateDuration: make([]time.Duration, len(seq)),
-		StatePassed:   make([]bool, len(seq)),
+		StateDuration: make([]time.Duration, 0),
+		StatePassed:   make([]bool, 0),
 		StateIndex:    0,
 		Sequence:      seq,
 	}
@@ -115,6 +115,8 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence, testId uuid.U
 	}
 
 	s.l.Info("sequence complete")
+
+	_ = s.progressFeed.Send(s.progress)
 
 	passingTest, err := s.rp.CompleteTest(ctx, testId)
 	if err != nil {
