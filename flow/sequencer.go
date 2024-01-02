@@ -225,7 +225,7 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 		}
 	}
 
-	s.progress.StatePassed = append(s.progress.StatePassed, isPassing)
+	s.progress.StatePassed = append(s.progress.StatePassed, statePassed)
 
 	switch {
 	// If encountered fatal error, should not continue.
