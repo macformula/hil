@@ -35,6 +35,10 @@ func NewCliDispatcher(l *zap.Logger) *CliDispatcher {
 	}
 }
 
+func (c *CliDispatcher) Shutdown() <-chan orchestrator.ShutdownSignal {
+	return c.cli.Quit()
+}
+
 func (c *CliDispatcher) Close() error {
 	err := c.cli.Close()
 	return err
@@ -74,7 +78,7 @@ func (c *CliDispatcher) Results() chan<- orchestrator.ResultsSignal {
 	return c.results
 }
 
-func (c *CliDispatcher) Quit() chan struct{} {
+func (c *CliDispatcher) Quit() chan orchestrator.ShutdownSignal {
 	return c.cli.Quit()
 }
 
@@ -99,7 +103,7 @@ func (c *CliDispatcher) monitorCli(ctx context.Context, cli cliInterface) {
 			c.cancelTest <- cancelSignal
 		case fatalSignal := <-cli.RecoverFromFatal():
 			c.l.Info("fatal recovery signal received")
-			
+
 			c.recoverFromFatal <- fatalSignal
 		case <-ctx.Done():
 			c.l.Info("context done signal received")
@@ -117,6 +121,7 @@ func (c *CliDispatcher) monitorOrchestrator(ctx context.Context) {
 			c.l.Info("status signal received")
 
 			c.cli.Status() <- status
+			c.l.Info("after status sent to cli")
 		case results := <-c.results:
 			c.l.Info("results signal received")
 

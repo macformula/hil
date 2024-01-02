@@ -7,8 +7,10 @@ import (
 	"io"
 )
 
-// SequencerIface is responsible for managing execution of a sequence of test states
+// SequencerIface is responsible for managing execution of a sequence of test states.
 type SequencerIface interface {
+	// Open sets up the Sequencer.
+	Open(ctx context.Context) error
 	// SubscribeToProgress subscribes to the progress of the Sequencer across its Sequence runs.
 	SubscribeToProgress(progCh chan flow.Progress) event.Subscription
 	// Run will run the sequence provided. FatalError must be called after Run to check for any non-recoverable errors.

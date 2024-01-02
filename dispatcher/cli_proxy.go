@@ -22,7 +22,7 @@ type cliInterface interface {
 	Status() chan orchestrator.StatusSignal
 	RecoverFromFatal() chan orchestrator.RecoverFromFatalSignal
 	Results() chan orchestrator.ResultsSignal
-	Quit() chan struct{}
+	Quit() chan orchestrator.ShutdownSignal
 }
 
 func newCli(l *zap.Logger) *model {
@@ -38,14 +38,14 @@ func newCli(l *zap.Logger) *model {
 		list:                  llist,
 		startChan:             make(chan orchestrator.StartSignal),
 		resultsChan:           make(chan orchestrator.ResultsSignal),
-		statusChan:            make(chan orchestrator.StatusSignal, 2),
+		statusChan:            make(chan orchestrator.StatusSignal),
 		cancelChan:            make(chan orchestrator.CancelTestSignal),
 		fatalChan:             make(chan orchestrator.RecoverFromFatalSignal),
 		currentScreen:         Idle,
 		spinner:               sp,
 		results:               make([]result, showLastResults),
 		currentRunningResults: make([]result, showLastResults),
-		quit:                  make(chan struct{}),
+		quit:                  make(chan orchestrator.ShutdownSignal),
 		Ticks:                 _timeAFK,
 	}
 
@@ -68,7 +68,9 @@ func (c *model) Close() error { // doesnt work
 
 func (c *model) Open(ctx context.Context) error {
 	go c.run()
+	c.l.Info("BEFORE MONITOR")
 	go c.monitorDispatcher(ctx)
+	c.l.Info("AFTER MONITOR")
 
 	return nil
 }
@@ -106,15 +108,16 @@ func (c *model) Results() chan orchestrator.ResultsSignal {
 	return c.resultsChan
 }
 
-func (c *model) Quit() chan struct{} {
+func (c *model) Quit() chan orchestrator.ShutdownSignal {
 	return c.quit
 }
 
 func (c *model) monitorDispatcher(ctx context.Context) {
+	c.l.Info("INSIDE MONITOR DISPATCHER")
 	for {
 		select {
 		case status := <-c.statusChan:
-			c.l.Info("status signal received")
+			c.l.Info("status signal received", zap.String("orchestrator state", status.OrchestratorState.String()))
 
 			c.statusSignal = status
 			c.currentRunningTestId = status.TestId
@@ -124,6 +127,7 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 			c.currentRunningResults = make([]result, showLastResults)
 			c.results = make([]result, showLastResults)
 			progress := status.Progress
+			c.l.Info("progress state info", zap.Bools("state passed", progress.StatePassed), zap.Durations("state durations", progress.StateDuration))
 
 			if c.currentScreen == FatalError && status.OrchestratorState != orchestrator.FatalError {
 				c.currentScreen = Idle
@@ -139,6 +143,7 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 			}
 			c.orchestratorWorking = true
 			// populate currentRunningResults
+
 			for i, passed := range progress.StatePassed {
 				duration := progress.StateDuration[i]
 

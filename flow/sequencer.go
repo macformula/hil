@@ -35,6 +35,7 @@ func NewSequencer(rp ResultProcessorIface, l *zap.Logger) *Sequencer {
 		l:            l.Named(_loggerName),
 		progressFeed: event.Feed{},
 		fatalErr:     utils.NewResettaleError(),
+		regularErr:   utils.NewResettaleError(),
 		rp:           rp,
 	}
 }
@@ -43,6 +44,15 @@ func NewSequencer(rp ResultProcessorIface, l *zap.Logger) *Sequencer {
 // The Progress channel gets updated whenever there is new information available.
 func (s *Sequencer) SubscribeToProgress(progCh chan Progress) event.Subscription {
 	return s.progressFeed.Subscribe(progCh)
+}
+
+func (s *Sequencer) Open(ctx context.Context) error {
+	err := s.rp.Open(ctx)
+	if err != nil {
+		return errors.Wrap(err, "open")
+	}
+
+	return nil
 }
 
 // Run will run the sequence provided. FatalError must be called after Run to check for any non-recoverable errors.
