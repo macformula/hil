@@ -12,7 +12,7 @@ type SequencerIface interface {
 	// SubscribeToProgress subscribes to the progress of the Sequencer across its Sequence runs.
 	SubscribeToProgress(progCh chan flow.Progress) event.Subscription
 	// Run will run the sequence provided. FatalError must be called after Run to check for any non-recoverable errors.
-	Run(ctx context.Context, seq flow.Sequence) error
+	Run(context.Context, flow.Sequence, TestId) (bool, []flow.Tag, error)
 	// FatalError indicates that there is an error that requires intervention.
 	FatalError() error
 	// ResetFatalError sets the fatal error to nil.
@@ -30,7 +30,7 @@ type DispatcherIface interface {
 	Start() <-chan StartSignal
 	// CancelTest will cancel execution of the test with the given ID.
 	CancelTest() <-chan CancelTestSignal
-	// Exit will shutdown the hil app
+	// Shutdown will shut down the hil app.
 	Shutdown() <-chan ShutdownSignal
 	// RecoverFromFatal will tell the orchestrator to leave the fatal error state and go back to idle.
 	RecoverFromFatal() <-chan RecoverFromFatalSignal
