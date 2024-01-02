@@ -219,13 +219,13 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 			return false, errors.Wrap(err, "submit tag")
 		}
 
-		s.progress.StatePassed = append(s.progress.StatePassed, isPassing)
-
 		if !isPassing {
 			statePassed = false
 			s.failedTags = append(s.failedTags, tag)
 		}
 	}
+
+	s.progress.StatePassed = append(s.progress.StatePassed, isPassing)
 
 	switch {
 	// If encountered fatal error, should not continue.
