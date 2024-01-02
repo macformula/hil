@@ -42,7 +42,7 @@ type model struct {
 	statusChan  chan orchestrator.StatusSignal
 	fatalChan   chan orchestrator.RecoverFromFatalSignal
 	cancelChan  chan orchestrator.CancelTestSignal
-	quit        chan struct{} // temporary
+	quit        chan orchestrator.ShutdownSignal // temporary
 
 	//program       *tea.Program
 	currentScreen         screenState
@@ -371,7 +371,7 @@ func frame() tea.Cmd {
 }
 
 func getSequence(i item) flow.Sequence {
-	return test.DoNothingSequence
+	return test.SleepSequence
 }
 
 func getMetaData(i item) map[string]string {

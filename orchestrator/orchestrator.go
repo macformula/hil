@@ -77,8 +77,14 @@ func NewOrchestrator(s SequencerIface, l *zap.Logger, dispatchers ...DispatcherI
 }
 
 func (o *Orchestrator) Open(ctx context.Context) error {
+	o.l.Info("orchestrator open")
 	if len(o.dispatchers) == 0 {
 		return errors.Errorf("orchestrator requires at least one dispatcher")
+	}
+
+	err := o.sequencer.Open(ctx)
+	if err != nil {
+		return errors.Wrap(err, "sequencer open")
 	}
 
 	// Subscribe to sequencer progress
@@ -91,7 +97,7 @@ func (o *Orchestrator) Open(ctx context.Context) error {
 
 	// Setup dispatchers
 	for i, d := range o.dispatchers {
-		err := d.Open(ctx)
+		err = d.Open(ctx)
 		if err != nil {
 			return errors.Wrap(err, "dispatcher open")
 		}
