@@ -79,8 +79,7 @@ func (s *Sequencer) ResetFatalError() {
 
 func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
 	var (
-		onceErr = utils.NewResettaleError()
-		nSubs   = 0
+		nSubs = 0
 	)
 
 	for idx, state := range seq {
@@ -112,7 +111,7 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence) error {
 	s.progress.Complete = true
 	_ = s.progressFeed.Send(s.progress)
 
-	return onceErr.Err()
+	return nil
 }
 
 func (s *Sequencer) runState(ctx context.Context, state State) {

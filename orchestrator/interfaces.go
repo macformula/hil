@@ -30,6 +30,8 @@ type DispatcherIface interface {
 	Start() <-chan StartSignal
 	// CancelTest will cancel execution of the test with the given ID.
 	CancelTest() <-chan CancelTestSignal
+	// Exit will shutdown the hil app
+	Shutdown() <-chan ShutdownSignal
 	// RecoverFromFatal will tell the orchestrator to leave the fatal error state and go back to idle.
 	RecoverFromFatal() <-chan RecoverFromFatalSignal
 	// Status signal is sent periodically to the

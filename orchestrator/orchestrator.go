@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	_loggerName = "orchestrator"
-	_maxTestQueueLen
+	_loggerName      = "orchestrator"
+	_maxTestQueueLen = 10
 )
 
 type Orchestrator struct {
@@ -29,7 +29,7 @@ type Orchestrator struct {
 
 	testQueue []StartSignal
 
-	startSignal     chan StartSignal
+	shutdownSig     chan ShutdownSignal
 	resultsSig      chan ResultsSignal
 	statusSig       chan StatusSignal
 	recoverFatalSig chan RecoverFromFatalSignal
@@ -50,11 +50,15 @@ func NewOrchestrator(s SequencerIface, l *zap.Logger, dispatchers ...DispatcherI
 		fatalErr:        utils.NewResettaleError(),
 		sequencer:       s,
 		testQueue:       make([]StartSignal, 0),
-		startSignal:     make(chan StartSignal),
 		resultsSig:      make(chan ResultsSignal),
 		statusSig:       make(chan StatusSignal),
 		recoverFatalSig: make(chan RecoverFromFatalSignal),
 		progCh:          make(chan flow.Progress),
+		shutdownSig:     make(chan ShutdownSignal),
+	}
+
+	ret.cancelCurrentTest = func() {
+		ret.l.Error("cancel current test func not set")
 	}
 
 	for _, d := range dispatchers {
@@ -87,11 +91,13 @@ func (o *Orchestrator) Open(ctx context.Context) error {
 }
 
 func (o *Orchestrator) Run(ctx context.Context) error {
-	const _checkForStartSignalPeriod = 20 * time.Millisecond
+	const _checkForStartSignalPeriod = 100 * time.Millisecond
 
 	for {
 		select {
 		case <-time.After(_checkForStartSignalPeriod):
+		case <-o.shutdownSig:
+			return nil
 		case <-o.recoverFatalSig:
 			o.sequencer.ResetFatalError()
 			o.state = Idle
@@ -102,6 +108,23 @@ func (o *Orchestrator) Run(ctx context.Context) error {
 			continue
 		}
 
+		o.currentTest = startSig.TestId
+
+		ctx, o.cancelCurrentTest = context.WithCancel(ctx)
+
+		err := o.sequencer.Run(ctx, startSig.Seq)
+		if err != nil {
+			// TODO: how do we handle this error type
+			o.l.Error("sequencer run", zap.Error(errors.Wrap(err, "run")))
+		}
+
+		err = o.sequencer.FatalError()
+		if err != nil {
+			o.l.Error("sequencer fatal error", zap.Error(err))
+
+			o.fatalErr.Set(err)
+			o.state = FatalError
+		}
 	}
 }
 
@@ -162,6 +185,13 @@ func (o *Orchestrator) monitorDispatcher(ctx context.Context, d DispatcherIface)
 			}
 
 			go o.removeTestFromQueue(cancelTestSignal.TestId)
+		case <-d.Shutdown():
+			o.l.Info("received shutdown signal",
+				zap.String("dispatcher", d.Name()))
+
+			o.shutdownSig <- ShutdownSignal{}
+
+			return
 		case <-ctx.Done():
 			o.l.Info("context done signal received")
 
@@ -173,15 +203,17 @@ func (o *Orchestrator) monitorDispatcher(ctx context.Context, d DispatcherIface)
 func (o *Orchestrator) addTestToQueue(startSig StartSignal) {
 	o.testQueueMtx.Lock()
 	defer o.testQueueMtx.Unlock()
+
 	o.testQueue = append(o.testQueue, startSig)
 }
 
 func (o *Orchestrator) removeTestFromQueue(testId TestId) {
+	o.testQueueMtx.Lock()
+	defer o.testQueueMtx.Unlock()
+
 	for i := 0; i < len(o.testQueue); i++ {
 		if o.testQueue[i].TestId == testId {
-			o.testQueueMtx.Lock()
 			o.testQueue = append(o.testQueue[:i], o.testQueue[i+1:]...)
-			o.testQueueMtx.Unlock()
 			return
 		}
 	}
@@ -192,4 +224,9 @@ func (o *Orchestrator) dequeueNextTest() (StartSignal, bool) {
 	o.testQueueMtx.Lock()
 	defer o.testQueueMtx.Unlock()
 
+	if len(o.testQueue) == 0 {
+		return StartSignal{}, false
+	}
+
+	return o.testQueue[0], true
 }
