@@ -13,33 +13,38 @@ TEMPLATE_FILE_PATH = "./results/server/tm.py.jinja"
 
 
 class ResultAccumulator:
-    def __init__(self, tag_file_path: str, schema_file_path: str) -> None:
+    def __init__(self, tag_fp: str, schema_fp: str, historic_tests_fp: str) -> None:
         # Generate tag database from yaml file
-        self.__parse_args(tag_file_path, schema_file_path)
+        self.__parse_args(tag_fp, schema_fp)
         self.tag_submissions: dict[str, any] = {}  # tag_id -> value cache
         self.error_submissions: list[str] = []  # list of cached errors
         self.historic_tests_fp = historic_tests_fp
+        self.all_tags_passing = True
 
 
     def submit_tag(self, tag_id: str, value: any) -> Union[bool, KeyError]:
         """On tag submissions"""
         try:
             is_passing: bool = self.tag_db[tag_id].is_passing(value)
+            if not is_passing:
+                self.all_tags_passing = False
             self.tag_submissions[tag_id] = value
             return is_passing, None
         except KeyError as e:
+            self.all_tags_passing = False
             return False, e
         
     def get_all_tags(self):
         return self.tag_db
     
     def get_all_errors(self):
-        # TODO: Implement memoryview
-        return ["run (firmware_state): test error"]
+        return self.error_submissions
 
-    def submit_error(self, error: str) -> None:
+    def submit_error(self, error: str) -> int:
         """On error submissions"""
         self.error_submissions.append(error)
+
+        return len(self.error_submissions)
 
     def __parse_args(self, tag_file_path: str, schema_file_path: str) -> None:
         self.tag_db: dict[str, Tag] = {}  # tag_id -> Tag
@@ -121,7 +126,9 @@ class ResultAccumulator:
         returns overall pass/fail"""
         tag_ids = list(self.tag_submissions.keys())
         html_file_name, dt = self.__generate_test_file(tag_ids)
+        
         has_errors = len(self.error_submissions) > 0
+        overall_pass_fail = self.all_tags_passing and (not has_errors)
 
         self.__update_historic_tests(test_id, dt)
         self.__generate_index_html(html_file_name)
@@ -130,8 +137,9 @@ class ResultAccumulator:
         # reset cached submissions
         self.tag_submissions = {}
         self.error_submissions = []
+        self.all_tags_passing = True
 
-        return has_errors
+        return overall_pass_fail
 
     def __update_historic_tests(self, test_id: str, dt: str) -> None:
         # Replace the following line with your logic to determine test pass/fail

@@ -11,8 +11,7 @@ class TagTunnel(results_pb2_grpc.TagTunnel):
         )
     
     def CompleteTest(self, request, context):
-        self.ra.generate_and_run_tests(request.test_id)
-        test_passed = self.ra.overall_pass_fail()
+        test_passed = self.ra.generate_and_run_tests(request.test_id)
 
         return results_pb2.CompleteTestResponse(test_passed=test_passed)
 
@@ -58,8 +57,9 @@ class TagTunnel(results_pb2_grpc.TagTunnel):
         return results_pb2.EnumerateTagsResponse(tags=proto_tags)
 
     def SubmitError(self, request, context):
-        # TODO: implement me
-        return results_pb2.SubmitErrorResponse(error_count=1)
+        error_count = self.ra.submit_error(request.error)
+        
+        return results_pb2.SubmitErrorResponse(error_count=error_count)
 
     def SubmitTag(self, request, context):
         # get the value of the oneof entry that is actually set
