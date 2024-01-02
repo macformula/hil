@@ -4,6 +4,7 @@ from tag import Tag
 from typing import Union
 import yaml
 import jsonschema
+import json
 import datetime
 import os
 
@@ -17,6 +18,8 @@ class ResultAccumulator:
         self.__parse_args(tag_file_path, schema_file_path)
         self.tag_submissions: dict[str, any] = {}  # tag_id -> value cache
         self.error_submissions: list[str] = []  # list of cached errors
+        self.historic_tests_fp = historic_tests_fp
+
 
     def submit_tag(self, tag_id: str, value: any) -> Union[bool, KeyError]:
         """On tag submissions"""
@@ -26,6 +29,13 @@ class ResultAccumulator:
             return is_passing, None
         except KeyError as e:
             return False, e
+        
+    def get_all_tags(self):
+        return self.tag_db
+    
+    def get_all_errors(self):
+        # TODO: Implement memoryview
+        return ["run (firmware_state): test error"]
 
     def submit_error(self, error: str) -> None:
         """On error submissions"""
@@ -77,7 +87,7 @@ class ResultAccumulator:
             template_content = file.read()
         return Template(template_content)
 
-    def __generate_test_file(self, tag_ids: list) -> None:
+    def __generate_test_file(self, tag_ids: list) -> [str, str]:
         """Creates file from tag submissions, runs tests on it, then deletes it"""
         template = self.load_template_from_file(TEMPLATE_FILE_PATH)
         test_file_content = template.render(
@@ -92,25 +102,64 @@ class ResultAccumulator:
             file.write(test_file_content)
 
         dt = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        html = f"--html=logs/pytest_report_{dt}.html"
+        html_file_name = f"pytest_report_{dt}.html"
+        html_cli_arg = f"--html=logs/{html_file_name}"
         pytest.main(
-            ["-v", "--showlocals", "--durations=10", test_file_path, html],
+            ["-v", "--showlocals", "--durations=10", test_file_path, html_cli_arg],
             plugins=[self],
         )
 
         os.remove(test_file_path)
 
-    def generate_and_run_tests(self) -> bool:
+        return html_file_name, dt
+
+    def generate_and_run_tests(self, test_id: str) -> bool:
         """On CompleteTest submissions
         - Wrapper for generate_test_file and pytest.main.
         the full RA tests w/ reports are run with this one
 
         returns overall pass/fail"""
         tag_ids = list(self.tag_submissions.keys())
-        self.__generate_test_file(tag_ids)
+        html_file_name, dt = self.__generate_test_file(tag_ids)
         has_errors = len(self.error_submissions) > 0
+
+        self.__update_historic_tests(test_id, dt)
+        self.__generate_index_html(html_file_name)
+        self.__commit_to_github_pages()
+
         # reset cached submissions
         self.tag_submissions = {}
         self.error_submissions = []
 
         return has_errors
+
+    def __update_historic_tests(self, test_id: str, dt: str) -> None:
+        # Replace the following line with your logic to determine test pass/fail
+        new_test = {
+            "testId": test_id,
+            "testPassed": self.overall_pass_fail(),
+            "date": dt
+        }
+
+        # Load existing tests from the JSON file
+        with open(self.historic_test_fp, 'r') as file:
+            existing_tests = json.load(file)
+
+        # Append the new test to the existing tests
+        existing_tests.append(new_test)
+
+        # Save the updated list back to the JSON file
+        with open(self.historic_test_fp, 'w') as file:
+            json.dump(existing_tests, file, indent=2)
+
+    def __generate_index_html(self, html_file_name):
+        #TODO: Implement me @itshady
+        return
+
+    def __commit_to_github_pages(self):
+        #TODO: Implement me
+        return
+
+    def overall_pass_fail(self) -> bool:
+        # Implement me
+        return False
