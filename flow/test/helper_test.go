@@ -20,7 +20,7 @@ func SetupSequencer(t *testing.T, logFileName string) (*flow.Sequencer, *zap.Log
 	}
 	defer logger.Sync()
 
-	sequencer := flow.NewSequencer(logger)
+	sequencer := flow.NewSequencer(simpleResultProcessor{}, logger)
 
 	go func(s *flow.Sequencer, l *zap.Logger) {
 		prog := make(chan flow.Progress)
@@ -43,7 +43,7 @@ func SetupSequencer(t *testing.T, logFileName string) (*flow.Sequencer, *zap.Log
 				)
 
 				// Log state durations on the last state
-				if p.Complete {
+				if (p.StateIndex + 1) == len(p.Sequence) {
 					for idx, state := range p.Sequence {
 						l.Info("state_duration",
 							zap.String("state", state.Name()),
