@@ -26,6 +26,10 @@ type Sequencer struct {
 
 	rp ResultProcessorIface
 
+	cancelCurrentTest context.CancelFunc
+
+	testCanceled bool
+
 	failedTags []Tag
 }
 
@@ -56,7 +60,11 @@ func (s *Sequencer) Open(ctx context.Context) error {
 }
 
 // Run will run the sequence provided. FatalError must be called after Run to check for any non-recoverable errors.
-func (s *Sequencer) Run(ctx context.Context, seq Sequence, testId uuid.UUID) (bool, []Tag, error) {
+func (s *Sequencer) Run(
+	ctx context.Context,
+	seq Sequence,
+	cancelTest chan struct{},
+	testId uuid.UUID) (bool, []Tag, error) {
 	if len(seq) == 0 {
 		return false, nil, errors.New("sequence cannot be empty")
 	}
@@ -71,7 +79,7 @@ func (s *Sequencer) Run(ctx context.Context, seq Sequence, testId uuid.UUID) (bo
 
 	s.failedTags = []Tag{}
 
-	isPassing, err := s.runSequence(ctx, seq, testId)
+	isPassing, err := s.runSequence(ctx, seq, cancelTest, testId)
 	if err != nil {
 		return false, s.failedTags, errors.Wrap(err, "run sequence")
 	}
@@ -90,7 +98,7 @@ func (s *Sequencer) ResetFatalError() {
 	s.fatalErr.Reset()
 }
 
-func (s *Sequencer) runSequence(ctx context.Context, seq Sequence, testId uuid.UUID) (bool, error) {
+func (s *Sequencer) runSequence(ctx context.Context, seq Sequence, cancelTest chan struct{}, testId uuid.UUID) (bool, error) {
 	for idx, state := range seq {
 		s.progress.CurrentState = state
 		s.progress.StateIndex = idx
@@ -99,7 +107,7 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence, testId uuid.U
 
 		s.l.Info("starting next state", zap.String("state", state.Name()))
 
-		s.runState(ctx, state)
+		s.runState(ctx, cancelTest, state)
 
 		s.l.Info("processing results", zap.String("state", state.Name()))
 
@@ -126,7 +134,7 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence, testId uuid.U
 	return passingTest, nil
 }
 
-func (s *Sequencer) runState(ctx context.Context, state State) {
+func (s *Sequencer) runState(ctx context.Context, cancelTest chan struct{}, state State) {
 	var (
 		timeoutCtx context.Context
 		cancel     context.CancelFunc
@@ -135,8 +143,10 @@ func (s *Sequencer) runState(ctx context.Context, state State) {
 
 	startTime = time.Now()
 
-	timeoutCtx, cancel = context.WithTimeout(ctx, state.Timeout())
-	defer cancel()
+	timeoutCtx, s.cancelCurrentTest = context.WithTimeout(ctx, state.Timeout())
+	defer s.cancelCurrentTest()
+
+	go s.monitorCancelSignal(ctx, cancelTest)
 
 	s.l.Info("setting up state", zap.String("state", state.Name()))
 
@@ -228,6 +238,10 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 	s.progress.StatePassed = append(s.progress.StatePassed, statePassed)
 
 	switch {
+	// If test canceled should not continue to next states.
+	case s.testCanceled:
+		s.testCanceled = false
+		continueSequence = false
 	// If encountered fatal error, should not continue.
 	case state.FatalError() != nil:
 		continueSequence = false
@@ -242,4 +256,13 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 	}
 
 	return continueSequence, nil
+}
+
+func (s *Sequencer) monitorCancelSignal(ctx context.Context, cancelTest chan struct{}) {
+	select {
+	case <-ctx.Done():
+	case <-cancelTest:
+		s.testCanceled = true
+		s.cancelCurrentTest()
+	}
 }
