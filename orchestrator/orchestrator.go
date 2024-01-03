@@ -233,6 +233,10 @@ func (o *Orchestrator) monitorDispatcher(ctx context.Context, d DispatcherIface)
 			o.l.Info("received shutdown signal",
 				zap.String("dispatcher", d.Name()))
 
+			if o.state == Running {
+				o.cancelCurrentTest <- struct{}{}
+			}
+
 			o.shutdownSig <- ShutdownSignal{}
 
 			return
