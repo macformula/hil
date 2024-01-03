@@ -9,8 +9,7 @@ type Sequence []State
 type Progress struct {
 	CurrentState  State
 	StateIndex    int
-	Complete      bool
 	Sequence      Sequence
+	StatePassed   []bool
 	StateDuration []time.Duration
-	TotalStates   int
 }
