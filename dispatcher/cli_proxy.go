@@ -109,7 +109,6 @@ func (c *model) Quit() chan orchestrator.ShutdownSignal {
 }
 
 func (c *model) monitorDispatcher(ctx context.Context) {
-	c.l.Info("INSIDE MONITOR DISPATCHER")
 	for {
 		select {
 		case status := <-c.statusChan:
@@ -117,6 +116,8 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 
 			c.statusSignal = status
 			c.currentRunningTestId = status.TestId
+
+			c.fatalErr = status.FatalError
 
 			c.currentRunningResults = make([]result, showLastResults)
 			c.results = make([]result, showLastResults)
