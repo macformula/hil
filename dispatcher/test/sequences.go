@@ -14,8 +14,8 @@ var DoNothingSequence = flow.Sequence{
 }
 
 var SleepSequence = flow.Sequence{
-	&test.SleepState{SleepTime: 5 * time.Second},
-	&test.SleepState{SleepTime: 5 * time.Second},
+	&test.SleepState{SleepTime: 1 * time.Second},
+	&test.SleepState{SleepTime: 20 * time.Second},
 	&test.SleepState{SleepTime: 1 * time.Second},
 	&test.SleepState{SleepTime: 2 * time.Second},
 }
