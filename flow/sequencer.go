@@ -137,7 +137,6 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence, cancelTest ch
 func (s *Sequencer) runState(ctx context.Context, cancelTest chan struct{}, state State) {
 	var (
 		timeoutCtx context.Context
-		cancel     context.CancelFunc
 		startTime  time.Time
 	)
 
@@ -175,8 +174,8 @@ func (s *Sequencer) runState(ctx context.Context, cancelTest chan struct{}, stat
 		return
 	}
 
-	timeoutCtx, cancel = context.WithTimeout(ctx, state.Timeout())
-	defer cancel()
+	timeoutCtx, s.cancelCurrentTest = context.WithTimeout(ctx, state.Timeout())
+	defer s.cancelCurrentTest()
 
 	s.l.Info("running state", zap.String("state", state.Name()))
 
@@ -254,6 +253,8 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 	default:
 		continueSequence = false
 	}
+
+	s.regularErr.Reset()
 
 	return continueSequence, nil
 }
