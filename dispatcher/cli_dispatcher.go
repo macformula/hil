@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/macformula/hil/orchestrator"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -31,7 +32,7 @@ func NewCliDispatcher(l *zap.Logger) *CliDispatcher {
 		status:           make(chan orchestrator.StatusSignal),
 		cancelTest:       make(chan orchestrator.CancelTestSignal),
 		recoverFromFatal: make(chan orchestrator.RecoverFromFatalSignal),
-		cli:              newCli(zap.L()),
+		cli:              newCli(l),
 	}
 }
 
@@ -46,11 +47,10 @@ func (c *CliDispatcher) Close() error {
 
 func (c *CliDispatcher) Open(ctx context.Context) error {
 	err := c.cli.Open(ctx)
-	if err != nil {
-		return err
-	}
 
-	c.cli.Start()
+	if err != nil {
+		return errors.Wrap(err, "cli open")
+	}
 
 	go c.monitorCli(ctx, c.cli)
 	go c.monitorOrchestrator(ctx)
