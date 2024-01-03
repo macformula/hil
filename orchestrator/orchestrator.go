@@ -229,6 +229,12 @@ func (o *Orchestrator) monitorDispatcher(ctx context.Context, d DispatcherIface)
 			}
 
 			o.removeTestFromQueue(cancelTestSignal.TestId)
+
+			o.resultFeed.Send(ResultsSignal{
+				TestId:     cancelTestSignal.TestId,
+				IsPassing:  false,
+				FailedTags: make([]flow.Tag, 0),
+			})
 		case <-d.Shutdown():
 			o.l.Info("received shutdown signal",
 				zap.String("dispatcher", d.Name()))
