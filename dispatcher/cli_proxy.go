@@ -8,6 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
+	"github.com/macformula/hil/dispatcher/test"
 	"github.com/macformula/hil/orchestrator"
 	"go.uber.org/zap"
 	"io"
@@ -54,9 +55,9 @@ func newCli(l *zap.Logger) *model {
 
 func getItems() []list.Item {
 	return []list.Item{
-		item{title: "All Tests", desc: "Run all Test Suites"},
-		item{title: "AMK Test Suite", desc: "Runs all tests regarding the motor"},
-		item{title: "BMS Test Suite", desc: "Runs all tests regarding the battery"},
+		item{title: "All Tests (DoNothing)", desc: "Run all Test Suites", sequence: test.DoNothingSequence},
+		item{title: "AMK Test Suite (Sleep)", desc: "Runs all tests regarding the motor", sequence: test.SleepSequence},
+		item{title: "BMS Test Suite (FatalError)", desc: "Runs all tests regarding the battery", sequence: test.FatalErrorSequence},
 	}
 }
 
