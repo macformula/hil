@@ -257,8 +257,6 @@ func (o *Orchestrator) monitorProgress(ctx context.Context) {
 			o.statusUpdate()
 		case <-ctx.Done():
 			return
-		case <-o.shutdownSig:
-			return
 		}
 	}
 }

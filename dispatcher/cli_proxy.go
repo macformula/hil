@@ -10,7 +10,6 @@ import (
 	"github.com/macformula/hil/orchestrator"
 	"go.uber.org/zap"
 	"io"
-	"log"
 	"os"
 )
 
@@ -62,15 +61,12 @@ func getItems() []list.Item {
 
 func (c *model) Close() error { // doesnt work
 	c.Quitting = true
-	fmt.Println("quitting")
 	return nil
 }
 
 func (c *model) Open(ctx context.Context) error {
 	go c.run()
-	c.l.Info("BEFORE MONITOR")
 	go c.monitorDispatcher(ctx)
-	c.l.Info("AFTER MONITOR")
 
 	return nil
 }
@@ -84,7 +80,6 @@ func (c *model) run() {
 	defer f.Close()
 
 	p := tea.NewProgram(c, tea.WithAltScreen())
-	//c.program = p
 
 	if _, err := p.Run(); err != nil {
 		fmt.Println("Error running program:", err)
@@ -122,8 +117,6 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 			c.statusSignal = status
 			c.currentRunningTestId = status.TestId
 
-			log.Printf("%s Inside monitorDispatcher %s, %p", status, status.OrchestratorState, &c)
-
 			c.currentRunningResults = make([]result, showLastResults)
 			c.results = make([]result, showLastResults)
 			progress := status.Progress
@@ -142,7 +135,6 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 				continue
 			}
 			c.orchestratorWorking = true
-			// populate currentRunningResults
 
 			for i, passed := range progress.StatePassed {
 				duration := progress.StateDuration[i]
@@ -165,7 +157,11 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 				}
 			}
 		case results := <-c.resultsChan:
-			c.l.Info("results signal received")
+			c.l.Info("results signal received",
+				zap.Any("failed tags", results.FailedTags),
+				zap.Bool("is passing", results.IsPassing),
+				zap.Any("tagId from results", results.TestId),
+				zap.Any("tagId stored", c.testToRun))
 
 			c.resultsSignal = results
 			if results.TestId == c.testToRun {
@@ -173,8 +169,6 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 			}
 			c.Ticks = _timeAFK
 			c.results = make([]result, showLastResults)
-
-			log.Printf("%s Inside monitorDispatcher resultsChan %s, %p", c.resultsSignal, c.currentScreen, &c)
 		case <-ctx.Done():
 			c.l.Info("context done signal received")
 
