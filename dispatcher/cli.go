@@ -160,7 +160,6 @@ func updateRunning(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			//m.currentScreen = Idle
 			testId := m.testToRun
-			//m.testToRun = uuid.New()
 			m.cancelChan <- orchestrator.CancelTestSignal{TestId: testId}
 			return m, nil
 		default:
