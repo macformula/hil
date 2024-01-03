@@ -148,11 +148,15 @@ func (o *Orchestrator) Run(ctx context.Context) error {
 			o.l.Error("sequencer run", zap.Error(errors.Wrap(err, "run")))
 		}
 
+		o.l.Info("sending results")
+
 		o.resultFeed.Send(ResultsSignal{
 			TestId:     o.currentTest,
 			IsPassing:  isPassing,
 			FailedTags: failedTags,
 		})
+
+		o.resetProgress()
 
 		err = o.sequencer.FatalError()
 		if err != nil {
@@ -253,6 +257,13 @@ func (o *Orchestrator) monitorProgress(ctx context.Context) {
 			return
 		}
 	}
+}
+
+func (o *Orchestrator) resetProgress() {
+	o.progressMtx.Lock()
+	defer o.progressMtx.Unlock()
+
+	o.progress = flow.Progress{}
 }
 
 func (o *Orchestrator) addTestToQueue(startSig StartSignal) {

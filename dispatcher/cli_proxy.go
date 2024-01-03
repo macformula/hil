@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/google/uuid"
 	"github.com/macformula/hil/orchestrator"
 	"go.uber.org/zap"
 	"io"
@@ -120,7 +121,10 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 			c.currentRunningResults = make([]result, showLastResults)
 			c.results = make([]result, showLastResults)
 			progress := status.Progress
-			c.l.Info("progress state info", zap.Bools("state passed", progress.StatePassed), zap.Durations("state durations", progress.StateDuration))
+			c.l.Info("progress state info",
+				zap.Bools("state passed", progress.StatePassed),
+				zap.Durations("state durations", progress.StateDuration),
+				zap.String("testid", status.TestId.String()))
 
 			if c.currentScreen == FatalError && status.OrchestratorState != orchestrator.FatalError {
 				c.currentScreen = Idle
@@ -167,6 +171,9 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 			if results.TestId == c.testToRun {
 				c.currentScreen = Results
 			}
+
+			c.testToRun = uuid.New()
+
 			c.Ticks = _timeAFK
 			c.results = make([]result, showLastResults)
 		case <-ctx.Done():

@@ -159,9 +159,9 @@ func updateRunning(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
-			m.currentScreen = Idle
+			//m.currentScreen = Idle
 			testId := m.testToRun
-			m.testToRun = uuid.New()
+			//m.testToRun = uuid.New()
 			m.cancelChan <- orchestrator.CancelTestSignal{TestId: testId}
 			return m, nil
 		default:
@@ -195,7 +195,6 @@ func updateFatal(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 func updateResults(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tickMsg:
-		//log.Printf("%s Inside updateResults %s", m.statusSignal, m.currentScreen)
 		if m.Ticks == 0 {
 			m.currentScreen = Idle
 			return m, m.spinner.Tick
