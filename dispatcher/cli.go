@@ -43,7 +43,6 @@ type model struct {
 	cancelChan  chan orchestrator.CancelTestSignal
 	quit        chan orchestrator.ShutdownSignal // temporary
 
-	//program       *tea.Program
 	currentScreen         screenState
 	results               []result
 	currentRunningResults []result
@@ -51,6 +50,7 @@ type model struct {
 	testToRun             orchestrator.TestId
 	testItem              item
 	orchestratorWorking   bool
+	fatalErr              error
 }
 
 func (c *model) Init() tea.Cmd {
@@ -271,6 +271,7 @@ func currentRunningTestView(m *model) string {
 func fatalView(m *model) string {
 	s := "\n"
 	s += helpStyle(fmt.Sprintf("\nHit \"enter\" to send the fatal recovery signal (ONLY DO THIS IF YOU FIXED THE PROBLEM)\n"))
+	s += errorStyle(fmt.Sprintf("\nERROR: %s", m.fatalErr.Error()))
 	return s
 }
 
@@ -315,6 +316,7 @@ var (
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
 var helpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Render
+var errorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#ff0000")).Render
 
 type item struct {
 	title string
@@ -350,7 +352,7 @@ func frame() tea.Cmd {
 }
 
 func getSequence(i item) flow.Sequence {
-	return test.SleepSequence
+	return test.FatalErrorSequence
 }
 
 func getMetaData(i item) map[string]string {
