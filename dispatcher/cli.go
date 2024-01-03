@@ -14,7 +14,6 @@ import (
 	"github.com/muesli/reflow/indent"
 	"github.com/muesli/termenv"
 	"go.uber.org/zap"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -55,11 +54,7 @@ type model struct {
 }
 
 func (c *model) Init() tea.Cmd {
-	//f := runPretendProcess(c)
-	return tea.Batch(
-		c.spinner.Tick,
-		//f,
-	)
+	return c.spinner.Tick
 }
 
 // Main update function.
@@ -76,7 +71,6 @@ func (c *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Hand off the message and model to the appropriate update function for the
 	// appropriate view based on the current state.
-	log.Printf("%s Inside Main UPDATE %s, %p", c.resultsSignal, c.currentScreen, &c)
 	switch c.currentScreen {
 	case Idle:
 		return updateIdle(msg, c)
@@ -134,6 +128,7 @@ func updateIdle(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 				}
 				m.testItem = i
 			}
+
 			m.currentScreen = Running
 			m.results = make([]result, showLastResults)
 			return m, m.spinner.Tick
@@ -165,8 +160,9 @@ func updateRunning(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c":
 			m.currentScreen = Idle
-			m.cancelChan <- orchestrator.CancelTestSignal{TestId: m.testToRun}
-			m.testToRun = orchestrator.TestId{}
+			testId := m.testToRun
+			m.testToRun = uuid.New()
+			m.cancelChan <- orchestrator.CancelTestSignal{TestId: testId}
 			return m, nil
 		default:
 			return m, nil
@@ -218,22 +214,6 @@ func updateResults(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 }
 
 // Sub-views
-
-// processFinishedMsg is sent when a pretend process completes.
-type processFinishedMsg time.Duration
-
-// pretendProcess simulates a long-running process.
-func runPretendProcess(m *model) tea.Cmd {
-	startTime := time.Now()
-	//status := <-m.statusChan
-	//m.status = status
-	endTime := time.Now()
-	elapsedTime := endTime.Sub(startTime)
-	return func() tea.Msg {
-		return processFinishedMsg(elapsedTime)
-	}
-}
-
 func idleView(m *model) string {
 	return lipgloss.JoinHorizontal(lipgloss.Top, docStyle.Render(m.list.View()), "\n"+currentRunningTestView(m))
 }

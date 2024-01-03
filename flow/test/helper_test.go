@@ -20,7 +20,7 @@ func SetupSequencer(t *testing.T, logFileName string) (*flow.Sequencer, *zap.Log
 	}
 	defer logger.Sync()
 
-	sequencer := flow.NewSequencer(simpleResultProcessor{}, logger)
+	sequencer := flow.NewSequencer(&SimpleResultProcessor{}, logger)
 
 	go func(s *flow.Sequencer, l *zap.Logger) {
 		prog := make(chan flow.Progress)

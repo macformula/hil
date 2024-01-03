@@ -4,10 +4,12 @@ import (
 	"context"
 	"github.com/macformula/hil/dispatcher"
 	"github.com/macformula/hil/flow"
-	"github.com/macformula/hil/flow/test"
+	ftest "github.com/macformula/hil/flow/test"
 	"github.com/macformula/hil/orchestrator"
+	otest "github.com/macformula/hil/orchestrator/test"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"time"
 )
 
 const (
@@ -25,9 +27,10 @@ func main() {
 	}
 	defer logger.Sync()
 
-	rp := test.NewSimpleResultProcessor(logger)
+	rp := ftest.NewSimpleResultProcessor(logger)
 	s := flow.NewSequencer(rp, logger)
 	d := dispatcher.NewCliDispatcher(logger)
+	otest.NewSimpleDispatcher(5*time.Second, 10*time.Second)
 	o := orchestrator.NewOrchestrator(s, logger, d)
 
 	err = o.Open(context.Background())
@@ -39,6 +42,8 @@ func main() {
 	if err != nil {
 		panic(errors.Wrap(err, "orchestrator run"))
 	}
+
+	logger.Info("shutdown main program")
 }
 
 //func main() {
