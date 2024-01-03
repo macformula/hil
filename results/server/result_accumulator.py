@@ -109,9 +109,9 @@ class ResultAccumulator:
         dt = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         html_file_name = f"pytest_report_{dt}.html"
         html_cli_arg = f"--html=logs/{html_file_name}"
-        html = f"--html=logs/pytest_report_{dt}.html"
+        html = f"--html='./logs/pytest_report_{dt}.html'"
         pytest.main(
-            ["-v", "--showlocals", "--durations=10", test_file_path, html],
+            ["-v", "--showlocals", "--durations=10", html, test_file_path],
             plugins=[self],
         )
 
