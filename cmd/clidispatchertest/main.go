@@ -6,10 +6,8 @@ import (
 	"github.com/macformula/hil/flow"
 	ftest "github.com/macformula/hil/flow/test"
 	"github.com/macformula/hil/orchestrator"
-	otest "github.com/macformula/hil/orchestrator/test"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"time"
 )
 
 const (
@@ -30,7 +28,7 @@ func main() {
 	rp := ftest.NewSimpleResultProcessor(logger)
 	s := flow.NewSequencer(rp, logger)
 	d := dispatcher.NewCliDispatcher(logger)
-	otest.NewSimpleDispatcher(5*time.Second, 10*time.Second)
+	//d2 := otest.NewSimpleDispatcher(5*time.Second, 10*time.Second)
 	o := orchestrator.NewOrchestrator(s, logger, d)
 
 	err = o.Open(context.Background())

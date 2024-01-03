@@ -8,7 +8,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
 	"github.com/lucasb-eyer/go-colorful"
-	"github.com/macformula/hil/dispatcher/test"
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/orchestrator"
 	"github.com/muesli/reflow/indent"
@@ -319,8 +318,9 @@ var helpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Render
 var errorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#ff0000")).Render
 
 type item struct {
-	title string
-	desc  string
+	title    string
+	desc     string
+	sequence flow.Sequence
 }
 
 func (i item) Title() string       { return i.title }
@@ -352,7 +352,7 @@ func frame() tea.Cmd {
 }
 
 func getSequence(i item) flow.Sequence {
-	return test.FatalErrorSequence
+	return i.sequence
 }
 
 func getMetaData(i item) map[string]string {
