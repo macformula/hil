@@ -14,8 +14,7 @@ import (
 )
 
 const (
-	_loggerName      = "orchestrator"
-	_maxTestQueueLen = 10
+	_loggerName = "orchestrator"
 )
 
 type Orchestrator struct {
@@ -41,7 +40,7 @@ type Orchestrator struct {
 	statusFeed event.Feed
 	statusSubs []event.Subscription
 
-	cancelCurrentTest context.CancelFunc
+	cancelCurrentTest chan struct{}
 
 	testQueueMtx sync.Mutex
 	progressMtx  sync.Mutex
@@ -51,22 +50,19 @@ type Orchestrator struct {
 
 func NewOrchestrator(s SequencerIface, l *zap.Logger, dispatchers ...DispatcherIface) *Orchestrator {
 	ret := &Orchestrator{
-		l:               l.Named(_loggerName),
-		state:           Idle,
-		currentTest:     uuid.Nil,
-		sequencer:       s,
-		progress:        flow.Progress{},
-		testQueue:       make([]StartSignal, 0),
-		shutdownSig:     make(chan ShutdownSignal),
-		recoverFatalSig: make(chan RecoverFromFatalSignal),
-		progCh:          make(chan flow.Progress),
-		testQueueMtx:    sync.Mutex{},
-		progressMtx:     sync.Mutex{},
-		fatalErr:        utils.NewResettaleError(),
-	}
-
-	ret.cancelCurrentTest = func() {
-		ret.l.Error("cancel current test func not set")
+		l:                 l.Named(_loggerName),
+		state:             Idle,
+		currentTest:       uuid.Nil,
+		sequencer:         s,
+		progress:          flow.Progress{},
+		testQueue:         make([]StartSignal, 0),
+		shutdownSig:       make(chan ShutdownSignal),
+		recoverFatalSig:   make(chan RecoverFromFatalSignal),
+		progCh:            make(chan flow.Progress),
+		cancelCurrentTest: make(chan struct{}),
+		testQueueMtx:      sync.Mutex{},
+		progressMtx:       sync.Mutex{},
+		fatalErr:          utils.NewResettaleError(),
 	}
 
 	for _, d := range dispatchers {
@@ -144,12 +140,10 @@ func (o *Orchestrator) Run(ctx context.Context) error {
 
 		o.currentTest = startSig.TestId
 
-		ctx, o.cancelCurrentTest = context.WithCancel(ctx)
-
 		o.state = Running
 		o.statusUpdate()
 
-		isPassing, failedTags, err := o.sequencer.Run(ctx, startSig.Seq, o.currentTest)
+		isPassing, failedTags, err := o.sequencer.Run(ctx, startSig.Seq, o.cancelCurrentTest, o.currentTest)
 		if err != nil {
 			o.l.Error("sequencer run", zap.Error(errors.Wrap(err, "run")))
 		}
@@ -225,7 +219,7 @@ func (o *Orchestrator) monitorDispatcher(ctx context.Context, d DispatcherIface)
 				zap.String("test id", cancelTestSignal.TestId.String()))
 
 			if cancelTestSignal.TestId == o.currentTest {
-				o.cancelCurrentTest()
+				o.cancelCurrentTest <- struct{}{}
 
 				continue
 			}
