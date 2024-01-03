@@ -5,7 +5,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/macformula/hil/dispatcher/test"
 	"github.com/macformula/hil/orchestrator"
+	"go.uber.org/zap"
 	"time"
+)
+
+const (
+	_loggerName = "simpledispatcher"
 )
 
 type SimpleDispatcher struct {
@@ -16,10 +21,12 @@ type SimpleDispatcher struct {
 	status          chan orchestrator.StatusSignal
 	resultsSig      chan orchestrator.ResultsSignal
 	durations       []time.Duration
+	l               *zap.Logger
 }
 
-func NewSimpleDispatcher(durations ...time.Duration) *SimpleDispatcher {
+func NewSimpleDispatcher(l *zap.Logger, durations ...time.Duration) *SimpleDispatcher {
 	return &SimpleDispatcher{
+		l:               l.Named(_loggerName),
 		startSig:        make(chan orchestrator.StartSignal),
 		shutdownSig:     make(chan orchestrator.ShutdownSignal),
 		cancelSig:       make(chan orchestrator.CancelTestSignal),
@@ -40,6 +47,7 @@ func (s *SimpleDispatcher) Name() string {
 
 func (s *SimpleDispatcher) Open(ctx context.Context) error {
 	go s.simulate(s.durations)
+	go s.monitorOrchestrator(ctx)
 	return nil
 }
 
@@ -83,4 +91,25 @@ func (s *SimpleDispatcher) Status() chan<- orchestrator.StatusSignal {
 
 func (s *SimpleDispatcher) Results() chan<- orchestrator.ResultsSignal {
 	return s.resultsSig
+}
+
+func (s *SimpleDispatcher) monitorOrchestrator(ctx context.Context) {
+	for {
+		select {
+		case status := <-s.status:
+			s.l.Info("status signal received",
+				zap.String("testid", status.TestId.String()),
+				zap.String("orchestrator state", status.OrchestratorState.String()))
+
+		case results := <-s.resultsSig:
+			s.l.Info("results signal received",
+				zap.String("testid", results.TestId.String()))
+
+		case <-ctx.Done():
+			s.l.Info("context done signal received")
+
+			s.Close()
+			return
+		}
+	}
 }

@@ -172,9 +172,8 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 			c.resultsSignal = results
 			if results.TestId == c.testToRun {
 				c.currentScreen = Results
+				c.testToRun = uuid.New()
 			}
-
-			c.testToRun = uuid.New()
 
 			c.Ticks = _timeAFK
 			c.results = make([]result, showLastResults)
