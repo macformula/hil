@@ -1,4 +1,5 @@
 import pytest
+import git
 from jinja2 import Template
 from tag import Tag
 from typing import Union
@@ -8,19 +9,29 @@ import json
 import datetime
 import os
 
-# File paths
-TEMPLATE_FILE_PATH = "./results/server/tm.py.jinja"
-
-
 class ResultAccumulator:
-    def __init__(self, tag_fp: str, schema_fp: str, historic_tests_fp: str) -> None:
+    def __init__(self, 
+                 tags_fp: str, 
+                 tags_schema_fp: str, 
+                 template_fp: str,
+                 historic_tests_fp: str, 
+                 reports_dir: str,
+                 pages_repo_dir: str,
+                 pages_branch: str,
+                 git_username: str,
+                 git_email: str) -> None:
         # Generate tag database from yaml file
-        self.__parse_args(tag_fp, schema_fp)
+        self.__parse_args(tags_fp, tags_schema_fp)
         self.tag_submissions: dict[str, any] = {}  # tag_id -> value cache
         self.error_submissions: list[str] = []  # list of cached errors
         self.historic_tests_fp = historic_tests_fp
+        self.template_fp = template_fp
+        self.reports_dir = reports_dir
+        self.pages_repo_dir = pages_repo_dir
+        self.pages_branch = pages_branch
+        self.git_username = git_username
+        self.git_email = git_email
         self.all_tags_passing = True
-
 
     def submit_tag(self, tag_id: str, value: any) -> Union[bool, KeyError]:
         """On tag submissions"""
@@ -94,7 +105,7 @@ class ResultAccumulator:
 
     def __generate_test_file(self, tag_ids: list) -> [str, str]:
         """Creates file from tag submissions, runs tests on it, then deletes it"""
-        template = self.load_template_from_file(TEMPLATE_FILE_PATH)
+        template = self.load_template_from_file(self.template_fp)
         test_file_content = template.render(
             tag_db=self.tag_db,
             tag_submissions=self.tag_submissions,
@@ -107,17 +118,16 @@ class ResultAccumulator:
             file.write(test_file_content)
 
         dt = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        html_file_name = f"pytest_report_{dt}.html"
-        html_cli_arg = f"--html=logs/{html_file_name}"
-        html = f"--html='./logs/pytest_report_{dt}.html'"
+        html_file_name = f"hil_report_{dt}.html"
+        html_cli_arg = f"--html={self.reports_dir}/{html_file_name}"
         pytest.main(
-            ["-v", "--showlocals", "--durations=10", html, test_file_path],
+            ["-v", "--showlocals", "--durations=10", html_cli_arg, test_file_path],
             plugins=[self],
         )
 
         os.remove(test_file_path)
 
-        return html_file_name, dt
+        return dt
 
     def generate_and_run_tests(self, test_id: str) -> bool:
         """On CompleteTest submissions
@@ -126,14 +136,13 @@ class ResultAccumulator:
 
         returns overall pass/fail"""
         tag_ids = list(self.tag_submissions.keys())
-        html_file_name, dt = self.__generate_test_file(tag_ids)
+        date_time = self.__generate_test_file(tag_ids)
 
         has_errors = len(self.error_submissions) > 0
         overall_pass_fail = self.all_tags_passing and (not has_errors)
 
-        self.__update_historic_tests(test_id, dt, overall_pass_fail)
-        self.__generate_index_html(html_file_name)
-        self.__commit_to_github_pages()
+        self.__update_historic_tests(test_id, date_time, overall_pass_fail)
+        self.__push_to_github_pages(test_id)
 
         # reset cached submissions
         self.tag_submissions = {}
@@ -154,17 +163,35 @@ class ResultAccumulator:
         with open(self.historic_tests_fp, 'r') as file:
             existing_tests = json.load(file)
 
-        # Append the new test to the existing tests
-        existing_tests.append(new_test)
+        # Prepend the new test to the existing tests
+        existing_tests.insert(0, new_test)
 
         # Save the updated list back to the JSON file
         with open(self.historic_tests_fp, 'w') as file:
             json.dump(existing_tests, file, indent=2)
 
-    def __generate_index_html(self, html_file_name):
-        #TODO: Implement me @itshady
-        return
+    def __push_to_github_pages(self, test_id) -> None:
+        repo = git.Repo(self.pages_repo_dir)
 
-    def __commit_to_github_pages(self):
-        #TODO: Implement me
+        # Set Git user name and email for the repository
+        repo.config_writer().set_value("user", "name", self.git_username).release()
+        repo.config_writer().set_value("user", "email", self.git_email).release()
+
+        # Add all changes to the index
+        repo.git.add('*')
+
+        # Commit changes
+        repo.index.commit(test_id)
+
+        # Fetch updates from the remote repository
+        repo.remotes.origin.fetch()
+
+        # Ensure we are on the branch that needs to be updated
+        repo.heads[self.pages_branch].checkout()
+
+        # Rebase changes
+        repo.git.rebase('origin/' + self.pages_branch)
+
+        # Push the changes, forcing the update to the remote branch
+        repo.git.push()
         return
