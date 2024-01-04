@@ -152,11 +152,14 @@ class ResultAccumulator:
         return overall_pass_fail
 
     def __update_historic_tests(self, test_id: str, dt: str, test_passed: bool) -> None:
+        ymd, hms = dt.split('_')
+
         # Replace the following line with your logic to determine test pass/fail
         new_test = {
             "testId": test_id,
             "testPassed": test_passed,
-            "date": dt
+            "date": ymd,
+            "time": hms
         }
 
         # Load existing tests from the JSON file
