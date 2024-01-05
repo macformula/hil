@@ -9,17 +9,22 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const addr = "localhost:31763"
-
 type ResultsClient struct {
+	addr   string
 	conn   *grpc.ClientConn
 	client proto.TagTunnelClient
 }
 
+func NewResultsClient(ip, port string) *ResultsClient {
+	return &ResultsClient{
+		addr: ip + ":" + port,
+	}
+}
+
 func (r *ResultsClient) Open(ctx context.Context) error {
-	conn, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.DialContext(ctx, r.addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "dial context")
 	}
 	r.conn = conn
 	r.client = proto.NewTagTunnelClient(conn)
@@ -29,20 +34,23 @@ func (r *ResultsClient) Open(ctx context.Context) error {
 func (r *ResultsClient) SubmitTag(ctx context.Context, tag string, value any) (bool, error) {
 	request, err := createRequest(tag, value)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "create request")
 	}
 
 	reply, err := r.client.SubmitTag(ctx, request)
 	if err != nil {
-		return reply.Success, err
+		if !reply.Success {
+			return false, errors.New(reply.Error)
+		}
+		return reply.IsPassing, errors.Wrap(err, "submit tag")
 	}
-	return reply.Success, nil
+	return reply.IsPassing, nil
 }
 
 func (r *ResultsClient) CompleteTest(ctx context.Context, testId uuid.UUID) (bool, error) {
 	reply, err := r.client.CompleteTest(ctx, &proto.CompleteTestRequest{TestId: testId.String()})
 	if err != nil {
-		return reply.TestPassed, err
+		return reply.TestPassed, errors.Wrap(err, "complete test")
 	}
 	return reply.TestPassed, nil
 }
@@ -50,7 +58,7 @@ func (r *ResultsClient) CompleteTest(ctx context.Context, testId uuid.UUID) (boo
 func (r *ResultsClient) SubmitError(ctx context.Context, err error) error {
 	_, submitErr := r.client.SubmitError(ctx, &proto.SubmitErrorRequest{Error: err.Error()})
 	if submitErr != nil {
-		return submitErr
+		return errors.Wrap(err, "submit error")
 	}
 	return nil
 }
@@ -67,7 +75,7 @@ func createRequest(tag string, data any) (*proto.SubmitTagRequest, error) {
 	case bool:
 		request.Data = &proto.SubmitTagRequest_ValueBool{ValueBool: data.(bool)}
 	default:
-		return nil, errors.New("unsupported data type for tag submission")
+		return nil, errors.Errorf("unsupported data type for tag submission (%T)", data)
 	}
 	return request, nil
 }
