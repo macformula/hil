@@ -144,21 +144,28 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 
 			for i, passed := range progress.StatePassed {
 				duration := progress.StateDuration[i]
+				state := status.Progress.Sequence[i].Name()
 
 				desc := "Passed"
+				isPassed := true
 				if !passed {
-					desc = "Failed"
+					desc = "Failed" // not useful currently
+					isPassed = false
 				}
 
 				c.currentRunningResults = append(c.currentRunningResults[1:], result{
 					duration: duration,
 					desc:     desc,
+					passed:   isPassed,
+					name:     state,
 				})
 
 				if c.currentRunningTestId == c.testToRun {
 					c.results = append(c.results[1:], result{
 						duration: duration,
 						desc:     desc,
+						passed:   isPassed,
+						name:     state,
 					})
 				}
 			}
@@ -173,9 +180,9 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 			if results.TestId == c.testToRun {
 				c.currentScreen = Results
 				c.testToRun = uuid.New()
+				c.Ticks = _timeAFK
 			}
 
-			c.Ticks = _timeAFK
 			c.results = make([]result, showLastResults)
 		case <-ctx.Done():
 			c.l.Info("context done signal received")
