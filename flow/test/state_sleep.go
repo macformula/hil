@@ -25,7 +25,7 @@ func (s *SleepState) ContinueOnFail() bool {
 
 // Timeout returns the state setup and run timeout.
 func (s *SleepState) Timeout() time.Duration {
-	return s.SleepTime
+	return s.SleepTime + 1*time.Second
 }
 
 // Setup executes any necessary setup logic before run.
