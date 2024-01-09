@@ -11,7 +11,7 @@ type ResultProcessorIface interface {
 	Open(context.Context) error
 	SubmitTag(ctx context.Context, tagId string, value any) (bool, error)
 	CompleteTest(ctx context.Context, testId uuid.UUID) (bool, error)
-	EncounteredError(ctx context.Context, err error) error
+	SubmitError(ctx context.Context, err error) error
 }
 
 // State is a set of logic that gets executed as a part of a Sequence.

@@ -47,7 +47,7 @@ func (s *SimpleResultProcessor) CompleteTest(ctx context.Context, testId uuid.UU
 	return s.overallPassFail, nil
 }
 
-func (s *SimpleResultProcessor) EncounteredError(ctx context.Context, err error) error {
+func (s *SimpleResultProcessor) SubmitError(ctx context.Context, err error) error {
 	s.overallPassFail = false
 	return nil
 }

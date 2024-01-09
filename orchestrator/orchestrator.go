@@ -143,7 +143,7 @@ func (o *Orchestrator) Run(ctx context.Context) error {
 		o.state = Running
 		o.statusUpdate()
 
-		isPassing, failedTags, err := o.sequencer.Run(ctx, startSig.Seq, o.cancelCurrentTest, o.currentTest)
+		isPassing, failedTags, testErrors, err := o.sequencer.Run(ctx, startSig.Seq, o.cancelCurrentTest, o.currentTest)
 		if err != nil {
 			o.l.Error("sequencer run", zap.Error(errors.Wrap(err, "run")))
 		}
@@ -154,6 +154,7 @@ func (o *Orchestrator) Run(ctx context.Context) error {
 			TestId:     o.currentTest,
 			IsPassing:  isPassing,
 			FailedTags: failedTags,
+			TestErrors: testErrors,
 		})
 
 		o.resetProgress()
