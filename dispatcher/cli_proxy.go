@@ -151,13 +151,13 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 			}
 			c.orchestratorWorking = true
 
-			for i, passed := range progress.StatePassed {
+			for i, statePassed := range progress.StatePassed {
 				duration := progress.StateDuration[i]
-				state := status.Progress.Sequence.States[i].Name()
+				stateName := status.Progress.Sequence.States[i].Name()
 
 				desc := "Passed"
 				isPassed := true
-				if !passed {
+				if !statePassed {
 					desc = "Failed" // not useful currently
 					isPassed = false
 				}
@@ -166,7 +166,7 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 					duration: duration,
 					desc:     desc,
 					passed:   isPassed,
-					name:     state,
+					name:     stateName,
 				})
 
 				if c.currentRunningTestId == c.testToRun {
@@ -174,7 +174,7 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 						duration: duration,
 						desc:     desc,
 						passed:   isPassed,
-						name:     state,
+						name:     stateName,
 					})
 				}
 			}
