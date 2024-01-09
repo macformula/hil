@@ -329,9 +329,8 @@ func resultsView(m *model) string {
 
 	if results.TestErrors != nil && len(results.TestErrors) > 0 {
 		builder.WriteString("Errors:\n")
-		for i, err := range results.TestErrors {
-			builder.WriteString(fmt.Sprintf("\t(%d) %s\n", i, err))
-			builder.WriteString("\n")
+		for _, err := range results.TestErrors {
+			builder.WriteString(fmt.Sprintf("\t❌  %s\n", err))
 		}
 	} else {
 		builder.WriteString("No errors.\n")
