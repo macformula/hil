@@ -32,6 +32,7 @@ type ResultsSignal struct {
 	IsPassing bool
 	// Should be of type Tag, will replace this later
 	FailedTags []flow.Tag
+	TestErrors []error
 }
 
 type CancelTestSignal struct {

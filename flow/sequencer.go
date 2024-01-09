@@ -31,6 +31,7 @@ type Sequencer struct {
 	testCanceled bool
 
 	failedTags []Tag
+	testErrors []error
 }
 
 // NewSequencer returns a Sequencer object reference.
@@ -64,9 +65,9 @@ func (s *Sequencer) Run(
 	ctx context.Context,
 	seq Sequence,
 	cancelTest chan struct{},
-	testId uuid.UUID) (bool, []Tag, error) {
+	testId uuid.UUID) (bool, []Tag, []error, error) {
 	if len(seq) == 0 {
-		return false, nil, errors.New("sequence cannot be empty")
+		return false, nil, []error{errors.New("sequence cannot be empty")}, errors.New("sequence cannot be empty")
 	}
 
 	s.progress = Progress{
@@ -81,10 +82,10 @@ func (s *Sequencer) Run(
 
 	isPassing, err := s.runSequence(ctx, seq, cancelTest, testId)
 	if err != nil {
-		return false, s.failedTags, errors.Wrap(err, "run sequence")
+		return false, s.failedTags, s.testErrors, errors.Wrap(err, "run sequence")
 	}
 
-	return isPassing, s.failedTags, nil
+	return isPassing, s.failedTags, s.testErrors, nil
 }
 
 // FatalError indicates that there is an error that requires intervention.
@@ -207,14 +208,18 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 	if s.regularErr.Err() != nil {
 		statePassed = false
 
-		err := s.rp.EncounteredError(ctx, s.regularErr.Err())
+		s.testErrors = append(s.testErrors, s.regularErr.Err())
+
+		err := s.rp.SubmitError(ctx, s.regularErr.Err())
 		if err != nil {
 			return false, errors.Wrap(err, "encountered error")
 		}
 	}
 
 	if s.fatalErr.Err() != nil {
-		err := s.rp.EncounteredError(ctx, s.fatalErr.Err())
+		statePassed = false
+
+		err := s.rp.SubmitError(ctx, s.fatalErr.Err())
 		if err != nil {
 			return false, errors.Wrap(err, "encountered error")
 		}

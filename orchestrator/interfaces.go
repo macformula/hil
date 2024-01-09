@@ -14,7 +14,7 @@ type SequencerIface interface {
 	// SubscribeToProgress subscribes to the progress of the Sequencer across its Sequence runs.
 	SubscribeToProgress(progCh chan flow.Progress) event.Subscription
 	// Run will run the sequence provided. FatalError must be called after Run to check for any non-recoverable errors.
-	Run(context.Context, flow.Sequence, chan struct{}, TestId) (bool, []flow.Tag, error)
+	Run(context.Context, flow.Sequence, chan struct{}, TestId) (bool, []flow.Tag, []error, error)
 	// FatalError indicates that there is an error that requires intervention.
 	FatalError() error
 	// ResetFatalError sets the fatal error to nil.
