@@ -66,7 +66,7 @@ func (s *Sequencer) Run(
 	seq Sequence,
 	cancelTest chan struct{},
 	testId uuid.UUID) (bool, []Tag, []error, error) {
-	if len(seq) == 0 {
+	if len(seq.States) == 0 {
 		return false, nil, []error{errors.New("sequence cannot be empty")}, errors.New("sequence cannot be empty")
 	}
 
@@ -100,7 +100,7 @@ func (s *Sequencer) ResetFatalError() {
 }
 
 func (s *Sequencer) runSequence(ctx context.Context, seq Sequence, cancelTest chan struct{}, testId uuid.UUID) (bool, error) {
-	for idx, state := range seq {
+	for idx, state := range seq.States {
 		s.progress.CurrentState = state
 		s.progress.StateIndex = idx
 
