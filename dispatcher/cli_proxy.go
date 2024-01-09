@@ -57,8 +57,6 @@ func getItems() []list.Item {
 	l := []list.Item{}
 	for _, s := range test.Sequences {
 		l = append(l, item{
-			title:    s.Name,
-			desc:     s.Desc,
 			sequence: s,
 		})
 	}

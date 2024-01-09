@@ -242,7 +242,7 @@ func runningView(m *model) string {
 		s += fmt.Sprintf("%s currently running...\n", state.Name())
 	}
 
-	s += helpStyle(fmt.Sprintf("\nCurrent test running: %s\n", m.testItem.title))
+	s += helpStyle(fmt.Sprintf("\nCurrent test running: %s\n", m.testItem.sequence.Name))
 	s += helpStyle(fmt.Sprintf("\nTest_ID: %s\n", m.testToRun.String()))
 	s += helpStyle(fmt.Sprintf("\nCtrl+c to cancel the test\n"))
 
@@ -361,14 +361,12 @@ var helpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Render
 var errorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#ff0000")).Render
 
 type item struct {
-	title    string
-	desc     string
 	sequence flow.Sequence
 }
 
-func (i item) Title() string       { return i.title }
-func (i item) Description() string { return i.desc }
-func (i item) FilterValue() string { return i.title }
+func (i item) Title() string       { return i.sequence.Name }
+func (i item) Description() string { return i.sequence.Desc }
+func (i item) FilterValue() string { return i.sequence.Name }
 
 type (
 	tickMsg  struct{}
@@ -402,8 +400,7 @@ func getSequence(i item) flow.Sequence {
 
 func getMetaData(i item) map[string]string {
 	metaData := make(map[string]string)
-	metaData["title"] = i.title
-	metaData["desc"] = i.desc
+	// No metadata required yet
 	return metaData
 }
 
