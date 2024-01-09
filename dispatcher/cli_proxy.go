@@ -144,7 +144,7 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 
 			for i, passed := range progress.StatePassed {
 				duration := progress.StateDuration[i]
-				state := status.Progress.Sequence[i].Name()
+				state := status.Progress.Sequence.States[i].Name()
 
 				desc := "Passed"
 				isPassed := true
