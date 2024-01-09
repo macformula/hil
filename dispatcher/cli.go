@@ -223,8 +223,17 @@ func runningView(m *model) string {
 		if res.duration == 0 {
 			s += "........................\n"
 		} else {
-			s += fmt.Sprintf("%s Job finished in %s\n", res.desc, res.duration)
+			if res.passed {
+				s += fmt.Sprintf("%s %s, finished in %s\n", passed("Passed"), res.name, res.duration)
+			} else {
+				s += fmt.Sprintf("%s %s, finished in %s\n", failed("Failed"), res.name, res.duration)
+			}
 		}
+	}
+
+	state := m.statusSignal.Progress.CurrentState
+	if state != nil {
+		s += fmt.Sprintf("%s currently running...\n", state.Name())
 	}
 
 	s += helpStyle(fmt.Sprintf("\nCurrent test running: %s\n", m.testItem.title))
@@ -251,8 +260,17 @@ func currentRunningTestView(m *model) string {
 		if res.duration == 0 {
 			s += "........................\n"
 		} else {
-			s += fmt.Sprintf("%s Job finished in %s\n", res.desc, res.duration)
+			if res.passed {
+				s += fmt.Sprintf("%s %s, finished in %s\n", passed("Passed"), res.name, res.duration)
+			} else {
+				s += fmt.Sprintf("%s %s, finished in %s\n", failed("Failed"), res.name, res.duration)
+			}
 		}
+	}
+
+	state := m.statusSignal.Progress.CurrentState
+	if state != nil {
+		s += fmt.Sprintf("%s currently running...\n", state.Name())
 	}
 
 	s += helpStyle(fmt.Sprintf("\nCurrent test running: %s\n", "Unknown name for now"))
@@ -278,7 +296,11 @@ func resultsView(m *model) string {
 	results := m.resultsSignal
 
 	builder.WriteString(fmt.Sprintf("Test ID: %s\n", results.TestId.String()))
-	builder.WriteString(fmt.Sprintf("Passing: %t\n", results.IsPassing))
+	if results.IsPassing {
+		builder.WriteString(passed(fmt.Sprintf("Passing: %t\n", results.IsPassing)))
+	} else {
+		builder.WriteString(failed(fmt.Sprintf("Failed: %t\n", results.IsPassing)))
+	}
 
 	if results.FailedTags != nil && len(results.FailedTags) > 0 {
 		builder.WriteString("Failed Tags:\n")
@@ -308,8 +330,9 @@ const (
 )
 
 var (
-	term    = termenv.EnvColorProfile()
-	keyword = makeFgStyle("211")
+	term   = termenv.EnvColorProfile()
+	failed = makeFgStyle("#ff0000")
+	passed = makeFgStyle("#008000")
 )
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
@@ -334,6 +357,8 @@ type (
 type result struct {
 	duration time.Duration
 	desc     string
+	passed   bool
+	name     string
 }
 
 // Utils Functions
