@@ -323,6 +323,19 @@ func resultsView(m *model) string {
 	} else {
 		builder.WriteString("No failed tags.\n")
 	}
+
+	builder.WriteString("\n\n")
+
+	if results.TestErrors != nil && len(results.TestErrors) > 0 {
+		builder.WriteString("Errors:\n")
+		for _, err := range results.TestErrors {
+			builder.WriteString(fmt.Sprintf("  - : %s\n", err))
+			builder.WriteString("\n")
+		}
+	} else {
+		builder.WriteString("No errors.\n")
+	}
+
 	builder.WriteString(fmt.Sprintf("\nProgram quits in %s seconds\n", colorFg(strconv.Itoa(m.Ticks), "79")))
 	builder.WriteString(helpStyle("\nPress enter to go back to Main Menu\n"))
 
