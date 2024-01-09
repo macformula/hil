@@ -54,11 +54,20 @@ func newCli(l *zap.Logger) *model {
 }
 
 func getItems() []list.Item {
-	return []list.Item{
-		item{title: "All Tests (DoNothing)", desc: "Run all Test Suites", sequence: test.DoNothingSequence},
-		item{title: "AMK Test Suite (Sleep)", desc: "Runs all tests regarding the motor", sequence: test.SleepSequence},
-		item{title: "BMS Test Suite (FatalError)", desc: "Runs all tests regarding the battery", sequence: test.FatalErrorSequence},
+	l := []list.Item{}
+	for _, s := range test.Sequences {
+		l = append(l, item{
+			title:    s.Name,
+			desc:     s.Desc,
+			sequence: s,
+		})
 	}
+	return l
+	//return []list.Item{
+	//	item{title: "All Tests (DoNothing)", desc: "Run all Test Suites", sequence: test.DoNothingSequence},
+	//	item{title: "AMK Test Suite (Sleep)", desc: "Runs all tests regarding the motor", sequence: test.SleepSequence},
+	//	item{title: "BMS Test Suite (FatalError)", desc: "Runs all tests regarding the battery", sequence: test.FatalErrorSequence},
+	//}
 }
 
 func (c *model) Close() error { // doesnt work

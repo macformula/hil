@@ -6,8 +6,13 @@ import (
 	"time"
 )
 
+var (
+	Sequences = []flow.Sequence{DoNothingSequence, SleepSequence, FatalErrorSequence, ErrorSequence}
+)
+
 var DoNothingSequence = flow.Sequence{
 	Name: "Do Nothing 🥱",
+	Desc: "Wow... it does nothing",
 	States: []flow.State{
 		&test.DoNothingState{},
 		&test.DoNothingState{},
@@ -18,6 +23,7 @@ var DoNothingSequence = flow.Sequence{
 
 var SleepSequence = flow.Sequence{
 	Name: "Sleeper 💤",
+	Desc: "zzz",
 	States: []flow.State{
 		&test.SleepState{SleepTime: 1 * time.Second},
 		&test.SleepState{SleepTime: 5 * time.Second},
@@ -28,11 +34,24 @@ var SleepSequence = flow.Sequence{
 
 var FatalErrorSequence = flow.Sequence{
 	Name: "Fatal Error 💀",
+	Desc: "This will fatal... duh",
 	States: []flow.State{
 		&test.SleepState{SleepTime: 2 * time.Second},
 		&test.SleepState{SleepTime: 3 * time.Second},
 		&test.SleepState{SleepTime: 1 * time.Second},
 		&test.RunFatalErrorState{},
+		&test.SleepState{SleepTime: 2 * time.Second},
+		&test.SleepState{SleepTime: 3 * time.Second},
+	},
+}
+
+var ErrorSequence = flow.Sequence{
+	Name: "Normal Error",
+	Desc: "ERROR ERROR ERROR",
+	States: []flow.State{
+		&test.SleepState{SleepTime: 2 * time.Second},
+		&test.SleepState{SleepTime: 3 * time.Second},
+		&test.RunErrorState{},
 		&test.SleepState{SleepTime: 2 * time.Second},
 		&test.SleepState{SleepTime: 3 * time.Second},
 	},
