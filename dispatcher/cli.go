@@ -217,7 +217,13 @@ func idleView(m *model) string {
 
 func runningView(m *model) string {
 	s := "\n" +
-		m.spinner.View() + " Work relevant to you...\n\n"
+		m.spinner.View()
+
+	if m.currentRunningTestId == m.testToRun {
+		s += fmt.Sprintf(" Work relevant to you (%s)...\n\n", m.statusSignal.Progress.Sequence.Name)
+	} else {
+		s += " Work relevant to you...\n\n"
+	}
 
 	for _, res := range m.results {
 		if res.duration == 0 {
@@ -232,7 +238,7 @@ func runningView(m *model) string {
 	}
 
 	state := m.statusSignal.Progress.CurrentState
-	if state != nil {
+	if state != nil && m.orchestratorWorking {
 		s += fmt.Sprintf("%s currently running...\n", state.Name())
 	}
 
@@ -269,7 +275,7 @@ func currentRunningTestView(m *model) string {
 	}
 
 	state := m.statusSignal.Progress.CurrentState
-	if state != nil {
+	if state != nil && m.orchestratorWorking {
 		s += fmt.Sprintf("%s currently running...\n", state.Name())
 	}
 
