@@ -85,7 +85,10 @@ func (s *Sequencer) Run(
 		return false, s.failedTags, s.testErrors, errors.Wrap(err, "run sequence")
 	}
 
-	return isPassing, s.failedTags, s.testErrors, nil
+	testErrors := s.testErrors
+	s.testErrors = []error{}
+
+	return isPassing, s.failedTags, testErrors, nil
 }
 
 // FatalError indicates that there is an error that requires intervention.
