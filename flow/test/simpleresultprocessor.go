@@ -18,7 +18,8 @@ type SimpleResultProcessor struct {
 
 func NewSimpleResultProcessor(l *zap.Logger) *SimpleResultProcessor {
 	return &SimpleResultProcessor{
-		l: l.Named(_loggerName),
+		l:               l.Named(_loggerName),
+		overallPassFail: true,
 	}
 }
 
