@@ -292,7 +292,8 @@ func currentRunningTestView(m *model) string {
 
 func fatalView(m *model) string {
 	s := "\n"
-	s += helpStyle(fmt.Sprintf("\nHit \"enter\" to send the fatal recovery signal (ONLY DO THIS IF YOU FIXED THE PROBLEM)\n"))
+	s += helpStyle(fmt.Sprintf("\n%s\nHit \"enter\" to send the fatal recovery signal (CONTACT IVAN LANGE IF YOU DO NOT KNOW HOW TO FIX PROBLEM)\n",
+		title("💀💀💀 FATAL ERROR 💀💀💀")))
 	s += errorStyle(fmt.Sprintf("\nERROR: %s", m.fatalErr.Error()))
 	return s
 }
@@ -328,8 +329,8 @@ func resultsView(m *model) string {
 
 	if results.TestErrors != nil && len(results.TestErrors) > 0 {
 		builder.WriteString("Errors:\n")
-		for _, err := range results.TestErrors {
-			builder.WriteString(fmt.Sprintf("  - : %s\n", err))
+		for i, err := range results.TestErrors {
+			builder.WriteString(fmt.Sprintf("\t(%d) %s\n", i, err))
 			builder.WriteString("\n")
 		}
 	} else {
@@ -352,6 +353,7 @@ var (
 	term   = termenv.EnvColorProfile()
 	failed = makeFgStyle("#ff0000")
 	passed = makeFgStyle("#008000")
+	title  = makeFgStyle("#ffffff")
 )
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
