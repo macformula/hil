@@ -304,22 +304,19 @@ func resultsView(m *model) string {
 
 	builder.WriteString(fmt.Sprintf("Test ID: %s\n", results.TestId.String()))
 	if results.IsPassing {
-		builder.WriteString(passed(fmt.Sprintf("Passing: %t\n", results.IsPassing)))
+		builder.WriteString(passed(fmt.Sprintf("PASSED\n\n")))
 	} else {
-		builder.WriteString(failed(fmt.Sprintf("Failed: %t\n", results.IsPassing)))
+		builder.WriteString(failed(fmt.Sprintf("FAILED\n\n")))
 	}
 
 	if results.FailedTags != nil && len(results.FailedTags) > 0 {
 		builder.WriteString("Failed Tags:\n")
 		for _, tag := range results.FailedTags {
-			builder.WriteString(fmt.Sprintf("  Tag ID: %s\n", tag.TagID))
-			builder.WriteString(fmt.Sprintf("  Tag Description: %s\n", tag.TagDescription))
-			builder.WriteString(fmt.Sprintf("  Comparison Operator: %s\n", tag.ComparisonOperator))
-			builder.WriteString(fmt.Sprintf("  Lower Limit: %f\n", tag.LowerLimit))
-			builder.WriteString(fmt.Sprintf("  Upper Limit: %f\n", tag.UpperLimit))
-			builder.WriteString(fmt.Sprintf("  Expected Value: %v\n", tag.ExpectedValue))
-			builder.WriteString(fmt.Sprintf("  Unit: %s\n", tag.Unit))
-			builder.WriteString("\n")
+			if tag.TagDescription == "" {
+				builder.WriteString(fmt.Sprintf("\t🏷️ %s: %s\n", tag.TagID, "no description provided"))
+			} else {
+				builder.WriteString(fmt.Sprintf("\t🏷️ %s: %s\n", tag.TagID, tag.TagDescription))
+			}
 		}
 	} else {
 		builder.WriteString("No failed tags.\n")
