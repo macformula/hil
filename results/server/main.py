@@ -14,7 +14,7 @@ pages_repo_dir="../macfe-hil.github.io"
 pages_branch="main"
 git_username="macformularacing"
 git_email="macformulaelectric@gmail.com"
-rp_server_port = "31763"
+rp_server_address = "localhost:31763"
 
 
 def serve():
@@ -35,9 +35,9 @@ def serve():
                            )
 
     results_pb2_grpc.add_TagTunnelServicer_to_server(TagTunnel(result_accumulator=ra), server)
-    server.add_insecure_port("[::]:" + rp_server_port)
+    server.add_insecure_port(rp_server_address)
     server.start()
-    print("Listening on " + rp_server_port)
+    print("Listening on " + rp_server_address)
     server.wait_for_termination()
 
 if __name__ == "__main__":
