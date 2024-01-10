@@ -14,10 +14,10 @@ pages_repo_dir="../macfe-hil.github.io"
 pages_branch="main"
 git_username="macformularacing"
 git_email="macformulaelectric@gmail.com"
+rp_server_port = "31763"
 
 
 def serve():
-    port = "8080"
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     # Insta
     repo_handler = RepoHandler(pages_repo_dir=pages_repo_dir,
@@ -35,11 +35,10 @@ def serve():
                            )
 
     results_pb2_grpc.add_TagTunnelServicer_to_server(TagTunnel(result_accumulator=ra), server)
-    server.add_insecure_port("[::]:" + port)
+    server.add_insecure_port("[::]:" + rp_server_port)
     server.start()
-    print("Listening on " + port)
+    print("Listening on " + rp_server_port)
     server.wait_for_termination()
-
 
 if __name__ == "__main__":
     serve()
