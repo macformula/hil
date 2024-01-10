@@ -1,7 +1,7 @@
 import pytest
-import git
 from jinja2 import Template
 from tag import Tag
+from repo_handler import RepoHandler
 from typing import Union
 import yaml
 import jsonschema
@@ -16,10 +16,8 @@ class ResultAccumulator:
                  template_fp: str,
                  historic_tests_fp: str, 
                  reports_dir: str,
-                 pages_repo_dir: str,
-                 pages_branch: str,
-                 git_username: str,
-                 git_email: str) -> None:
+                 repo_handler: RepoHandler,
+                 ) -> None:
         # Generate tag database from yaml file
         self.__parse_args(tags_fp, tags_schema_fp)
         self.tag_submissions: dict[str, any] = {}  # tag_id -> value cache
@@ -27,10 +25,7 @@ class ResultAccumulator:
         self.historic_tests_fp = historic_tests_fp
         self.template_fp = template_fp
         self.reports_dir = reports_dir
-        self.pages_repo_dir = pages_repo_dir
-        self.pages_branch = pages_branch
-        self.git_username = git_username
-        self.git_email = git_email
+        self.repo_handler = repo_handler
         self.all_tags_passing = True
 
     def submit_tag(self, tag_id: str, value: any) -> Union[bool, KeyError]:
@@ -142,7 +137,7 @@ class ResultAccumulator:
         overall_pass_fail = self.all_tags_passing and (not has_errors)
 
         self.__update_historic_tests(test_id, date_time, overall_pass_fail)
-        self.__push_to_github_pages(test_id)
+        self.repo_handler.push_to_github_pages(test_id)
 
         # reset cached submissions
         self.tag_submissions = {}
@@ -173,28 +168,3 @@ class ResultAccumulator:
         with open(self.historic_tests_fp, 'w') as file:
             json.dump(existing_tests, file, indent=2)
 
-    def __push_to_github_pages(self, test_id) -> None:
-        repo = git.Repo(self.pages_repo_dir)
-
-        # Set Git user name and email for the repository
-        repo.config_writer().set_value("user", "name", self.git_username).release()
-        repo.config_writer().set_value("user", "email", self.git_email).release()
-
-        # Add all changes to the index
-        repo.git.add('*')
-
-        # Commit changes
-        repo.index.commit(test_id)
-
-        # Fetch updates from the remote repository
-        repo.remotes.origin.fetch()
-
-        # Ensure we are on the branch that needs to be updated
-        repo.heads[self.pages_branch].checkout()
-
-        # Rebase changes
-        repo.git.rebase('origin/' + self.pages_branch)
-
-        # Push the changes, forcing the update to the remote branch
-        repo.git.push()
-        return
