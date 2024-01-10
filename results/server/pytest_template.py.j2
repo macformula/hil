@@ -8,14 +8,6 @@ def tag_submissions():
 def errors():
     return {{ error_submissions }}
 
-# def test_overall(errors):
-#     """Overall pass/fail"""
-#     if error_submissions:
-#         print(f"Errors: {error_submissions}")
-#     else:
-#         print("No Errors Encountered!")
-#     assert not error_submissions
-
 {% for error in error_submissions %}
 def test_error_{{ loop.index0 }}():
     """
@@ -26,7 +18,6 @@ def test_error_{{ loop.index0 }}():
 
     assert "{{ error }}" == ""
 {% endfor %}
-
 
 
 {% for tag_id in tag_ids %}

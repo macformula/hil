@@ -1,0 +1,3 @@
+[submodule "config/hil-config"]
+	path = config/hil-config
+	url = git@github.com:macformula/hil-config.git
