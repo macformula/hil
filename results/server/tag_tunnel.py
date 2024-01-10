@@ -2,10 +2,11 @@ from generated import results_pb2_grpc
 from generated import results_pb2
 from result_accumulator import ResultAccumulator
 
+
 class TagTunnel(results_pb2_grpc.TagTunnel):
     def __init__(self, result_accumulator: ResultAccumulator):
         self.ra = result_accumulator
-    
+
     def CompleteTest(self, request, context):
         test_passed = self.ra.generate_and_run_tests(request.test_id)
 
@@ -45,7 +46,7 @@ class TagTunnel(results_pb2_grpc.TagTunnel):
                 else:
                     proto_tag.expected_val_str = "ERROR: Unexpected Type"
             else:
-               proto_tag.expected_val_str = "" 
+                proto_tag.expected_val_str = ""
 
             # Add the Tag message to the list
             proto_tags.append(proto_tag)
@@ -54,7 +55,7 @@ class TagTunnel(results_pb2_grpc.TagTunnel):
 
     def SubmitError(self, request, context):
         error_count = self.ra.submit_error(request.error)
-        
+
         return results_pb2.SubmitErrorResponse(error_count=error_count)
 
     def SubmitTag(self, request, context):
@@ -62,9 +63,10 @@ class TagTunnel(results_pb2_grpc.TagTunnel):
         value = getattr(request, request.WhichOneof("data"))
         is_passing, e = self.ra.submit_tag(request.tag, value)
         if e != None:
-            return results_pb2.SubmitTagResponse(success=False, error=str(e), is_passing=is_passing)
+            return results_pb2.SubmitTagResponse(
+                success=False, error=str(e), is_passing=is_passing
+            )
         else:
-            return results_pb2.SubmitTagResponse(success=True, error="", is_passing=is_passing)
-    
-
-    
+            return results_pb2.SubmitTagResponse(
+                success=True, error="", is_passing=is_passing
+            )

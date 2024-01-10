@@ -9,15 +9,17 @@ import json
 import datetime
 import os
 
+
 class ResultAccumulator:
-    def __init__(self, 
-                 tags_fp: str, 
-                 tags_schema_fp: str, 
-                 template_fp: str,
-                 historic_tests_fp: str, 
-                 reports_dir: str,
-                 repo_handler: RepoHandler,
-                 ) -> None:
+    def __init__(
+        self,
+        tags_fp: str,
+        tags_schema_fp: str,
+        template_fp: str,
+        historic_tests_fp: str,
+        reports_dir: str,
+        repo_handler: RepoHandler,
+    ) -> None:
         # Generate tag database from yaml file
         self.__parse_args(tags_fp, tags_schema_fp)
         self.tag_submissions: dict[str, any] = {}  # tag_id -> value cache
@@ -39,10 +41,10 @@ class ResultAccumulator:
         except KeyError as e:
             self.all_tags_passing = False
             return False, e
-        
+
     def get_all_tags(self):
         return self.tag_db
-    
+
     def get_all_errors(self):
         return self.error_submissions
 
@@ -147,24 +149,23 @@ class ResultAccumulator:
         return overall_pass_fail
 
     def __update_historic_tests(self, test_id: str, dt: str, test_passed: bool) -> None:
-        ymd, hms = dt.split('_')
+        ymd, hms = dt.split("_")
 
         # Replace the following line with your logic to determine test pass/fail
         new_test = {
             "testId": test_id,
             "testPassed": test_passed,
             "date": ymd,
-            "time": hms
+            "time": hms,
         }
 
         # Load existing tests from the JSON file
-        with open(self.historic_tests_fp, 'r') as file:
+        with open(self.historic_tests_fp, "r") as file:
             existing_tests = json.load(file)
 
         # Prepend the new test to the existing tests
         existing_tests.insert(0, new_test)
 
         # Save the updated list back to the JSON file
-        with open(self.historic_tests_fp, 'w') as file:
+        with open(self.historic_tests_fp, "w") as file:
             json.dump(existing_tests, file, indent=2)
-

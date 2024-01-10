@@ -1,18 +1,16 @@
 import git
- 
+
+
 class RepoHandler:
 
-    def __init__(self,
-            pages_repo_dir: str,
-            pages_branch: str,
-            git_username: str,
-            git_email: str
-            ) -> None:
+    def __init__(
+        self, pages_repo_dir: str, pages_branch: str, git_username: str, git_email: str
+    ) -> None:
         self.pages_repo_dir = pages_repo_dir
         self.pages_branch = pages_branch
         self.git_username = git_username
         self.git_email = git_email
-        
+
     def push_to_github_pages(self, test_id) -> None:
         repo = git.Repo(self.pages_repo_dir)
 
@@ -21,7 +19,7 @@ class RepoHandler:
         repo.config_writer().set_value("user", "email", self.git_email).release()
 
         # Add all changes to the index
-        repo.git.add('*')
+        repo.git.add("*")
 
         # Commit changes
         repo.index.commit(test_id)
@@ -33,9 +31,9 @@ class RepoHandler:
         repo.heads[self.pages_branch].checkout()
 
         # Rebase changes
-        repo.git.rebase('origin/' + self.pages_branch)
+        repo.git.rebase("origin/" + self.pages_branch)
 
         # Push the changes, forcing the update to the remote branch
         repo.git.push()
-        
+
         return
