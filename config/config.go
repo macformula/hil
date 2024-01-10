@@ -6,11 +6,14 @@ import (
 	"os"
 )
 
+// Config holds configuration variables for the HIL setup
 type Config struct {
-	// TODO: Update config with actual useful configurations
-	HostIP string `yaml:"hostIP"`
+	TracerDirectory string `yaml:"tracerDirectory"`
+	CanInterface    string `yaml:"canInterface"`
+	BusName         string `yaml:"busName"`
 }
 
+// NewConfig returns a new Config type
 func NewConfig(path string) (*Config, error) {
 	config := &Config{}
 
