@@ -7,7 +7,7 @@ from tag_tunnel import TagTunnel
 
 tags_fp="./results/server/tags.yaml"
 tags_schema_fp="./results/server/schema/tags_schema.json"
-template_fp="./results/server/tm.py.j2"
+template_fp="./results/server/pytest_template.py.j2"
 historic_tests_fp="../macfe-hil.github.io/historic_tests.json"
 reports_dir="../macfe-hil.github.io/reports"
 pages_repo_dir="../macfe-hil.github.io"
