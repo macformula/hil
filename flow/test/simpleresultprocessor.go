@@ -34,7 +34,7 @@ func (s *SimpleResultProcessor) SubmitTag(ctx context.Context, tagId string, val
 	s.l.Info("simple result processor submit tag", zap.String("tagId", tagId), zap.Any("value", value))
 	s.submissions[tagId] = value
 
-	if tagId == "FAIL" {
+	if tagId == "FW001" {
 		s.overallPassFail = false
 
 		return false, nil
