@@ -9,12 +9,6 @@ import json
 import datetime
 import os
 
-# TODO: move this to a config file
-pages_repo_dir="../macfe-hil.github.io"
-pages_branch="main"
-git_username="macformularacing"
-git_email="macformulaelectric@gmail.com"
-
 class ResultAccumulator:
     def __init__(self, 
                  tags_fp: str, 
@@ -22,6 +16,7 @@ class ResultAccumulator:
                  template_fp: str,
                  historic_tests_fp: str, 
                  reports_dir: str,
+                 repo_handler: RepoHandler,
                  ) -> None:
         # Generate tag database from yaml file
         self.__parse_args(tags_fp, tags_schema_fp)
@@ -30,12 +25,7 @@ class ResultAccumulator:
         self.historic_tests_fp = historic_tests_fp
         self.template_fp = template_fp
         self.reports_dir = reports_dir
-        self.repo_handler = RepoHandler(
-            pages_repo_dir=pages_repo_dir,
-            pages_branch=pages_branch,
-            git_username=git_username,
-            git_email=git_email
-        )
+        self.repo_handler = repo_handler
         self.all_tags_passing = True
 
     def submit_tag(self, tag_id: str, value: any) -> Union[bool, KeyError]:

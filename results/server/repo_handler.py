@@ -13,7 +13,6 @@ class RepoHandler:
         self.git_username = git_username
         self.git_email = git_email
         
-    @staticmethod
     def push_to_github_pages(self, test_id) -> None:
         repo = git.Repo(self.pages_repo_dir)
 
@@ -38,4 +37,5 @@ class RepoHandler:
 
         # Push the changes, forcing the update to the remote branch
         repo.git.push()
+        
         return
