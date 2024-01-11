@@ -64,7 +64,7 @@ class TagTunnel(results_pb2_grpc.TagTunnel):
         is_passing, e = self.ra.submit_tag(request.tag, value)
         if e != None:
             return results_pb2.SubmitTagResponse(
-                success=False, error=str(e), is_passing=is_passing
+                success=False, error=f"unknown tag id ({str(e)})", is_passing=is_passing
             )
         else:
             return results_pb2.SubmitTagResponse(
