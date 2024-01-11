@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package ResultsProcessor;
+
+option go_package = ".client";
+
+service TagTunnel {
+  rpc CompleteTest (CompleteTestRequest) returns (CompleteTestResponse) {}
+  rpc EnumerateErrors (EnumerateErrorsRequest) returns (EnumerateErrorsResponse) {}
+  rpc EnumerateTags (EnumerateTagsRequest) returns (EnumerateTagsResponse) {}
+  rpc SubmitError (SubmitErrorRequest) returns (SubmitErrorResponse) {}
+  rpc SubmitTag (SubmitTagRequest) returns (SubmitTagResponse) {}
+}
+
+message SubmitTagRequest {
+  string tag = 1;
+  oneof data {
+    string  value_str = 2;
+    int32   value_int = 3;
+    float   value_float = 4;
+    bool    value_bool = 5;
+  }
+}
+
+message SubmitTagResponse {
+  bool success = 1;
+  string error = 2;
+  bool is_passing = 3;
+}
+
+message CompleteTestRequest {
+  string test_id = 1;
+}
+
+message CompleteTestResponse {
+  bool test_passed = 1;
+}
+
+message SubmitErrorRequest {
+  string error = 1;
+}
+
+message SubmitErrorResponse {
+  int32 error_count = 1;
+}
+
+message EnumerateErrorsRequest {
+  // No fields are defined in this message.
+}
+
+message EnumerateErrorsResponse {
+  repeated string errors = 1;
+}
+
+message EnumerateTagsRequest {
+  // No fields are defined in this message.
+}
+
+message EnumerateTagsResponse {
+  repeated Tag tags = 1;
+}
+
+message Tag {
+  string tag_id = 1;
+  string description = 2;
+  string comp_operator = 3;
+  float upper_limit = 4;
+  float lower_limit = 5;
+  oneof expected_val {
+    string expected_val_str = 6;
+    int32 expected_val_int = 7;
+    float expected_val_float = 8;
+    bool expected_val_bool = 9;
+  }
+}
