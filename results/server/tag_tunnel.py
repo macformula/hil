@@ -8,7 +8,7 @@ class TagTunnel(results_pb2_grpc.TagTunnel):
         self.ra = result_accumulator
 
     def CompleteTest(self, request, context):
-        test_passed = self.ra.generate_and_run_tests(request.test_id)
+        test_passed = self.ra.generate_and_run_tests(request.test_id, request.sequence_name)
 
         return results_pb2.CompleteTestResponse(test_passed=test_passed)
 
