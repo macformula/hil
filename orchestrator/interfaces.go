@@ -37,7 +37,8 @@ type DispatcherIface interface {
 	Shutdown() <-chan ShutdownSignal
 	// RecoverFromFatal will tell the orchestrator to leave the fatal error state and go back to idle.
 	RecoverFromFatal() <-chan RecoverFromFatalSignal
-	// Status signal is sent periodically to the
+	// Status signal is sent on updates to the dispatchers.
 	Status() chan<- StatusSignal
+	// Results signal is sent at the end of a test execution or on test cancel.
 	Results() chan<- ResultsSignal
 }

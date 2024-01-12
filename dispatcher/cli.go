@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
-	
+
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
@@ -45,11 +45,12 @@ type model struct {
 	fatalErr              error
 }
 
+// Init is the first function that will be called.
 func (c *model) Init() tea.Cmd {
 	return c.spinner.Tick
 }
 
-// Main update function.
+// Update is called when a message is received.
 func (c *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Make sure these keys always quit
 	if msg, ok := msg.(tea.KeyMsg); ok {
@@ -77,7 +78,8 @@ func (c *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 }
 
-// The main view, which just calls the appropriate sub-view
+// View renders the program's UI, which is just a string. The view is
+// rendered after every Update.
 func (c *model) View() string {
 	var s string
 
@@ -344,9 +346,20 @@ type item struct {
 	sequence flow.Sequence
 }
 
-func (i item) Title() string       { return i.sequence.Name }
-func (i item) Description() string { return i.sequence.Desc }
-func (i item) FilterValue() string { return i.sequence.Name }
+// Title is the sequence name.
+func (i item) Title() string {
+	return i.sequence.Name
+}
+
+// Description is the sequence description.
+func (i item) Description() string {
+	return i.sequence.Desc
+}
+
+// FilterValue is the sequences name.
+func (i item) FilterValue() string {
+	return i.sequence.Name
+}
 
 type result struct {
 	duration time.Duration

@@ -13,6 +13,7 @@ const (
 	_loggerName = "cliDispatcher"
 )
 
+// CliDispatcher is the cli implementation of the orchestrator.DispatcherIface.
 type CliDispatcher struct {
 	l                *zap.Logger
 	start            chan orchestrator.StartSignal
@@ -25,6 +26,7 @@ type CliDispatcher struct {
 	cli              cliIface
 }
 
+// NewCliDispatcher creates a cli dispatcher object.
 func NewCliDispatcher(l *zap.Logger) *CliDispatcher {
 	return &CliDispatcher{
 		l:                l.Named(_loggerName),
@@ -37,15 +39,18 @@ func NewCliDispatcher(l *zap.Logger) *CliDispatcher {
 	}
 }
 
+// Shutdown will shut down the hil app.
 func (c *CliDispatcher) Shutdown() <-chan orchestrator.ShutdownSignal {
 	return c.cli.Quit()
 }
 
+// Close should close all objects held by the dispatcher.
 func (c *CliDispatcher) Close() error {
 	err := c.cli.Close()
 	return err
 }
 
+// Open should set up all initial calls for the dispatcher.
 func (c *CliDispatcher) Open(ctx context.Context) error {
 	err := c.cli.Open(ctx)
 
@@ -59,22 +64,27 @@ func (c *CliDispatcher) Open(ctx context.Context) error {
 	return nil
 }
 
+// Start signal is sent by the dispatcher to the orchestrator to start a test sequence.
 func (c *CliDispatcher) Start() <-chan orchestrator.StartSignal {
 	return c.start
 }
 
+// CancelTest will cancel execution of the test with the given ID.
 func (c *CliDispatcher) CancelTest() <-chan orchestrator.CancelTestSignal {
 	return c.cancelTest
 }
 
+// RecoverFromFatal will tell the orchestrator to leave the fatal error state and go back to idle.
 func (c *CliDispatcher) RecoverFromFatal() <-chan orchestrator.RecoverFromFatalSignal {
 	return c.recoverFromFatal
 }
 
+// Status signal is sent on updates from the orchestrator.
 func (c *CliDispatcher) Status() chan<- orchestrator.StatusSignal {
 	return c.status
 }
 
+// Results signal is sent at the end of a test execution or on test cancel.
 func (c *CliDispatcher) Results() chan<- orchestrator.ResultsSignal {
 	return c.results
 }
@@ -83,8 +93,9 @@ func (c *CliDispatcher) Quit() chan orchestrator.ShutdownSignal {
 	return c.cli.Quit()
 }
 
+// Name returns the dispatcher name.
 func (c *CliDispatcher) Name() string {
-	return "CliDispatcher"
+	return "cli_dispatcher"
 }
 
 func (c *CliDispatcher) monitorCli(ctx context.Context, cli cliIface) {
