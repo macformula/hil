@@ -131,7 +131,7 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence, cancelTest ch
 
 	_ = s.progressFeed.Send(s.progress)
 
-	passingTest, err := s.rp.CompleteTest(ctx, testId)
+	passingTest, err := s.rp.CompleteTest(ctx, testId, seq.Name)
 	if err != nil {
 		return false, errors.Wrap(err, "complete test")
 	}
