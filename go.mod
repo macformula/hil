@@ -40,4 +40,6 @@ require (
 	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.14.0 // indirect
+	periph.io/x/conn/v3 v3.7.0 // indirect
+	periph.io/x/host/v3 v3.8.2 // indirect
 )
