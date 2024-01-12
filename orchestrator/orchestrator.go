@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	_loggerName = "orchestrator"
+	_loggerName                = "orchestrator"
+	_checkForStartSignalPeriod = 50 * time.Millisecond
 )
 
 type Orchestrator struct {
@@ -106,8 +107,6 @@ func (o *Orchestrator) Open(ctx context.Context) error {
 }
 
 func (o *Orchestrator) Run(ctx context.Context) error {
-	const _checkForStartSignalPeriod = 100 * time.Millisecond
-
 	for {
 		select {
 		case <-time.After(_checkForStartSignalPeriod):
