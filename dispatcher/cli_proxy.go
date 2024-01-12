@@ -47,7 +47,6 @@ func newCli(l *zap.Logger) *model {
 		results:               make([]result, showLastResults),
 		currentRunningResults: make([]result, showLastResults),
 		quit:                  make(chan orchestrator.ShutdownSignal),
-		Ticks:                 _timeAFK,
 	}
 
 	return &model
@@ -183,11 +182,10 @@ func (c *model) monitorDispatcher(ctx context.Context) {
 				zap.Any("tagId from results", results.TestId),
 				zap.Any("tagId stored", c.testToRun))
 
-			c.resultsSignal = results
 			if results.TestId == c.testToRun {
+				c.resultsSignal = results
 				c.currentScreen = Results
 				c.testToRun = uuid.New()
-				c.Ticks = _timeAFK
 			}
 
 			c.results = make([]result, showLastResults)

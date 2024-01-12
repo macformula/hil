@@ -7,13 +7,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
-	"github.com/lucasb-eyer/go-colorful"
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/orchestrator"
 	"github.com/muesli/reflow/indent"
 	"github.com/muesli/termenv"
 	"go.uber.org/zap"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -24,12 +22,6 @@ type model struct {
 	list    list.Model
 	spinner spinner.Model
 
-	Choice   int
-	Chosen   bool
-	Ticks    int
-	Frames   int
-	Progress float64
-	Loaded   bool
 	Quitting bool
 
 	statusSignal  orchestrator.StatusSignal
@@ -158,7 +150,6 @@ func updateRunning(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
-			//m.currentScreen = Idle
 			testId := m.testToRun
 			m.cancelChan <- orchestrator.CancelTestSignal{TestId: testId}
 			return m, nil
@@ -192,21 +183,20 @@ func updateFatal(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 
 func updateResults(msg tea.Msg, m *model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tickMsg:
-		if m.Ticks == 0 {
-			m.currentScreen = Idle
-			return m, m.spinner.Tick
-		}
-		m.Ticks--
-		return m, tick()
 	case tea.KeyMsg:
-		if msg.String() == "enter" {
+		switch msg.String() {
+		case "enter":
 			m.currentScreen = Idle
 			return m, m.spinner.Tick
+		case "ctrl+c":
+			m.Quitting = true
+			m.quit <- struct{}{}
+			return m, tea.Quit
+		default:
+			return m, nil
 		}
-		return m, nil
 	default:
-		return m, tick()
+		return m, nil
 	}
 }
 
@@ -333,7 +323,7 @@ func resultsView(m *model) string {
 		builder.WriteString("No errors.\n")
 	}
 
-	builder.WriteString(fmt.Sprintf("\nProgram quits in %s seconds\n", colorFg(strconv.Itoa(m.Ticks), "79")))
+	//builder.WriteString(fmt.Sprintf("\nProgram quits in %s seconds\n", colorFg(strconv.Itoa(m.Ticks), "79")))
 	builder.WriteString(helpStyle("\nPress enter to go back to Main Menu\n"))
 
 	return builder.String()
@@ -341,7 +331,6 @@ func resultsView(m *model) string {
 
 // NEW UTILS FILE FOR THIS
 const (
-	_timeAFK        = 10
 	showLastResults = 5
 )
 
@@ -365,8 +354,7 @@ func (i item) Description() string { return i.sequence.Desc }
 func (i item) FilterValue() string { return i.sequence.Name }
 
 type (
-	tickMsg  struct{}
-	frameMsg struct{}
+	tickMsg struct{}
 )
 
 type result struct {
@@ -384,12 +372,6 @@ func tick() tea.Cmd {
 	})
 }
 
-func frame() tea.Cmd {
-	return tea.Tick(time.Second/60, func(time.Time) tea.Msg {
-		return frameMsg{}
-	})
-}
-
 func getSequence(i item) flow.Sequence {
 	return i.sequence
 }
@@ -400,39 +382,7 @@ func getMetaData(i item) map[string]string {
 	return metaData
 }
 
-// Color a string's foreground with the given value.
-func colorFg(val, color string) string {
-	return termenv.String(val).Foreground(term.Color(color)).String()
-}
-
 // Return a function that will colorize the foreground of a given string.
 func makeFgStyle(color string) func(string) string {
 	return termenv.Style{}.Foreground(term.Color(color)).Styled
-}
-
-// Generate a blend of colors.
-func makeRamp(colorA, colorB string, steps float64) (s []string) {
-	cA, _ := colorful.Hex(colorA)
-	cB, _ := colorful.Hex(colorB)
-
-	for i := 0.0; i < steps; i++ {
-		c := cA.BlendLuv(cB, i/steps)
-		s = append(s, colorToHex(c))
-	}
-	return
-}
-
-// Convert a colorful.Color to a hexadecimal format compatible with termenv.
-func colorToHex(c colorful.Color) string {
-	return fmt.Sprintf("#%s%s%s", colorFloatToHex(c.R), colorFloatToHex(c.G), colorFloatToHex(c.B))
-}
-
-// Helper function for converting colors to hex. Assumes a value between 0 and
-// 1.
-func colorFloatToHex(f float64) (s string) {
-	s = strconv.FormatInt(int64(f*255), 16)
-	if len(s) == 1 {
-		s = "0" + s
-	}
-	return
 }
