@@ -63,10 +63,7 @@ func NewOrchestrator(s SequencerIface, l *zap.Logger, dispatchers ...DispatcherI
 		testQueueMtx:      sync.Mutex{},
 		progressMtx:       sync.Mutex{},
 		fatalErr:          utils.NewResettaleError(),
-	}
-
-	for _, d := range dispatchers {
-		ret.dispatchers = append(ret.dispatchers, d)
+		dispatchers:       dispatchers,
 	}
 
 	return ret
