@@ -1,6 +1,12 @@
 # MAC Formula HIL
 Hardware-in-the-loop tester to accelerate testing of the electrical-software test-bench 
 
+## Contributing
+
+### Linter
+- Install [golangci](https://golangci-lint.run/usage/install)
+- Follow these [docs](https://golangci-lint.run/usage/integrations/) to integrate it with your IDE
+
 ## Working with Remote Linux Machines
 
 ### Requirements
