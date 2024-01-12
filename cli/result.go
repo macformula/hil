@@ -1,4 +1,4 @@
-package dispatcher
+package cli
 
 import "time"
 

@@ -1,9 +1,10 @@
-package dispatcher
+package cli
 
 import (
 	"context"
-	"github.com/macformula/hil/orchestrator"
 	"io"
+
+	"github.com/macformula/hil/orchestrator"
 )
 
 type cliIface interface {

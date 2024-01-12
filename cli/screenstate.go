@@ -1,4 +1,4 @@
-package dispatcher
+package cli
 
 //go:generate enumer -type=screenState screenstate.go
 type screenState int

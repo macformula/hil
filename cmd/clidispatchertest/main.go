@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/macformula/hil/dispatcher"
-	dtest "github.com/macformula/hil/dispatcher/test"
+	"github.com/macformula/hil/cli"
+	dtest "github.com/macformula/hil/cli/test"
 	"github.com/macformula/hil/flow"
 	ftest "github.com/macformula/hil/flow/test"
 	"github.com/macformula/hil/orchestrator"
@@ -29,7 +29,7 @@ func main() {
 
 	rp := ftest.NewSimpleResultProcessor(logger)
 	s := flow.NewSequencer(rp, logger)
-	d := dispatcher.NewCliDispatcher(dtest.Sequences, logger)
+	d := cli.NewCliDispatcher(dtest.Sequences, logger)
 	d2 := otest.NewSimpleDispatcher(logger, 5*time.Second, 10*time.Second)
 	o := orchestrator.NewOrchestrator(s, logger, d, d2)
 
