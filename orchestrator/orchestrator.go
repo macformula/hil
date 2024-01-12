@@ -2,14 +2,14 @@ package orchestrator
 
 import (
 	"context"
-	"github.com/ethereum/go-ethereum/event"
-	"github.com/google/uuid"
-	"github.com/macformula/hil/utils"
-	"github.com/pkg/errors"
 	"sync"
 	"time"
 
+	"github.com/ethereum/go-ethereum/event"
+	"github.com/google/uuid"
 	"github.com/macformula/hil/flow"
+	"github.com/macformula/hil/utils"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 

@@ -2,11 +2,12 @@ package test
 
 import (
 	"context"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/macformula/hil/dispatcher/test"
 	"github.com/macformula/hil/orchestrator"
 	"go.uber.org/zap"
-	"time"
 )
 
 const (

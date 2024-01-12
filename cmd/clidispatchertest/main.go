@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"time"
+
 	"github.com/macformula/hil/dispatcher"
 	"github.com/macformula/hil/flow"
 	ftest "github.com/macformula/hil/flow/test"
@@ -9,7 +11,6 @@ import (
 	otest "github.com/macformula/hil/orchestrator/test"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"time"
 )
 
 const (

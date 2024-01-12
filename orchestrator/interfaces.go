@@ -2,9 +2,10 @@ package orchestrator
 
 import (
 	"context"
+	"io"
+
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/macformula/hil/flow"
-	"io"
 )
 
 // SequencerIface is responsible for managing execution of a sequence of test states.

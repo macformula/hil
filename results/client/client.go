@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	proto "github.com/macformula/hil/results/client/generated"
 	"github.com/pkg/errors"

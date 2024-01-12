@@ -3,6 +3,9 @@ package dispatcher
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
@@ -11,8 +14,6 @@ import (
 	"github.com/macformula/hil/dispatcher/test"
 	"github.com/macformula/hil/orchestrator"
 	"go.uber.org/zap"
-	"io"
-	"os"
 )
 
 // cliIface is responsible for managing a Cli

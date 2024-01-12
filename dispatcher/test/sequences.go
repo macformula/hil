@@ -1,9 +1,10 @@
 package test
 
 import (
+	"time"
+
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/flow/test"
-	"time"
 )
 
 var (

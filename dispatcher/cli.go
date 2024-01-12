@@ -2,6 +2,9 @@ package dispatcher
 
 import (
 	"fmt"
+	"strings"
+	"time"
+	
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
@@ -12,8 +15,6 @@ import (
 	"github.com/muesli/reflow/indent"
 	"github.com/muesli/termenv"
 	"go.uber.org/zap"
-	"strings"
-	"time"
 )
 
 type model struct {
