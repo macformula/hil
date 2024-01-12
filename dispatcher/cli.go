@@ -32,12 +32,12 @@ type model struct {
 	statusChan  chan orchestrator.StatusSignal
 	fatalChan   chan orchestrator.RecoverFromFatalSignal
 	cancelChan  chan orchestrator.CancelTestSignal
-	quit        chan orchestrator.ShutdownSignal // temporary
+	quit        chan orchestrator.ShutdownSignal
 
 	currentScreen         screenState
 	results               []result
 	currentRunningResults []result
-	currentRunningTestId  orchestrator.TestId // change this to Test_id
+	currentRunningTestId  orchestrator.TestId
 	testToRun             orchestrator.TestId
 	testItem              item
 	orchestratorWorking   bool
@@ -79,19 +79,13 @@ func (c *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // The main view, which just calls the appropriate sub-view
 func (c *model) View() string {
 	var s string
-	if c.Quitting {
-		return "\n  See you later!\n\n"
-	}
 
 	switch c.currentScreen {
 	case Idle:
-		//fmt.Println("Idle state")
 		s = idleView(c)
 	case Running:
-		//fmt.Println("Running state")
 		s = runningView(c)
 	case FatalError:
-		//fmt.Println("FatalError state")
 		s = fatalView(c)
 	case Results:
 		s = resultsView(c)
@@ -353,10 +347,6 @@ func (i item) Title() string       { return i.sequence.Name }
 func (i item) Description() string { return i.sequence.Desc }
 func (i item) FilterValue() string { return i.sequence.Name }
 
-type (
-	tickMsg struct{}
-)
-
 type result struct {
 	duration time.Duration
 	desc     string
@@ -365,13 +355,6 @@ type result struct {
 }
 
 // Utils Functions
-
-func tick() tea.Cmd {
-	return tea.Tick(time.Second, func(time.Time) tea.Msg {
-		return tickMsg{}
-	})
-}
-
 func getSequence(i item) flow.Sequence {
 	return i.sequence
 }

@@ -21,7 +21,7 @@ type CliDispatcher struct {
 	recoverFromFatal chan orchestrator.RecoverFromFatalSignal
 	testToRun        uuid.UUID
 	stop             chan struct{}
-	cli              cliInterface
+	cli              cliIface
 }
 
 func NewCliDispatcher(l *zap.Logger) *CliDispatcher {
@@ -86,7 +86,7 @@ func (c *CliDispatcher) Name() string {
 	return "CliDispatcher"
 }
 
-func (c *CliDispatcher) monitorCli(ctx context.Context, cli cliInterface) {
+func (c *CliDispatcher) monitorCli(ctx context.Context, cli cliIface) {
 	for {
 		select {
 		case recoverSignal := <-cli.RecoverFromFatal():

@@ -15,14 +15,22 @@ import (
 	"os"
 )
 
-type cliInterface interface {
+// cliIface is responsible for managing a Cli
+type cliIface interface {
 	io.Closer
+	// Open will be called on CliDispatcher Open
 	Open(context.Context) error
+	// Start signal is sent by the Cli to the CliDispatcher to signal start test
 	Start() chan orchestrator.StartSignal
+	// CancelTest will signal the Dispatcher to cancel execution of the current test the Cli is trying to run
 	CancelTest() chan orchestrator.CancelTestSignal
+	// Status signal is received when the orchestrator sends a new status
 	Status() chan orchestrator.StatusSignal
+	// RecoverFromFatal is sent to signal the orchestrator that the Fatal error has been fixed
 	RecoverFromFatal() chan orchestrator.RecoverFromFatalSignal
+	// Results signal is received when the orchestrator completes or cancels a test
 	Results() chan orchestrator.ResultsSignal
+	// Quit is sent when the user wants to quit the Cli
 	Quit() chan orchestrator.ShutdownSignal
 }
 
@@ -60,11 +68,6 @@ func getItems() []list.Item {
 		})
 	}
 	return l
-	//return []list.Item{
-	//	item{title: "All Tests (DoNothing)", desc: "Run all Test Suites", sequence: test.DoNothingSequence},
-	//	item{title: "AMK Test Suite (Sleep)", desc: "Runs all tests regarding the motor", sequence: test.SleepSequence},
-	//	item{title: "BMS Test Suite (FatalError)", desc: "Runs all tests regarding the battery", sequence: test.FatalErrorSequence},
-	//}
 }
 
 func (c *model) Close() error { // doesnt work
