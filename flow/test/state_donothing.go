@@ -42,7 +42,7 @@ func (d *DoNothingState) Setup(ctx context.Context) error {
 
 // Name is the name of the state.
 func (d *DoNothingState) Name() string {
-	return "do_nothing_state"
+	return _name
 }
 
 // Run is the logic that gets executed after setup.

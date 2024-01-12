@@ -3,7 +3,6 @@ package dispatcher
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/macformula/hil/orchestrator"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -21,8 +20,6 @@ type CliDispatcher struct {
 	status           chan orchestrator.StatusSignal
 	cancelTest       chan orchestrator.CancelTestSignal
 	recoverFromFatal chan orchestrator.RecoverFromFatalSignal
-	testToRun        uuid.UUID
-	stop             chan struct{}
 	cli              cliIface
 }
 
