@@ -32,7 +32,7 @@ type cliModel struct {
 	sequenceList list.Model
 	spinner      spinner.Model
 
-	Quitting bool
+	quitting bool
 
 	statusSignal  orchestrator.StatusSignal
 	resultsSignal orchestrator.ResultsSignal
@@ -134,7 +134,7 @@ func (c *cliModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if keyMsg, ok := msg.(tea.KeyMsg); ok {
 		k := keyMsg.String()
 		if k == _quitKey || k == _escapeKey {
-			c.Quitting = true
+			c.quitting = true
 			c.quit <- struct{}{}
 
 			return c, tea.Quit
@@ -169,7 +169,7 @@ func (c *cliModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // Close will be called at the end of the program.
 func (c *cliModel) Close() error { // doesnt work
-	c.Quitting = true
+	c.quitting = true
 
 	return nil
 }
@@ -219,7 +219,7 @@ func (c *cliModel) updateIdle(msg tea.Msg) tea.Cmd {
 
 			return c.spinner.Tick
 		case _sigKill:
-			c.Quitting = true
+			c.quitting = true
 			c.quit <- struct{}{}
 
 			return tea.Quit
@@ -268,7 +268,7 @@ func (c *cliModel) updateFatal(msg tea.Msg) tea.Cmd {
 
 			return c.spinner.Tick
 		case _sigKill:
-			c.Quitting = true
+			c.quitting = true
 			c.quit <- struct{}{}
 
 			return tea.Quit
@@ -287,7 +287,7 @@ func (c *cliModel) updateResults(msg tea.Msg) tea.Cmd {
 
 			return c.spinner.Tick
 		case _sigKill:
-			c.Quitting = true
+			c.quitting = true
 			c.quit <- struct{}{}
 
 			return tea.Quit
@@ -336,7 +336,7 @@ func (c *cliModel) runningView() string {
 	s += helpStyle(fmt.Sprintf("\nTest_ID: %s\n", c.testToRun.String()))
 	s += helpStyle(fmt.Sprintf("\nCtrl+c to cancel the test\n"))
 
-	if c.Quitting {
+	if c.quitting {
 		s += "\n"
 	}
 
@@ -373,7 +373,7 @@ func (c *cliModel) currentRunningTestView() string {
 	s += helpStyle(fmt.Sprintf("\nTest_ID: %s\n", c.currentRunningTestId.String()))
 	s += helpStyle(fmt.Sprintf("\nQueue length: %d\n", c.statusSignal.QueueLength))
 
-	if c.Quitting {
+	if c.quitting {
 		s += "\n"
 	}
 
