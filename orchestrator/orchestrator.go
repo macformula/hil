@@ -126,6 +126,7 @@ func (o *Orchestrator) Run(ctx context.Context) error {
 		// Attempt to dequeue next test, if no test queued continue.
 		startSig, ok := o.dequeueNextTest()
 		if !ok {
+			// We want to keep the running state until no more tests are in the queue.
 			if o.state == Running {
 				o.state = Idle
 				o.statusUpdate()
