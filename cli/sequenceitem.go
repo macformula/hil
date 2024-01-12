@@ -4,10 +4,6 @@ import (
 	"github.com/macformula/hil/flow"
 )
 
-const (
-	showLastResults = 5
-)
-
 type sequenceItem flow.Sequence
 
 // Title is the sequence name.

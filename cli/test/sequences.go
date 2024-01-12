@@ -19,6 +19,14 @@ var DoNothingSequence = flow.Sequence{
 		&test.DoNothingState{},
 		&test.DoNothingState{},
 		&test.DoNothingState{},
+		&test.DoNothingState{},
+		&test.DoNothingState{},
+		&test.DoNothingState{},
+		&test.DoNothingState{},
+		&test.DoNothingState{},
+		&test.DoNothingState{},
+		&test.DoNothingState{},
+		&test.DoNothingState{},
 	},
 }
 

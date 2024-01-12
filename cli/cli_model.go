@@ -23,6 +23,7 @@ const (
 	_quitKey           = "q"
 	_escapeKey         = "esc"
 	_sequenceListTitle = "HIL"
+	_showLastResults   = 9
 )
 
 type cliModel struct {
@@ -74,8 +75,8 @@ func newCliModel(sequences []flow.Sequence, l *zap.Logger) *cliModel {
 		fatalChan:             make(chan orchestrator.RecoverFromFatalSignal),
 		currentScreen:         Idle,
 		spinner:               sp,
-		results:               make([]result, showLastResults),
-		currentRunningResults: make([]result, showLastResults),
+		results:               make([]result, _showLastResults),
+		currentRunningResults: make([]result, _showLastResults),
 		quit:                  make(chan orchestrator.ShutdownSignal),
 	}
 
@@ -173,8 +174,7 @@ func (c *cliModel) Close() error { // doesnt work
 	return nil
 }
 
-// View renders the program's UI, which is just a string. The view is
-// rendered after every Update.
+// View renders the program's UI, which is just a string. The view is rendered after every Update.
 func (c *cliModel) View() string {
 	var s string
 
@@ -215,7 +215,7 @@ func (c *cliModel) updateIdle(msg tea.Msg) tea.Cmd {
 			}
 
 			c.currentScreen = Running
-			c.results = make([]result, showLastResults)
+			c.results = make([]result, _showLastResults)
 
 			return c.spinner.Tick
 		case _sigKill:
@@ -451,8 +451,8 @@ func (c *cliModel) monitorDispatcher(ctx context.Context) {
 
 			c.fatalErr = status.FatalError
 
-			c.currentRunningResults = make([]result, showLastResults)
-			c.results = make([]result, showLastResults)
+			c.currentRunningResults = make([]result, _showLastResults)
+			c.results = make([]result, _showLastResults)
 			progress := status.Progress
 			c.l.Info("progress state info",
 				zap.Bools("state passed", progress.StatePassed),
@@ -513,7 +513,7 @@ func (c *cliModel) monitorDispatcher(ctx context.Context) {
 				c.testToRun = uuid.New()
 			}
 
-			c.results = make([]result, showLastResults)
+			c.results = make([]result, _showLastResults)
 		case <-ctx.Done():
 			c.l.Info("context done signal received")
 
