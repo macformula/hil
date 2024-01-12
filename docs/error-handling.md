@@ -5,7 +5,7 @@ This document goes over error handling in the `State > Sequencer > Orchestrator 
 
  - Treated as a test failure
  - Error will be logged
- - Result processor will receive encountered error signal
+ - Error will be submitted to the result processor
  - Sequence will continue to run as long as the `ContinueOnFail` function for given state is true
 
 ## Fatal Errors 
