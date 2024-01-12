@@ -2,6 +2,7 @@ package dispatcher
 
 import (
 	"context"
+	"github.com/macformula/hil/flow"
 
 	"github.com/macformula/hil/orchestrator"
 	"github.com/pkg/errors"
@@ -24,7 +25,7 @@ type CliDispatcher struct {
 }
 
 // NewCliDispatcher creates a cli dispatcher object.
-func NewCliDispatcher(l *zap.Logger) *CliDispatcher {
+func NewCliDispatcher(sequences []flow.Sequence, l *zap.Logger) *CliDispatcher {
 	return &CliDispatcher{
 		l:                l.Named(_loggerName),
 		start:            make(chan orchestrator.StartSignal, 5),
@@ -32,7 +33,7 @@ func NewCliDispatcher(l *zap.Logger) *CliDispatcher {
 		status:           make(chan orchestrator.StatusSignal),
 		cancelTest:       make(chan orchestrator.CancelTestSignal),
 		recoverFromFatal: make(chan orchestrator.RecoverFromFatalSignal),
-		cli:              newCli(l),
+		cli:              newCliModel(sequences, l),
 	}
 }
 
@@ -86,6 +87,7 @@ func (c *CliDispatcher) Results() chan<- orchestrator.ResultsSignal {
 	return c.results
 }
 
+// Quit signal will shut down the app.
 func (c *CliDispatcher) Quit() chan orchestrator.ShutdownSignal {
 	return c.cli.Quit()
 }
@@ -117,7 +119,6 @@ func (c *CliDispatcher) monitorCli(ctx context.Context, cli cliIface) {
 		case <-ctx.Done():
 			c.l.Info("context done signal received")
 
-			c.Close()
 			return
 		}
 	}
@@ -138,7 +139,6 @@ func (c *CliDispatcher) monitorOrchestrator(ctx context.Context) {
 		case <-ctx.Done():
 			c.l.Info("context done signal received")
 
-			c.Close()
 			return
 		}
 	}
