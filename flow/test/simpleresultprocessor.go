@@ -43,7 +43,7 @@ func (s *SimpleResultProcessor) SubmitTag(ctx context.Context, tagId string, val
 	return true, nil
 }
 
-func (s *SimpleResultProcessor) CompleteTest(ctx context.Context, testId uuid.UUID) (bool, error) {
+func (s *SimpleResultProcessor) CompleteTest(ctx context.Context, testId uuid.UUID, sequenceName string) (bool, error) {
 	return s.overallPassFail, nil
 }
 
