@@ -12,7 +12,7 @@ This document goes over error handling in the `State > Sequencer > Orchestrator 
 
 - Treated as a test failure
 - Error will be logged
-- Result processor will receive encountered error signal
+- Error will be submitted to the result processor
 - Will NOT continue to run the sequence
 - Orchestrator goes into a `FatalError` state
 - Any dispatcher must send the `RecoverFromFatal` signal to the orchestrator to return to idle
