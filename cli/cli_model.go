@@ -403,10 +403,10 @@ func (c *cliModel) resultsView() string {
 	if results.FailedTags != nil && len(results.FailedTags) > 0 {
 		builder.WriteString("Failed Tags:\n")
 		for _, tag := range results.FailedTags {
-			if tag.TagDescription == "" {
-				builder.WriteString(fmt.Sprintf("\t🏷️ %s: %s\n", tag.TagID, "no description provided"))
+			if tag.Description == "" {
+				builder.WriteString(fmt.Sprintf("\t🏷️ %s: %s\n", tag.ID, "no description provided"))
 			} else {
-				builder.WriteString(fmt.Sprintf("\t🏷️ %s: %s\n", tag.TagID, tag.TagDescription))
+				builder.WriteString(fmt.Sprintf("\t🏷️ %s: %s\n", tag.ID, tag.Description))
 			}
 		}
 	} else {

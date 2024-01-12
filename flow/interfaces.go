@@ -8,9 +8,13 @@ import (
 
 // ResultProcessorIface will be used to get pass/fail statuses on tags.
 type ResultProcessorIface interface {
+	// Open will be called at the start of the app.
 	Open(context.Context) error
+	// SubmitTag will return the passing status of a given tag.
 	SubmitTag(ctx context.Context, tagId string, value any) (bool, error)
+	// CompleteTest will signal the result processor that a test has been completed. The overall pass/fail is returned.
 	CompleteTest(ctx context.Context, testId uuid.UUID) (bool, error)
+	// SubmitError will be stored by the result processor and should make the sequence an overall fail.
 	SubmitError(ctx context.Context, err error) error
 }
 

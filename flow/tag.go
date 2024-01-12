@@ -1,11 +1,9 @@
 package flow
 
+// Tag is a way to identify expected bounds for a given result.
 type Tag struct {
-	TagID              string
-	TagDescription     string
-	ComparisonOperator string
-	LowerLimit         float64
-	UpperLimit         float64
-	ExpectedValue      any
-	Unit               string
+	// ID is the tag identifier.
+	ID string `yaml:"tagId"`
+	// Description describes the result that will be posted to this tag.
+	Description string `yaml:"description"`
 }

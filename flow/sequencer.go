@@ -51,6 +51,7 @@ func (s *Sequencer) SubscribeToProgress(progCh chan Progress) event.Subscription
 	return s.progressFeed.Subscribe(progCh)
 }
 
+// Open will be called at the start of the app.
 func (s *Sequencer) Open(ctx context.Context) error {
 	err := s.rp.Open(ctx)
 	if err != nil {
@@ -231,7 +232,7 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 	results := state.GetResults()
 
 	for tag, value := range results {
-		isPassing, err := s.rp.SubmitTag(ctx, tag.TagID, value)
+		isPassing, err := s.rp.SubmitTag(ctx, tag.ID, value)
 		if err != nil {
 			return false, errors.Wrap(err, "submit tag")
 		}

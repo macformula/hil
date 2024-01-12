@@ -17,7 +17,7 @@ type LvNominal struct {
 }
 
 var FwTags = FirmwareTags{
-	FrontControllerFlashed: flow.Tag{TagID: "FW001", TagDescription: "Front controller flashed."},
-	LvControllerFlashed:    flow.Tag{TagID: "FW002"},
-	TmsFlashed:             flow.Tag{TagID: "FW003"},
+	FrontControllerFlashed: flow.Tag{ID: "FW001", Description: "Front controller flashed."},
+	LvControllerFlashed:    flow.Tag{ID: "FW002"},
+	TmsFlashed:             flow.Tag{ID: "FW003"},
 }
