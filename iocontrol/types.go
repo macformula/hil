@@ -4,7 +4,7 @@ package iocontrol
 type Level int
 
 const (
-	Unknown Level = iota
+	Unknown Level = iota - 1
 	Low
 	High
 )
