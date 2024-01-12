@@ -38,13 +38,13 @@ func SetupSequencer(t *testing.T, logFileName string) (*flow.Sequencer, *zap.Log
 				}
 
 				l.Info("received progress update",
-					zap.String("completion", fmt.Sprintf("%f%%", float64(p.StateIndex)*100/float64(len(p.Sequence)))),
+					zap.String("completion", fmt.Sprintf("%f%%", float64(p.StateIndex)*100/float64(len(p.Sequence.States)))),
 					zap.String("current_state", p.CurrentState.Name()),
 				)
 
 				// Log state durations on the last state
-				if (p.StateIndex + 1) == len(p.Sequence) {
-					for idx, state := range p.Sequence {
+				if (p.StateIndex + 1) == len(p.Sequence.States) {
+					for idx, state := range p.Sequence.States {
 						l.Info("state_duration",
 							zap.String("state", state.Name()),
 							zap.Int64("duration (ms)", p.StateDuration[idx].Milliseconds()),
