@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	pin1 := raspi.NewDigitalPin(raspi.Gpio9, iocontrol.Output)
+	pin1 := raspi.NewDigitalPin(raspi.Gpio6, iocontrol.Output)
 
 	err := pin1.Open()
 	if err != nil {
