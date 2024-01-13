@@ -34,6 +34,10 @@ func NewDigitalPin(
 
 // Open initializes the host device drivers and acquires a gpio pin
 func (d *DigitalPin) Open() error {
+	if !d.pin.IsAPin() {
+		return errors.New("provided pin is reserved or not available")
+	}
+
 	if _, err := host.Init(); err != nil {
 		return err
 	}
