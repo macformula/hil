@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _PinName = "Gpio0Gpio1Gpio2Gpio3Gpio4Gpio5Gpio6Gpio7Gpio8Gpio9Gpio10Gpio11Gpio12Gpio13Gpio14Gpio15Gpio16Gpio17Gpio18Gpio19Gpio20Gpio21Gpio22Gpio23Gpio24Gpio25Gpio26Gpio27"
+const _PinName = "Gpio0Gpio1Gpio2Gpio3Gpio4Gpio5Gpio6Gpio12Gpio13Gpio14Gpio15Gpio16Gpio17Gpio18Gpio19Gpio20Gpio21Gpio22Gpio24Gpio26Gpio27"
 
-var _PinIndex = [...]uint8{0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 56, 62, 68, 74, 80, 86, 92, 98, 104, 110, 116, 122, 128, 134, 140, 146, 152, 158}
+var _PinIndex = [...]uint8{0, 5, 10, 15, 20, 25, 30, 35, 41, 47, 53, 59, 65, 71, 77, 83, 89, 95, 101, 107, 113, 119}
 
-const _PinLowerName = "gpio0gpio1gpio2gpio3gpio4gpio5gpio6gpio7gpio8gpio9gpio10gpio11gpio12gpio13gpio14gpio15gpio16gpio17gpio18gpio19gpio20gpio21gpio22gpio23gpio24gpio25gpio26gpio27"
+const _PinLowerName = "gpio0gpio1gpio2gpio3gpio4gpio5gpio6gpio12gpio13gpio14gpio15gpio16gpio17gpio18gpio19gpio20gpio21gpio22gpio24gpio26gpio27"
 
 func (i Pin) String() string {
 	if i >= Pin(len(_PinIndex)-1) {
@@ -31,30 +31,23 @@ func _PinNoOp() {
 	_ = x[Gpio4-(4)]
 	_ = x[Gpio5-(5)]
 	_ = x[Gpio6-(6)]
-	_ = x[Gpio7-(7)]
-	_ = x[Gpio8-(8)]
-	_ = x[Gpio9-(9)]
-	_ = x[Gpio10-(10)]
-	_ = x[Gpio11-(11)]
-	_ = x[Gpio12-(12)]
-	_ = x[Gpio13-(13)]
-	_ = x[Gpio14-(14)]
-	_ = x[Gpio15-(15)]
-	_ = x[Gpio16-(16)]
-	_ = x[Gpio17-(17)]
-	_ = x[Gpio18-(18)]
-	_ = x[Gpio19-(19)]
-	_ = x[Gpio20-(20)]
-	_ = x[Gpio21-(21)]
-	_ = x[Gpio22-(22)]
-	_ = x[Gpio23-(23)]
-	_ = x[Gpio24-(24)]
-	_ = x[Gpio25-(25)]
-	_ = x[Gpio26-(26)]
-	_ = x[Gpio27-(27)]
+	_ = x[Gpio12-(7)]
+	_ = x[Gpio13-(8)]
+	_ = x[Gpio14-(9)]
+	_ = x[Gpio15-(10)]
+	_ = x[Gpio16-(11)]
+	_ = x[Gpio17-(12)]
+	_ = x[Gpio18-(13)]
+	_ = x[Gpio19-(14)]
+	_ = x[Gpio20-(15)]
+	_ = x[Gpio21-(16)]
+	_ = x[Gpio22-(17)]
+	_ = x[Gpio24-(18)]
+	_ = x[Gpio26-(19)]
+	_ = x[Gpio27-(20)]
 }
 
-var _PinValues = []Pin{Gpio0, Gpio1, Gpio2, Gpio3, Gpio4, Gpio5, Gpio6, Gpio7, Gpio8, Gpio9, Gpio10, Gpio11, Gpio12, Gpio13, Gpio14, Gpio15, Gpio16, Gpio17, Gpio18, Gpio19, Gpio20, Gpio21, Gpio22, Gpio23, Gpio24, Gpio25, Gpio26, Gpio27}
+var _PinValues = []Pin{Gpio0, Gpio1, Gpio2, Gpio3, Gpio4, Gpio5, Gpio6, Gpio12, Gpio13, Gpio14, Gpio15, Gpio16, Gpio17, Gpio18, Gpio19, Gpio20, Gpio21, Gpio22, Gpio24, Gpio26, Gpio27}
 
 var _PinNameToValueMap = map[string]Pin{
 	_PinName[0:5]:          Gpio0,
@@ -71,48 +64,34 @@ var _PinNameToValueMap = map[string]Pin{
 	_PinLowerName[25:30]:   Gpio5,
 	_PinName[30:35]:        Gpio6,
 	_PinLowerName[30:35]:   Gpio6,
-	_PinName[35:40]:        Gpio7,
-	_PinLowerName[35:40]:   Gpio7,
-	_PinName[40:45]:        Gpio8,
-	_PinLowerName[40:45]:   Gpio8,
-	_PinName[45:50]:        Gpio9,
-	_PinLowerName[45:50]:   Gpio9,
-	_PinName[50:56]:        Gpio10,
-	_PinLowerName[50:56]:   Gpio10,
-	_PinName[56:62]:        Gpio11,
-	_PinLowerName[56:62]:   Gpio11,
-	_PinName[62:68]:        Gpio12,
-	_PinLowerName[62:68]:   Gpio12,
-	_PinName[68:74]:        Gpio13,
-	_PinLowerName[68:74]:   Gpio13,
-	_PinName[74:80]:        Gpio14,
-	_PinLowerName[74:80]:   Gpio14,
-	_PinName[80:86]:        Gpio15,
-	_PinLowerName[80:86]:   Gpio15,
-	_PinName[86:92]:        Gpio16,
-	_PinLowerName[86:92]:   Gpio16,
-	_PinName[92:98]:        Gpio17,
-	_PinLowerName[92:98]:   Gpio17,
-	_PinName[98:104]:       Gpio18,
-	_PinLowerName[98:104]:  Gpio18,
-	_PinName[104:110]:      Gpio19,
-	_PinLowerName[104:110]: Gpio19,
-	_PinName[110:116]:      Gpio20,
-	_PinLowerName[110:116]: Gpio20,
-	_PinName[116:122]:      Gpio21,
-	_PinLowerName[116:122]: Gpio21,
-	_PinName[122:128]:      Gpio22,
-	_PinLowerName[122:128]: Gpio22,
-	_PinName[128:134]:      Gpio23,
-	_PinLowerName[128:134]: Gpio23,
-	_PinName[134:140]:      Gpio24,
-	_PinLowerName[134:140]: Gpio24,
-	_PinName[140:146]:      Gpio25,
-	_PinLowerName[140:146]: Gpio25,
-	_PinName[146:152]:      Gpio26,
-	_PinLowerName[146:152]: Gpio26,
-	_PinName[152:158]:      Gpio27,
-	_PinLowerName[152:158]: Gpio27,
+	_PinName[35:41]:        Gpio12,
+	_PinLowerName[35:41]:   Gpio12,
+	_PinName[41:47]:        Gpio13,
+	_PinLowerName[41:47]:   Gpio13,
+	_PinName[47:53]:        Gpio14,
+	_PinLowerName[47:53]:   Gpio14,
+	_PinName[53:59]:        Gpio15,
+	_PinLowerName[53:59]:   Gpio15,
+	_PinName[59:65]:        Gpio16,
+	_PinLowerName[59:65]:   Gpio16,
+	_PinName[65:71]:        Gpio17,
+	_PinLowerName[65:71]:   Gpio17,
+	_PinName[71:77]:        Gpio18,
+	_PinLowerName[71:77]:   Gpio18,
+	_PinName[77:83]:        Gpio19,
+	_PinLowerName[77:83]:   Gpio19,
+	_PinName[83:89]:        Gpio20,
+	_PinLowerName[83:89]:   Gpio20,
+	_PinName[89:95]:        Gpio21,
+	_PinLowerName[89:95]:   Gpio21,
+	_PinName[95:101]:       Gpio22,
+	_PinLowerName[95:101]:  Gpio22,
+	_PinName[101:107]:      Gpio24,
+	_PinLowerName[101:107]: Gpio24,
+	_PinName[107:113]:      Gpio26,
+	_PinLowerName[107:113]: Gpio26,
+	_PinName[113:119]:      Gpio27,
+	_PinLowerName[113:119]: Gpio27,
 }
 
 var _PinNames = []string{
@@ -123,27 +102,20 @@ var _PinNames = []string{
 	_PinName[20:25],
 	_PinName[25:30],
 	_PinName[30:35],
-	_PinName[35:40],
-	_PinName[40:45],
-	_PinName[45:50],
-	_PinName[50:56],
-	_PinName[56:62],
-	_PinName[62:68],
-	_PinName[68:74],
-	_PinName[74:80],
-	_PinName[80:86],
-	_PinName[86:92],
-	_PinName[92:98],
-	_PinName[98:104],
-	_PinName[104:110],
-	_PinName[110:116],
-	_PinName[116:122],
-	_PinName[122:128],
-	_PinName[128:134],
-	_PinName[134:140],
-	_PinName[140:146],
-	_PinName[146:152],
-	_PinName[152:158],
+	_PinName[35:41],
+	_PinName[41:47],
+	_PinName[47:53],
+	_PinName[53:59],
+	_PinName[59:65],
+	_PinName[65:71],
+	_PinName[71:77],
+	_PinName[77:83],
+	_PinName[83:89],
+	_PinName[89:95],
+	_PinName[95:101],
+	_PinName[101:107],
+	_PinName[107:113],
+	_PinName[113:119],
 }
 
 // PinString retrieves an enum value from the enum constants string name.
