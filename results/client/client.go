@@ -42,11 +42,11 @@ func (r *ResultsClient) SubmitTag(ctx context.Context, tag string, value any) (b
 
 	reply, err := r.client.SubmitTag(ctx, request)
 	if err != nil {
-		if !reply.Success {
-			return false, errors.New(reply.Error)
-		}
-
 		return reply.IsPassing, errors.Wrap(err, "submit tag")
+	}
+
+	if !reply.Success {
+		return false, errors.New(reply.Error)
 	}
 
 	return reply.IsPassing, nil

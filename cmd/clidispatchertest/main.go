@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
+	"github.com/macformula/hil/results/client"
 	"time"
 
 	"github.com/macformula/hil/cli"
 	dtest "github.com/macformula/hil/cli/test"
 	"github.com/macformula/hil/flow"
-	ftest "github.com/macformula/hil/flow/test"
 	"github.com/macformula/hil/orchestrator"
 	otest "github.com/macformula/hil/orchestrator/test"
 	"github.com/pkg/errors"
@@ -15,7 +15,9 @@ import (
 )
 
 const (
-	_loggerName = "main.log"
+	_loggerName          = "main.log"
+	_resultProcessorIp   = "localhost"
+	_resultProcessorPort = "31763"
 )
 
 func main() {
@@ -27,7 +29,7 @@ func main() {
 	}
 	defer logger.Sync()
 
-	rp := ftest.NewSimpleResultProcessor(logger)
+	rp := client.NewResultsClient(_resultProcessorIp, _resultProcessorPort)
 	s := flow.NewSequencer(rp, logger)
 	d := cli.NewCliDispatcher(dtest.Sequences, logger)
 	d2 := otest.NewSimpleDispatcher(logger, 5*time.Second, 10*time.Second)
