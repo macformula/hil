@@ -31,6 +31,7 @@ message SubmitTagResponse {
 message CompleteTestRequest {
   string test_id = 1;
   string sequence_name = 2;
+  bool push_report_to_github = 3;
 }
 
 message CompleteTestResponse {

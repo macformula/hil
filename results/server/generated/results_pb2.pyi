@@ -30,12 +30,14 @@ class SubmitTagResponse(_message.Message):
     def __init__(self, success: bool = ..., error: _Optional[str] = ..., is_passing: bool = ...) -> None: ...
 
 class CompleteTestRequest(_message.Message):
-    __slots__ = ("test_id", "sequence_name")
+    __slots__ = ("test_id", "sequence_name", "push_report_to_github")
     TEST_ID_FIELD_NUMBER: _ClassVar[int]
     SEQUENCE_NAME_FIELD_NUMBER: _ClassVar[int]
+    PUSH_REPORT_TO_GITHUB_FIELD_NUMBER: _ClassVar[int]
     test_id: str
     sequence_name: str
-    def __init__(self, test_id: _Optional[str] = ..., sequence_name: _Optional[str] = ...) -> None: ...
+    push_report_to_github: bool
+    def __init__(self, test_id: _Optional[str] = ..., sequence_name: _Optional[str] = ..., push_report_to_github: bool = ...) -> None: ...
 
 class CompleteTestResponse(_message.Message):
     __slots__ = ("test_passed",)

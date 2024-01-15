@@ -11,14 +11,16 @@ import (
 )
 
 type ResultsClient struct {
-	addr   string
-	conn   *grpc.ClientConn
-	client proto.TagTunnelClient
+	addr                string
+	conn                *grpc.ClientConn
+	client              proto.TagTunnelClient
+	pushReportsToGithub bool
 }
 
-func NewResultsClient(ip, port string) *ResultsClient {
+func NewResultsClient(ip, port string, pushReportsToGithub bool) *ResultsClient {
 	return &ResultsClient{
-		addr: ip + ":" + port,
+		addr:                ip + ":" + port,
+		pushReportsToGithub: pushReportsToGithub,
 	}
 }
 
@@ -54,8 +56,9 @@ func (r *ResultsClient) SubmitTag(ctx context.Context, tag string, value any) (b
 
 func (r *ResultsClient) CompleteTest(ctx context.Context, testId uuid.UUID, sequenceName string) (bool, error) {
 	reply, err := r.client.CompleteTest(ctx, &proto.CompleteTestRequest{
-		TestId:       testId.String(),
-		SequenceName: sequenceName,
+		TestId:             testId.String(),
+		SequenceName:       sequenceName,
+		PushReportToGithub: r.pushReportsToGithub,
 	})
 
 	if err != nil {

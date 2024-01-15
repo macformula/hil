@@ -18,6 +18,7 @@ const (
 	_loggerName          = "main.log"
 	_resultProcessorIp   = "localhost"
 	_resultProcessorPort = "31763"
+	_pushToGithub        = false
 )
 
 func main() {
@@ -29,7 +30,7 @@ func main() {
 	}
 	defer logger.Sync()
 
-	rp := client.NewResultsClient(_resultProcessorIp, _resultProcessorPort)
+	rp := client.NewResultsClient(_resultProcessorIp, _resultProcessorPort, _pushToGithub)
 	s := flow.NewSequencer(rp, logger)
 	d := cli.NewCliDispatcher(dtest.Sequences, logger)
 	d2 := otest.NewSimpleDispatcher(logger, 5*time.Second, 10*time.Second)

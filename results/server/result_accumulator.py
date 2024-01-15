@@ -126,7 +126,7 @@ class ResultAccumulator:
 
         return dt
 
-    def generate_and_run_tests(self, test_id: str, sequence_name: str) -> bool:
+    def generate_and_run_tests(self, test_id: str, sequence_name: str, push_to_github: bool) -> bool:
         """On CompleteTest submissions
         - Wrapper for generate_test_file and pytest.main.
         the full RA tests w/ reports are run with this one
@@ -139,7 +139,8 @@ class ResultAccumulator:
         overall_pass_fail = self.all_tags_passing and (not has_errors)
 
         self.__update_historic_tests(test_id, sequence_name, date_time, overall_pass_fail)
-        self.repo_handler.push_to_github_pages(test_id)
+        if push_to_github:
+            self.repo_handler.push_to_github_pages(test_id)
 
         # reset cached submissions
         self.tag_submissions = {}

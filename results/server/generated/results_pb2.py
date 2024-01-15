@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rresults.proto\x12\x10ResultsProcessor\"~\n\x10SubmitTagRequest\x12\x0b\n\x03tag\x18\x01 \x01(\t\x12\x13\n\tvalue_str\x18\x02 \x01(\tH\x00\x12\x13\n\tvalue_int\x18\x03 \x01(\x05H\x00\x12\x15\n\x0bvalue_float\x18\x04 \x01(\x02H\x00\x12\x14\n\nvalue_bool\x18\x05 \x01(\x08H\x00\x42\x06\n\x04\x64\x61ta\"G\n\x11SubmitTagResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x12\x12\n\nis_passing\x18\x03 \x01(\x08\"=\n\x13\x43ompleteTestRequest\x12\x0f\n\x07test_id\x18\x01 \x01(\t\x12\x15\n\rsequence_name\x18\x02 \x01(\t\"+\n\x14\x43ompleteTestResponse\x12\x13\n\x0btest_passed\x18\x01 \x01(\x08\"#\n\x12SubmitErrorRequest\x12\r\n\x05\x65rror\x18\x01 \x01(\t\"*\n\x13SubmitErrorResponse\x12\x13\n\x0b\x65rror_count\x18\x01 \x01(\x05\"\x18\n\x16\x45numerateErrorsRequest\")\n\x17\x45numerateErrorsResponse\x12\x0e\n\x06\x65rrors\x18\x01 \x03(\t\"\x16\n\x14\x45numerateTagsRequest\"<\n\x15\x45numerateTagsResponse\x12#\n\x04tags\x18\x01 \x03(\x0b\x32\x15.ResultsProcessor.Tag\"\xee\x01\n\x03Tag\x12\x0e\n\x06tag_id\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x15\n\rcomp_operator\x18\x03 \x01(\t\x12\x13\n\x0bupper_limit\x18\x04 \x01(\x02\x12\x13\n\x0blower_limit\x18\x05 \x01(\x02\x12\x1a\n\x10\x65xpected_val_str\x18\x06 \x01(\tH\x00\x12\x1a\n\x10\x65xpected_val_int\x18\x07 \x01(\x05H\x00\x12\x1c\n\x12\x65xpected_val_float\x18\x08 \x01(\x02H\x00\x12\x1b\n\x11\x65xpected_val_bool\x18\t \x01(\x08H\x00\x42\x0e\n\x0c\x65xpected_val2\xf0\x03\n\tTagTunnel\x12_\n\x0c\x43ompleteTest\x12%.ResultsProcessor.CompleteTestRequest\x1a&.ResultsProcessor.CompleteTestResponse\"\x00\x12h\n\x0f\x45numerateErrors\x12(.ResultsProcessor.EnumerateErrorsRequest\x1a).ResultsProcessor.EnumerateErrorsResponse\"\x00\x12\x62\n\rEnumerateTags\x12&.ResultsProcessor.EnumerateTagsRequest\x1a\'.ResultsProcessor.EnumerateTagsResponse\"\x00\x12\\\n\x0bSubmitError\x12$.ResultsProcessor.SubmitErrorRequest\x1a%.ResultsProcessor.SubmitErrorResponse\"\x00\x12V\n\tSubmitTag\x12\".ResultsProcessor.SubmitTagRequest\x1a#.ResultsProcessor.SubmitTagResponse\"\x00\x42\tZ\x07.clientb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rresults.proto\x12\x10ResultsProcessor\"~\n\x10SubmitTagRequest\x12\x0b\n\x03tag\x18\x01 \x01(\t\x12\x13\n\tvalue_str\x18\x02 \x01(\tH\x00\x12\x13\n\tvalue_int\x18\x03 \x01(\x05H\x00\x12\x15\n\x0bvalue_float\x18\x04 \x01(\x02H\x00\x12\x14\n\nvalue_bool\x18\x05 \x01(\x08H\x00\x42\x06\n\x04\x64\x61ta\"G\n\x11SubmitTagResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x12\x12\n\nis_passing\x18\x03 \x01(\x08\"\\\n\x13\x43ompleteTestRequest\x12\x0f\n\x07test_id\x18\x01 \x01(\t\x12\x15\n\rsequence_name\x18\x02 \x01(\t\x12\x1d\n\x15push_report_to_github\x18\x03 \x01(\x08\"+\n\x14\x43ompleteTestResponse\x12\x13\n\x0btest_passed\x18\x01 \x01(\x08\"#\n\x12SubmitErrorRequest\x12\r\n\x05\x65rror\x18\x01 \x01(\t\"*\n\x13SubmitErrorResponse\x12\x13\n\x0b\x65rror_count\x18\x01 \x01(\x05\"\x18\n\x16\x45numerateErrorsRequest\")\n\x17\x45numerateErrorsResponse\x12\x0e\n\x06\x65rrors\x18\x01 \x03(\t\"\x16\n\x14\x45numerateTagsRequest\"<\n\x15\x45numerateTagsResponse\x12#\n\x04tags\x18\x01 \x03(\x0b\x32\x15.ResultsProcessor.Tag\"\xee\x01\n\x03Tag\x12\x0e\n\x06tag_id\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x15\n\rcomp_operator\x18\x03 \x01(\t\x12\x13\n\x0bupper_limit\x18\x04 \x01(\x02\x12\x13\n\x0blower_limit\x18\x05 \x01(\x02\x12\x1a\n\x10\x65xpected_val_str\x18\x06 \x01(\tH\x00\x12\x1a\n\x10\x65xpected_val_int\x18\x07 \x01(\x05H\x00\x12\x1c\n\x12\x65xpected_val_float\x18\x08 \x01(\x02H\x00\x12\x1b\n\x11\x65xpected_val_bool\x18\t \x01(\x08H\x00\x42\x0e\n\x0c\x65xpected_val2\xf0\x03\n\tTagTunnel\x12_\n\x0c\x43ompleteTest\x12%.ResultsProcessor.CompleteTestRequest\x1a&.ResultsProcessor.CompleteTestResponse\"\x00\x12h\n\x0f\x45numerateErrors\x12(.ResultsProcessor.EnumerateErrorsRequest\x1a).ResultsProcessor.EnumerateErrorsResponse\"\x00\x12\x62\n\rEnumerateTags\x12&.ResultsProcessor.EnumerateTagsRequest\x1a\'.ResultsProcessor.EnumerateTagsResponse\"\x00\x12\\\n\x0bSubmitError\x12$.ResultsProcessor.SubmitErrorRequest\x1a%.ResultsProcessor.SubmitErrorResponse\"\x00\x12V\n\tSubmitTag\x12\".ResultsProcessor.SubmitTagRequest\x1a#.ResultsProcessor.SubmitTagResponse\"\x00\x42\tZ\x07.clientb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -27,23 +27,23 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_SUBMITTAGRESPONSE']._serialized_start=163
   _globals['_SUBMITTAGRESPONSE']._serialized_end=234
   _globals['_COMPLETETESTREQUEST']._serialized_start=236
-  _globals['_COMPLETETESTREQUEST']._serialized_end=297
-  _globals['_COMPLETETESTRESPONSE']._serialized_start=299
-  _globals['_COMPLETETESTRESPONSE']._serialized_end=342
-  _globals['_SUBMITERRORREQUEST']._serialized_start=344
-  _globals['_SUBMITERRORREQUEST']._serialized_end=379
-  _globals['_SUBMITERRORRESPONSE']._serialized_start=381
-  _globals['_SUBMITERRORRESPONSE']._serialized_end=423
-  _globals['_ENUMERATEERRORSREQUEST']._serialized_start=425
-  _globals['_ENUMERATEERRORSREQUEST']._serialized_end=449
-  _globals['_ENUMERATEERRORSRESPONSE']._serialized_start=451
-  _globals['_ENUMERATEERRORSRESPONSE']._serialized_end=492
-  _globals['_ENUMERATETAGSREQUEST']._serialized_start=494
-  _globals['_ENUMERATETAGSREQUEST']._serialized_end=516
-  _globals['_ENUMERATETAGSRESPONSE']._serialized_start=518
-  _globals['_ENUMERATETAGSRESPONSE']._serialized_end=578
-  _globals['_TAG']._serialized_start=581
-  _globals['_TAG']._serialized_end=819
-  _globals['_TAGTUNNEL']._serialized_start=822
-  _globals['_TAGTUNNEL']._serialized_end=1318
+  _globals['_COMPLETETESTREQUEST']._serialized_end=328
+  _globals['_COMPLETETESTRESPONSE']._serialized_start=330
+  _globals['_COMPLETETESTRESPONSE']._serialized_end=373
+  _globals['_SUBMITERRORREQUEST']._serialized_start=375
+  _globals['_SUBMITERRORREQUEST']._serialized_end=410
+  _globals['_SUBMITERRORRESPONSE']._serialized_start=412
+  _globals['_SUBMITERRORRESPONSE']._serialized_end=454
+  _globals['_ENUMERATEERRORSREQUEST']._serialized_start=456
+  _globals['_ENUMERATEERRORSREQUEST']._serialized_end=480
+  _globals['_ENUMERATEERRORSRESPONSE']._serialized_start=482
+  _globals['_ENUMERATEERRORSRESPONSE']._serialized_end=523
+  _globals['_ENUMERATETAGSREQUEST']._serialized_start=525
+  _globals['_ENUMERATETAGSREQUEST']._serialized_end=547
+  _globals['_ENUMERATETAGSRESPONSE']._serialized_start=549
+  _globals['_ENUMERATETAGSRESPONSE']._serialized_end=609
+  _globals['_TAG']._serialized_start=612
+  _globals['_TAG']._serialized_end=850
+  _globals['_TAGTUNNEL']._serialized_start=853
+  _globals['_TAGTUNNEL']._serialized_end=1349
 # @@protoc_insertion_point(module_scope)
