@@ -2,12 +2,25 @@ package test
 
 import (
 	"context"
+	"github.com/macformula/hil"
+	"github.com/macformula/hil/flow"
 	"github.com/pkg/errors"
 	"time"
 )
 
 // RunErrorState returns an error when Run is called
 type RunErrorState struct{}
+
+func (r *RunErrorState) GetResults() map[flow.Tag]any {
+	return map[flow.Tag]any{
+		hil.FwTags.FrontControllerFlashed: true,
+		hil.FwTags.TmsFlashed:             true,
+	}
+}
+
+func (r *RunErrorState) ContinueOnFail() bool {
+	return true
+}
 
 // Timeout returns the state setup and run timeout.
 func (r *RunErrorState) Timeout() time.Duration {

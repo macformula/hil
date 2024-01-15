@@ -30,6 +30,7 @@ message SubmitTagResponse {
 
 message CompleteTestRequest {
   string test_id = 1;
+  string sequence_name = 2;
 }
 
 message CompleteTestResponse {

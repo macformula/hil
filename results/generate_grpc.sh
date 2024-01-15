@@ -1,4 +1,4 @@
 # NOTE: this is untested
-python3 -m grpc_tools.protoc -I ./results/proto --grpc_python_out=./results/server/generated --mypy_out=./results/server/generated ./results/proto/results.proto
+python3 -m grpc_tools.protoc -I ./proto --grpc_python_out=./server/generated --mypy_out=./server/generated ./proto/results.proto
 
-protoc --go_out=client/proto --go_opt=paths=source_relative --go-grpc_out=client/proto --go-grpc_opt=paths=source_relative demo.proto
+protoc --go_out=./client/generated --go_opt=paths=source_relative --go-grpc_out=./client/generated --go-grpc_opt=paths=source_relative ./proto/results.proto

@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	proto "github.com/macformula/hil/results/client/generated"
 	"github.com/pkg/errors"
@@ -26,8 +27,10 @@ func (r *ResultsClient) Open(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "dial context")
 	}
+
 	r.conn = conn
 	r.client = proto.NewTagTunnelClient(conn)
+
 	return nil
 }
 
@@ -42,16 +45,23 @@ func (r *ResultsClient) SubmitTag(ctx context.Context, tag string, value any) (b
 		if !reply.Success {
 			return false, errors.New(reply.Error)
 		}
+
 		return reply.IsPassing, errors.Wrap(err, "submit tag")
 	}
+
 	return reply.IsPassing, nil
 }
 
-func (r *ResultsClient) CompleteTest(ctx context.Context, testId uuid.UUID) (bool, error) {
-	reply, err := r.client.CompleteTest(ctx, &proto.CompleteTestRequest{TestId: testId.String()})
+func (r *ResultsClient) CompleteTest(ctx context.Context, testId uuid.UUID, sequenceName string) (bool, error) {
+	reply, err := r.client.CompleteTest(ctx, &proto.CompleteTestRequest{
+		TestId:       testId.String(),
+		SequenceName: sequenceName,
+	})
+
 	if err != nil {
 		return reply.TestPassed, errors.Wrap(err, "complete test")
 	}
+
 	return reply.TestPassed, nil
 }
 
@@ -60,11 +70,13 @@ func (r *ResultsClient) SubmitError(ctx context.Context, err error) error {
 	if submitErr != nil {
 		return errors.Wrap(err, "submit error")
 	}
+
 	return nil
 }
 
 func createRequest(tag string, data any) (*proto.SubmitTagRequest, error) {
 	request := &proto.SubmitTagRequest{Tag: tag}
+
 	switch data.(type) {
 	case int32:
 		request.Data = &proto.SubmitTagRequest_ValueInt{ValueInt: data.(int32)}
@@ -77,5 +89,6 @@ func createRequest(tag string, data any) (*proto.SubmitTagRequest, error) {
 	default:
 		return nil, errors.Errorf("unsupported data type for tag submission (%T)", data)
 	}
+
 	return request, nil
 }

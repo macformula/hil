@@ -1,16 +1,11 @@
 package flow
 
-import "time"
-
 // Sequence is a list of states that will be run in the order provided.
-type Sequence []State
-
-// Progress represents the progress of a currently running Sequence.
-type Progress struct {
-	CurrentState  State
-	StateIndex    int
-	Complete      bool
-	Sequence      Sequence
-	StateDuration []time.Duration
-	TotalStates   int
+type Sequence struct {
+	// Name of the sequence.
+	Name string
+	// Desc is the description for the purpose of the sequence.
+	Desc string
+	// States are the states to be run in the order provided.
+	States []State
 }

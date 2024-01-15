@@ -3,6 +3,8 @@ package test
 import (
 	"context"
 	"errors"
+	"github.com/macformula/hil"
+	"github.com/macformula/hil/flow"
 	"time"
 )
 
@@ -13,6 +15,17 @@ const (
 // DoNothingState does nothing
 type DoNothingState struct {
 	setupCalled bool
+}
+
+func (d *DoNothingState) GetResults() map[flow.Tag]any {
+	return map[flow.Tag]any{
+		hil.FwTags.FrontControllerFlashed: true,
+		hil.FwTags.TmsFlashed:             true,
+	}
+}
+
+func (d *DoNothingState) ContinueOnFail() bool {
+	return true
 }
 
 // Timeout returns the state setup and run timeout.
@@ -29,7 +42,7 @@ func (d *DoNothingState) Setup(ctx context.Context) error {
 
 // Name is the name of the state.
 func (d *DoNothingState) Name() string {
-	return "do_nothing_state"
+	return _name
 }
 
 // Run is the logic that gets executed after setup.
