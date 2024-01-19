@@ -62,7 +62,7 @@ func (r *ResultsClient) CompleteTest(ctx context.Context, testId uuid.UUID, sequ
 	})
 
 	if err != nil {
-		return reply.TestPassed, errors.Wrap(err, "complete test")
+		return false, errors.Wrap(err, "complete test")
 	}
 
 	return reply.TestPassed, nil
