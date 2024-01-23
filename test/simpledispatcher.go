@@ -5,13 +5,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/macformula/hil/cli/test"
 	"github.com/macformula/hil/orchestrator"
 	"go.uber.org/zap"
 )
 
 const (
-	_loggerName = "simpledispatcher"
+	_dispatcherLoggerName = "simple_dispatcher"
 )
 
 type SimpleDispatcher struct {
@@ -27,7 +26,7 @@ type SimpleDispatcher struct {
 
 func NewSimpleDispatcher(l *zap.Logger, durations ...time.Duration) *SimpleDispatcher {
 	return &SimpleDispatcher{
-		l:               l.Named(_loggerName),
+		l:               l.Named(_dispatcherLoggerName),
 		startSig:        make(chan orchestrator.StartSignal),
 		shutdownSig:     make(chan orchestrator.ShutdownSignal),
 		cancelSig:       make(chan orchestrator.CancelTestSignal),
@@ -58,7 +57,7 @@ func (s *SimpleDispatcher) simulate(durations []time.Duration) {
 		testId := uuid.New()
 		s.startSig <- orchestrator.StartSignal{
 			TestId:   testId,
-			Seq:      test.SleepSequence,
+			Seq:      SleepSequence,
 			Metadata: nil,
 		}
 		for {
