@@ -83,7 +83,7 @@ func (s *Sequencer) Run(
 
 	isPassing, err := s.runSequence(ctx, seq, cancelTest, testId)
 	if err != nil {
-		testErrors := s.testErrors
+		testErrors := append(s.testErrors, errors.Wrap(err, "run sequence"))
 		s.testErrors = []error{}
 
 		return false, s.failedTags, testErrors, errors.Wrap(err, "run sequence")
