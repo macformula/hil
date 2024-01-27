@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// Creating file to feed to mcap writer, this is where mcap data will be generated
 func initWriter() *mcap.Writer {
 	currentTime := time.Now()
 	formattedTime := currentTime.Format("2006.01.02_15.04.05")
@@ -17,7 +18,7 @@ func initWriter() *mcap.Writer {
 		fmt.Println("Error creating file:", err)
 		return nil
 	}
-	mcapwriter, mcaperr := mcap.NewWriter(file, &mcap.WriterOptions{
+	mcapwriter, mcaperr := mcap.NewWriter(file, &mcap.WriterOptions{ //creating the mcap writer
 		Chunked: false,
 	})
 
@@ -28,13 +29,14 @@ func initWriter() *mcap.Writer {
 	return mcapwriter
 }
 
+// struct for turning mcap data into json format
 type mcapmessage struct {
 	Data int64
 }
 
 func main() {
 	writer := initWriter()
-	defer func() {
+	defer func() { // writes footer to mcap file and closes it before main finishes execution
 		//err := writer.WriteFooter(&mcap.Footer{})
 		//if err != nil {
 		//	fmt.Println("Error closing mcap file:", err)
@@ -68,7 +70,7 @@ func main() {
 	err = writer.WriteChannel(&mcap.Channel{
 		ID:              1,
 		SchemaID:        1,
-		Topic:           "Engine  (RPM)",
+		Topic:           "Engine (RPM)",
 		MessageEncoding: "json",
 	})
 
@@ -107,13 +109,14 @@ func main() {
 		//binary.LittleEndian.PutUint64(bytearray, uint64(i*5))
 		err = writer.WriteMessage(&mcap.Message{
 			ChannelID:   1,
-			LogTime:     uint64(time.Now().Unix()),
-			PublishTime: uint64(time.Now().Unix()),
+			LogTime:     uint64(time.Now().Nanosecond()), //Wrong time formatting
+			PublishTime: uint64(time.Now().Nanosecond()),
 			Data:        d,
 		})
 		if err != nil {
 			fmt.Println("Error writing message to mcap file on iteration", i, " :", err)
 			return
 		}
+		time.Sleep(500 * time.Millisecond)
 	}
 }
