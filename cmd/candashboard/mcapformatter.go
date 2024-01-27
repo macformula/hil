@@ -56,7 +56,7 @@ func main() {
 	err = writer.WriteSchema(&mcap.Schema{
 		ID:       1,
 		Name:     "schema",
-		Encoding: "msg",
+		Encoding: "jsonschema",
 		Data:     []byte{},
 	})
 
@@ -69,7 +69,7 @@ func main() {
 		ID:              1,
 		SchemaID:        1,
 		Topic:           "Engine Speed (RPM)",
-		MessageEncoding: "msg",
+		MessageEncoding: "json",
 	})
 
 	if err != nil {
