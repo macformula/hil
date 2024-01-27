@@ -68,7 +68,7 @@ func main() {
 	err = writer.WriteChannel(&mcap.Channel{
 		ID:              1,
 		SchemaID:        1,
-		Topic:           "Engine Speed (RPM)",
+		Topic:           "Engine  (RPM)",
 		MessageEncoding: "json",
 	})
 
@@ -77,12 +77,12 @@ func main() {
 		return
 	}
 
-	err = writer.WriteChannel(&mcap.Channel{
-		ID:              2,
-		SchemaID:        1,
-		Topic:           "Torque (N-m)",
-		MessageEncoding: "json",
-	})
+	//err = writer.WriteChannel(&mcap.Channel{
+	//	ID:              2,
+	//	SchemaID:        1,
+	//	Topic:           "Torque (N-m)",
+	//	MessageEncoding: "json",
+	//})
 
 	if err != nil {
 		fmt.Println("Error creating Torque channel:", err)
@@ -92,10 +92,10 @@ func main() {
 	//bytearray := make([]byte, 8)
 
 	for i := 0; i < 20; i++ {
-		channelid := uint16(1)
-		if i%2 == 1 {
-			channelid = uint16(2)
-		}
+		//channelid := uint16(1)
+		//if i%2 == 1 {
+		//	channelid = uint16(2)
+		//}
 		m := mcapmessage{int64(i * 5)}
 		d, err := json.Marshal(m)
 
@@ -106,7 +106,7 @@ func main() {
 
 		//binary.LittleEndian.PutUint64(bytearray, uint64(i*5))
 		err = writer.WriteMessage(&mcap.Message{
-			ChannelID:   channelid,
+			ChannelID:   1,
 			LogTime:     uint64(time.Now().Unix()),
 			PublishTime: uint64(time.Now().Unix()),
 			Data:        d,
