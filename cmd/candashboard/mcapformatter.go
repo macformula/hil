@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"github.com/foxglove/mcap/go/mcap"
 	"os"
@@ -11,7 +11,7 @@ import (
 func initWriter() *mcap.Writer {
 	currentTime := time.Now()
 	formattedTime := currentTime.Format("2006.01.02_15.04.05")
-	fileName := fmt.Sprintf("file_%s.txt", formattedTime)
+	fileName := fmt.Sprintf("file_%s.mcap", formattedTime)
 	file, err := os.Create(fileName)
 	if err != nil {
 		fmt.Println("Error creating file:", err)
@@ -28,9 +28,19 @@ func initWriter() *mcap.Writer {
 	return mcapwriter
 }
 
+type mcapmessage struct {
+	Data int64
+}
+
 func main() {
 	writer := initWriter()
 	defer func() {
+		//err := writer.WriteFooter(&mcap.Footer{})
+		//if err != nil {
+		//	fmt.Println("Error closing mcap file:", err)
+		//	return
+		//}
+		// I think the writer.Close also writes a footer
 		err := writer.Close()
 		if err != nil {
 			fmt.Println("Error closing mcap file:", err)
@@ -71,7 +81,7 @@ func main() {
 		ID:              2,
 		SchemaID:        1,
 		Topic:           "Torque (N-m)",
-		MessageEncoding: "msg",
+		MessageEncoding: "json",
 	})
 
 	if err != nil {
@@ -79,19 +89,31 @@ func main() {
 		return
 	}
 
-	bytearray := make([]byte, 8)
+	//bytearray := make([]byte, 8)
 
 	for i := 0; i < 20; i++ {
 		channelid := uint16(1)
 		if i%2 == 1 {
 			channelid = uint16(2)
 		}
-		binary.LittleEndian.PutUint64(bytearray, uint64(i*5))
+		m := mcapmessage{int64(i * 5)}
+		d, err := json.Marshal(m)
+
+		if err != nil {
+			fmt.Println("Error marshalling message data into json format:", err)
+			return
+		}
+
+		//binary.LittleEndian.PutUint64(bytearray, uint64(i*5))
 		err = writer.WriteMessage(&mcap.Message{
 			ChannelID:   channelid,
 			LogTime:     uint64(time.Now().Unix()),
 			PublishTime: uint64(time.Now().Unix()),
-			Data:        bytearray,
+			Data:        d,
 		})
+		if err != nil {
+			fmt.Println("Error writing message to mcap file on iteration", i, " :", err)
+			return
+		}
 	}
 }
