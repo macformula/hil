@@ -15,7 +15,7 @@ import (
 
 const (
 	_python3                  = "python3"
-	_waitForFastFailErrorTime = 5 * time.Second
+	_waitForFastFailErrorTime = 1 * time.Second
 )
 
 type ResultProcessor struct {
