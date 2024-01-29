@@ -1,7 +1,10 @@
-package client
+package results
 
 import (
 	"context"
+	"fmt"
+	"os/exec"
+	"time"
 
 	"github.com/google/uuid"
 	proto "github.com/macformula/hil/results/client/generated"
@@ -10,21 +13,67 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type ResultsClient struct {
+const (
+	_python3                  = "python3"
+	_waitForFastFailErrorTime = 5 * time.Second
+)
+
+type ResultProcessor struct {
 	addr                string
 	conn                *grpc.ClientConn
 	client              proto.TagTunnelClient
 	pushReportsToGithub bool
+
+	serverAutoStart bool
+	configPath      string
+	serverPath      string
 }
 
-func NewResultsClient(ip, port string, pushReportsToGithub bool) *ResultsClient {
-	return &ResultsClient{
-		addr:                ip + ":" + port,
-		pushReportsToGithub: pushReportsToGithub,
+type Option = func(*ResultProcessor)
+
+// WithServerAutoStart will automatically start the result processor server. Server path should be the path to main.py.
+func WithServerAutoStart(configPath, serverPath string) Option {
+	return func(r *ResultProcessor) {
+		r.serverAutoStart = true
+		r.configPath = configPath
+		r.serverPath = serverPath
 	}
 }
 
-func (r *ResultsClient) Open(ctx context.Context) error {
+// WithPushReportsToGithub will push hil reports to the macfe-hil.github.io page.
+func WithPushReportsToGithub() Option {
+	return func(r *ResultProcessor) {
+		r.pushReportsToGithub = true
+	}
+}
+
+func NewResultProcessor(address string, opts ...Option) *ResultProcessor {
+	ret := &ResultProcessor{
+		addr:                address,
+		pushReportsToGithub: false,
+		serverAutoStart:     false,
+	}
+
+	for _, o := range opts {
+		o(ret)
+	}
+
+	return ret
+}
+
+func (r *ResultProcessor) Open(ctx context.Context) error {
+	var errCh = make(chan error)
+
+	if r.serverAutoStart {
+		go r.startServer(errCh)
+	}
+
+	select {
+	case <-time.After(_waitForFastFailErrorTime):
+	case err := <-errCh:
+		return errors.Wrap(err, "start server")
+	}
+
 	conn, err := grpc.DialContext(ctx, r.addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return errors.Wrap(err, "dial context")
@@ -36,7 +85,7 @@ func (r *ResultsClient) Open(ctx context.Context) error {
 	return nil
 }
 
-func (r *ResultsClient) SubmitTag(ctx context.Context, tag string, value any) (bool, error) {
+func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) (bool, error) {
 	request, err := createRequest(tag, value)
 	if err != nil {
 		return false, errors.Wrap(err, "create request")
@@ -54,7 +103,7 @@ func (r *ResultsClient) SubmitTag(ctx context.Context, tag string, value any) (b
 	return reply.IsPassing, nil
 }
 
-func (r *ResultsClient) CompleteTest(ctx context.Context, testId uuid.UUID, sequenceName string) (bool, error) {
+func (r *ResultProcessor) CompleteTest(ctx context.Context, testId uuid.UUID, sequenceName string) (bool, error) {
 	reply, err := r.client.CompleteTest(ctx, &proto.CompleteTestRequest{
 		TestId:             testId.String(),
 		SequenceName:       sequenceName,
@@ -68,13 +117,24 @@ func (r *ResultsClient) CompleteTest(ctx context.Context, testId uuid.UUID, sequ
 	return reply.TestPassed, nil
 }
 
-func (r *ResultsClient) SubmitError(ctx context.Context, err error) error {
+func (r *ResultProcessor) SubmitError(ctx context.Context, err error) error {
 	_, submitErr := r.client.SubmitError(ctx, &proto.SubmitErrorRequest{Error: err.Error()})
 	if submitErr != nil {
 		return errors.Wrap(err, "submit error")
 	}
 
 	return nil
+}
+
+func (r *ResultProcessor) startServer(errCh chan error) {
+	configFlag := fmt.Sprintf("--config=%s", r.configPath)
+
+	cmd := exec.Command(_python3, r.serverPath, configFlag)
+
+	err := cmd.Run()
+	if err != nil {
+		errCh <- errors.Wrap(err, "run")
+	}
 }
 
 func createRequest(tag string, data any) (*proto.SubmitTagRequest, error) {

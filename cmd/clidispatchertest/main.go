@@ -15,9 +15,9 @@ import (
 
 const (
 	_loggerName          = "main.log"
-	_resultProcessorIp   = "localhost"
-	_resultProcessorPort = "31763"
-	_pushToGithub        = true
+	_resultProcessorAddr = "localhost:31763"
+	_configPath          = "./config/hil-config/config.yaml"
+	_resultServerPath    = "./results/server/main.py"
 )
 
 func main() {
@@ -29,7 +29,10 @@ func main() {
 	}
 	defer logger.Sync()
 
-	resultProcessor := client.NewResultsClient(_resultProcessorIp, _resultProcessorPort, _pushToGithub)
+	resultProcessor := results.NewResultProcessor(_resultProcessorAddr,
+		results.WithPushReportsToGithub(),
+		results.WithServerAutoStart(_configPath, _resultServerPath),
+	)
 	sequencer := flow.NewSequencer(resultProcessor, logger)
 	cliDispatcher := cli.NewCliDispatcher(test.Sequences, logger)
 	simpleDispatcher := test.NewSimpleDispatcher(logger, 5*time.Second, 10*time.Second)
