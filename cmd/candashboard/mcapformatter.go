@@ -8,110 +8,120 @@ import (
 	"time"
 )
 
-// Creating file to feed to mcap writer, this is where mcap data will be generated
-func initWriter() *mcap.Writer {
-	currentTime := time.Now()
-	formattedTime := currentTime.Format("2006.01.02_15.04.05")
-	fileName := fmt.Sprintf("file_%s.mcap", formattedTime)
-	file, err := os.Create(fileName)
-	if err != nil {
-		fmt.Println("Error creating file:", err)
-		return nil
-	}
-	mcapwriter, mcaperr := mcap.NewWriter(file, &mcap.WriterOptions{ //creating the mcap writer
-		Chunked: false,
-	})
-
-	if mcaperr != nil {
-		fmt.Println("Error creating mcap file:", mcaperr)
-		return nil
-	}
-	return mcapwriter
+type MyData struct {
+	Data []byte `json:"data"`
 }
 
-// struct for turning mcap data into json format
 type mcapmessage struct {
-	Data int64
+	Data int
 }
 
 func main() {
-	writer := initWriter()
-	defer func() { // writes footer to mcap file and closes it before main finishes execution
-		//err := writer.WriteFooter(&mcap.Footer{})
-		//if err != nil {
-		//	fmt.Println("Error closing mcap file:", err)
-		//	return
-		//}
-		// I think the writer.Close also writes a footer
-		err := writer.Close()
+	//buf := &bytes.Buffer{}
+	currentTime := time.Now()
+	formattedTime := currentTime.Format("2006.01.02_15.04.05")
+	fileName := fmt.Sprintf("file_%s.mcap", formattedTime)
+	file, _ := os.Create(fileName)
+
+	w, _ := mcap.NewWriter(file, &mcap.WriterOptions{
+		Chunked: false,
+	})
+
+	defer func() {
+		err := w.Close()
 		if err != nil {
 			fmt.Println("Error closing mcap file:", err)
 			return
 		}
 	}()
-	err := writer.WriteHeader(&mcap.Header{})
+	err := w.WriteHeader(&mcap.Header{})
 	if err != nil {
-		fmt.Println("Error closing mcap file:", err)
-		return
+		panic("FAILED")
 	}
-
-	err = writer.WriteSchema(&mcap.Schema{
+	err = w.WriteSchema(&mcap.Schema{
 		ID:       1,
 		Name:     "schema",
 		Encoding: "jsonschema",
-		Data:     []byte{},
+		Data:     []byte(`{"type":"object"}`),
 	})
-
 	if err != nil {
-		fmt.Println("Error creating mcap schema:", err)
-		return
+		panic("FAILED")
 	}
-
-	err = writer.WriteChannel(&mcap.Channel{
+	err = w.WriteChannel(&mcap.Channel{
 		ID:              1,
-		SchemaID:        1,
-		Topic:           "Engine (RPM)",
+		Topic:           "/test",
 		MessageEncoding: "json",
+		SchemaID:        0,
+		Metadata: map[string]string{
+			"callerid": "100", // cspell:disable-line
+		},
 	})
-
 	if err != nil {
-		fmt.Println("Error creating Engine Speed channel:", err)
-		return
+		panic("FAILED")
 	}
-
-	//err = writer.WriteChannel(&mcap.Channel{
-	//	ID:              2,
-	//	SchemaID:        1,
-	//	Topic:           "Torque (N-m)",
-	//	MessageEncoding: "json",
+	err = w.WriteChannel(&mcap.Channel{
+		ID:              2,
+		Topic:           "/test2",
+		MessageEncoding: "json",
+		SchemaID:        0,
+	})
+	if err != nil {
+		panic("FAILED")
+	}
+	data := MyData{
+		Data: []byte{5, 6, 7, 8},
+	}
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		panic("FAILED")
+	}
+	err = w.WriteMessage(&mcap.Message{
+		ChannelID:   1,
+		Sequence:    0,
+		LogTime:     0,
+		PublishTime: 0,
+		Data:        jsonData,
+	})
+	if err != nil {
+		panic("FAILED")
+	}
+	//data = MyData{
+	//	Data: []byte{1, 2, 3, 4},
+	//}
+	//jsonData, err = json.Marshal(data)
+	//err = w.WriteMessage(&mcap.Message{
+	//	ChannelID:   2,
+	//	Sequence:    0,
+	//	LogTime:     100,
+	//	PublishTime: 100,
+	//	Data:        jsonData,
 	//})
+	//if err != nil {
+	//	panic("FAILED")
+	//}
 
-	if err != nil {
-		fmt.Println("Error creating Torque channel:", err)
-		return
-	}
-
-	//bytearray := make([]byte, 8)
-
-	for i := 0; i < 20; i++ {
+	for i := 1; i <= 20; i++ {
 		//channelid := uint16(1)
 		//if i%2 == 1 {
 		//	channelid = uint16(2)
 		//}
-		m := mcapmessage{int64(i * 5)}
-		d, err := json.Marshal(m)
 
+		
+		m := mcapmessage{i * 5}
+		d, err := json.Marshal(m)
 		if err != nil {
 			fmt.Println("Error marshalling message data into json format:", err)
 			return
 		}
 
 		//binary.LittleEndian.PutUint64(bytearray, uint64(i*5))
-		err = writer.WriteMessage(&mcap.Message{
-			ChannelID:   1,
-			LogTime:     uint64(time.Now().Nanosecond()), //Wrong time formatting
-			PublishTime: uint64(time.Now().Nanosecond()),
-			Data:        d,
+		//t := uint64(time.Now().Nanosecond())
+		t := uint64(i * 1000000000)
+		err = w.WriteMessage(&mcap.Message{
+			ChannelID: 2,
+			LogTime:   t, //Wrong time formatting
+			//PublishTime: t,
+			Data: d,
 		})
 		if err != nil {
 			fmt.Println("Error writing message to mcap file on iteration", i, " :", err)
@@ -119,4 +129,6 @@ func main() {
 		}
 		time.Sleep(500 * time.Millisecond)
 	}
+
+	//fmt.Println(buf)
 }
