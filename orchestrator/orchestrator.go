@@ -175,7 +175,12 @@ func (o *Orchestrator) Close() error {
 	for i, d := range o.dispatchers {
 		err := d.Close()
 		if err != nil {
-			resettableErr.Set(errors.Wrap(err, "dispatcher close"))
+			o.l.Error("failed to close dispatcher",
+				zap.String("dispatcher", d.Name()),
+				zap.Error(err),
+			)
+
+			resettableErr.Set(errors.Wrapf(err, "close dispatcher (%s)", d.Name()))
 		}
 
 		o.resultSubs[i].Unsubscribe()
@@ -184,7 +189,14 @@ func (o *Orchestrator) Close() error {
 
 	o.progSub.Unsubscribe()
 
-	return nil
+	err := o.sequencer.Close()
+	if err != nil {
+		o.l.Error("failed to close sequencer", zap.Error(err))
+
+		resettableErr.Set(errors.Wrap(err, "close sequencer"))
+	}
+
+	return resettableErr.Err()
 }
 
 func (o *Orchestrator) monitorDispatcher(ctx context.Context, d DispatcherIface) {

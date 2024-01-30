@@ -29,7 +29,8 @@ func main() {
 	}
 	defer logger.Sync()
 
-	resultProcessor := results.NewResultProcessor(_resultProcessorAddr,
+	resultProcessor := results.NewResultProcessor(logger,
+		_resultProcessorAddr,
 		results.WithPushReportsToGithub(),
 		results.WithServerAutoStart(_configPath, _resultServerPath),
 	)
@@ -42,6 +43,17 @@ func main() {
 	if err != nil {
 		panic(errors.Wrap(err, "orchestrator open"))
 	}
+
+	defer func() {
+		panicMsg := recover()
+
+		err = orchestrator.Close()
+		if err != nil {
+			logger.Error("orchestrator close", zap.Error(err))
+		}
+
+		panic(panicMsg)
+	}()
 
 	err = orchestrator.Run(context.Background())
 	if err != nil {

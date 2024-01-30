@@ -3,6 +3,7 @@ package results
 import (
 	"context"
 	"fmt"
+	"go.uber.org/zap"
 	"os/exec"
 	"time"
 
@@ -15,10 +16,12 @@ import (
 
 const (
 	_python3                  = "python3"
+	_loggerName               = "result_processor"
 	_waitForFastFailErrorTime = 1 * time.Second
 )
 
 type ResultProcessor struct {
+	l                   *zap.Logger
 	addr                string
 	conn                *grpc.ClientConn
 	client              proto.TagTunnelClient
@@ -27,6 +30,7 @@ type ResultProcessor struct {
 	serverAutoStart bool
 	configPath      string
 	serverPath      string
+	serverCmd       *exec.Cmd
 }
 
 type Option = func(*ResultProcessor)
@@ -47,8 +51,9 @@ func WithPushReportsToGithub() Option {
 	}
 }
 
-func NewResultProcessor(address string, opts ...Option) *ResultProcessor {
+func NewResultProcessor(l *zap.Logger, address string, opts ...Option) *ResultProcessor {
 	ret := &ResultProcessor{
+		l:                   l.Named(_loggerName),
 		addr:                address,
 		pushReportsToGithub: false,
 		serverAutoStart:     false,
@@ -126,12 +131,28 @@ func (r *ResultProcessor) SubmitError(ctx context.Context, err error) error {
 	return nil
 }
 
+func (r *ResultProcessor) Close() error {
+	r.l.Info("closing result processor")
+
+	if r.serverCmd != nil && r.serverCmd.Process != nil {
+		r.l.Info("killing server process",
+			zap.Int("pid", r.serverCmd.Process.Pid))
+
+		err := r.serverCmd.Process.Kill()
+		if err != nil {
+			return errors.Wrap(err, "kill server process")
+		}
+	}
+
+	return nil
+}
+
 func (r *ResultProcessor) startServer(errCh chan error) {
 	configFlag := fmt.Sprintf("--config=%s", r.configPath)
 
-	cmd := exec.Command(_python3, r.serverPath, configFlag)
+	r.serverCmd = exec.Command(_python3, r.serverPath, configFlag)
 
-	err := cmd.Run()
+	err := r.serverCmd.Run()
 	if err != nil {
 		errCh <- errors.Wrap(err, "run")
 	}
