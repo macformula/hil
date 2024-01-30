@@ -47,6 +47,8 @@ func main() {
 	defer func() {
 		panicMsg := recover()
 
+		logger.Error("panic recovered", zap.Any("panic", panicMsg))
+
 		err = orchestrator.Close()
 		if err != nil {
 			logger.Error("orchestrator close", zap.Error(err))
