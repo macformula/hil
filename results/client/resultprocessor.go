@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"os/exec"
+	"runtime"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,7 +16,9 @@ import (
 )
 
 const (
-	_python3                  = "python3"
+	_pythonUnix               = "python3"
+	_pythonWin                = "python"
+	_winOs                    = "windows"
 	_loggerName               = "result_processor"
 	_waitForFastFailErrorTime = 1 * time.Second
 )
@@ -150,7 +153,13 @@ func (r *ResultProcessor) Close() error {
 func (r *ResultProcessor) startServer(errCh chan error) {
 	configFlag := fmt.Sprintf("--config=%s", r.configPath)
 
-	r.serverCmd = exec.Command(_python3, r.serverPath, configFlag)
+	if runtime.GOOS == _winOs {
+		r.serverCmd = exec.Command(_pythonWin, r.serverPath, configFlag)
+	} else {
+		r.serverCmd = exec.Command(_pythonUnix, r.serverPath, configFlag)
+	}
+
+	r.l.Info("starting results server", zap.String("command", r.serverCmd.String()))
 
 	err := r.serverCmd.Run()
 	if err != nil {
