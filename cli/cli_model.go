@@ -23,7 +23,7 @@ const (
 	_quitKey           = "q"
 	_escapeKey         = "esc"
 	_sequenceListTitle = "HIL"
-	_showLastResults   = 9
+	_showLastResults   = 5
 )
 
 type cliModel struct {
