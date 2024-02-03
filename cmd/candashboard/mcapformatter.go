@@ -38,6 +38,7 @@ func main() {
 	if err != nil {
 		panic("FAILED")
 	}
+
 	err = w.WriteSchema(&mcap.Schema{
 		ID:       1,
 		Name:     "schema",
@@ -47,6 +48,7 @@ func main() {
 	if err != nil {
 		panic("FAILED")
 	}
+
 	err = w.WriteChannel(&mcap.Channel{
 		ID:              1,
 		Topic:           "/test",
@@ -59,6 +61,7 @@ func main() {
 	if err != nil {
 		panic("FAILED")
 	}
+
 	err = w.WriteChannel(&mcap.Channel{
 		ID:              2,
 		Topic:           "/test2",
@@ -68,6 +71,7 @@ func main() {
 	if err != nil {
 		panic("FAILED")
 	}
+
 	data := MyData{
 		Data: []byte{5, 6, 7, 8},
 	}
@@ -100,13 +104,12 @@ func main() {
 	//	panic("FAILED")
 	//}
 
-	for i := 1; i <= 20; i++ {
+	for i := 1; i <= 30; i++ {
 		//channelid := uint16(1)
 		//if i%2 == 1 {
 		//	channelid = uint16(2)
 		//}
 
-		
 		m := mcapmessage{i * 5}
 		d, err := json.Marshal(m)
 		if err != nil {
@@ -115,7 +118,13 @@ func main() {
 		}
 
 		//binary.LittleEndian.PutUint64(bytearray, uint64(i*5))
-		//t := uint64(time.Now().Nanosecond())
+
+		// Facing two errors - either data is unserializable or the time frame is so large it won't display
+		// Unix returns the amount of SECONDS since epoch - Unserializable data
+		// UnixNano returns the amount of NANOSECONDS since epoch - Too large of duration
+		// UnixMicro returns the amount of MICROSECONDS since epoch - Too large of duration
+		// Mcap docs specify that Timestamp is uint64 nanoseconds since a user-understood epoch (i.e unix epoch, robot boot time, etc.)
+		//t := uint64(time.Now().Unix())
 		t := uint64(i * 1000000000)
 		err = w.WriteMessage(&mcap.Message{
 			ChannelID: 2,
@@ -127,7 +136,7 @@ func main() {
 			fmt.Println("Error writing message to mcap file on iteration", i, " :", err)
 			return
 		}
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	//fmt.Println(buf)

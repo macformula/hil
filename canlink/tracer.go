@@ -48,6 +48,7 @@ type Tracer struct {
 	timeout      time.Duration
 	busName      string
 	fileType     string
+	types        []FileType
 }
 
 // NewTracer returns a new Tracer
@@ -55,6 +56,7 @@ func NewTracer(
 	canInterface string,
 	directory string,
 	l *zap.Logger,
+	types []FileType,
 	opts ...TracerOption) *Tracer {
 	tracer := &Tracer{
 		l:            l.Named(_loggerName),
@@ -65,6 +67,7 @@ func NewTracer(
 		canInterface: canInterface,
 		directory:    directory,
 		busName:      canInterface,
+		types:        types,
 	}
 
 	for _, o := range opts {

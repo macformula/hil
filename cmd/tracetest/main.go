@@ -28,6 +28,7 @@ func main() {
 		config.CanInterface,
 		config.TracerDirectory,
 		logger,
+		nil,
 		canlink.WithBusName(config.BusName),
 		canlink.WithTimeout(3*time.Second))
 
