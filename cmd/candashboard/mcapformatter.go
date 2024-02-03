@@ -13,7 +13,11 @@ type MyData struct {
 }
 
 type mcapmessage struct {
+	//Name string
 	Data int
+}
+
+type plotter struct {
 }
 
 func main() {
@@ -70,16 +74,19 @@ func main() {
 	}
 	data := MyData{
 		Data: []byte{5, 6, 7, 8},
+		//Data: []byte{1},
 	}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		panic("FAILED")
 	}
 	err = w.WriteMessage(&mcap.Message{
-		ChannelID:   1,
-		Sequence:    0,
-		LogTime:     0,
-		PublishTime: 0,
+		ChannelID: 1,
+		Sequence:  0,
+		//LogTime:   0,
+		LogTime: uint64(time.Now().Nanosecond()),
+		//PublishTime: 0,
+		PublishTime: uint64(time.Now().Nanosecond()),
 		Data:        jsonData,
 	})
 	if err != nil {
@@ -100,15 +107,24 @@ func main() {
 	//	panic("FAILED")
 	//}
 
+	t_holder := uint64(time.Now().UnixNano())
+	//t_hold := t_holder
+
 	for i := 1; i <= 20; i++ {
 		//channelid := uint16(1)
 		//if i%2 == 1 {
 		//	channelid = uint16(2)
 		//}
 
-		
-		m := mcapmessage{i * 5}
+		//what is happening here
+		m := mcapmessage{
+			//"Engine",
+			i * 5}
 		d, err := json.Marshal(m)
+
+		//fmt.Println("m: ", m.Data)
+		//fmt.Println("d: ", d)
+
 		if err != nil {
 			fmt.Println("Error marshalling message data into json format:", err)
 			return
@@ -116,18 +132,23 @@ func main() {
 
 		//binary.LittleEndian.PutUint64(bytearray, uint64(i*5))
 		//t := uint64(time.Now().Nanosecond())
-		t := uint64(i * 1000000000)
+
+		t := uint64(time.Now().UnixNano())
+		//t := uint64(time.Now().Second() + i*1000000)
+		//fmt.Println("Current time ", i, ":", time.Now().Second())
+		//t := uint64(i * 1000000000)
 		err = w.WriteMessage(&mcap.Message{
-			ChannelID: 2,
-			LogTime:   t, //Wrong time formatting
-			//PublishTime: t,
-			Data: d,
+			ChannelID:   2,
+			LogTime:     t - t_holder, //Wrong time formatting
+			PublishTime: t - t_holder,
+			Data:        d,
 		})
 		if err != nil {
 			fmt.Println("Error writing message to mcap file on iteration", i, " :", err)
 			return
 		}
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
+		//time.Sleep(3000 * time.Millisecond)
 	}
 
 	//fmt.Println(buf)
