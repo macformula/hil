@@ -2,6 +2,10 @@ package httpdispatcher
 
 import (
 	"context"
+	"log"
+	"net/http"
+
+	"github.com/gorilla/websocket"
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/orchestrator"
 	"go.uber.org/zap"
@@ -76,19 +80,56 @@ func (h *HttpServer) Results() chan<- orchestrator.ResultsSignal {
 	return h.results
 }
 
+// upgrade from http to websocket
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
+
+// Prepares the HTTP server to handle WebSocket upgrade requests
 func (h *HttpServer) setupServer() error {
-	// TODO: Implement this
-	panic("NOT IMPLEMENTED")
+	http.HandleFunc("/dispatcher", func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			h.l.Error("Failed to upgrade to websocket", zap.Error(err))
+			return
+		}
+		defer conn.Close()
+
+		// Handle incoming messages in a separate goroutine
+		go func(c *websocket.Conn) {
+			for {
+
+				messageType, message, err := c.ReadMessage()
+				if err != nil {
+					h.l.Error("Read error", zap.Error(err))
+					break
+				}
+				// Log the received message
+				h.l.Info("Received message", zap.String("message", string(message)))
+
+				// Echo the message back to the client
+				if err := c.WriteMessage(messageType, message); err != nil {
+					h.l.Error("Write error", zap.Error(err))
+					return
+				}
+			}
+		}(conn)
+	})
+
 	return nil
 }
 
 func (h *HttpServer) startServer() {
-	// TODO: Implement this
-	panic("NOT IMPLEMENTED")
+	addr := ":8080"
+	log.Printf("Starting server on %s\n", addr)
+	err := http.ListenAndServe(addr, nil)
+	if err != nil {
+		log.Fatalf("Failed to start server: %v\n", err)
+	}
 }
 
 func (h *HttpServer) closeServer() error {
-	// TODO: Implement this
-	panic("NOT IMPLEMENTED")
+	//TODO
 	return nil
 }
