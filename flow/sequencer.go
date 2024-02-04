@@ -106,6 +106,17 @@ func (s *Sequencer) ResetFatalError() {
 	s.fatalErr.Reset()
 }
 
+func (s *Sequencer) Close() error {
+	s.l.Info("closing sequencer")
+
+	err := s.rp.Close()
+	if err != nil {
+		return errors.Wrap(err, "result processor close")
+	}
+
+	return nil
+}
+
 func (s *Sequencer) runSequence(ctx context.Context, seq Sequence, cancelTest chan struct{}, testId uuid.UUID) (bool, error) {
 	for idx, state := range seq.States {
 		s.progress.CurrentState = state
