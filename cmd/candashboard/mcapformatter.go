@@ -114,7 +114,7 @@ func main() {
 		d, err := json.Marshal(m)
 		if err != nil {
 			fmt.Println("Error marshalling message data into json format:", err)
-			return
+			return //what is the point of this return keyword
 		}
 
 		//binary.LittleEndian.PutUint64(bytearray, uint64(i*5))

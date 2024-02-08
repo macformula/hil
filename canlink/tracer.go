@@ -35,9 +35,10 @@ type TracerOption func(*Tracer)
 
 // Tracer listens on a CAN bus and records all traffic during a specified period
 type Tracer struct {
-	l          *zap.Logger
-	stop       chan struct{}
-	frameCh    chan TimestampedFrame
+	l       *zap.Logger
+	stop    chan struct{}
+	frameCh chan TimestampedFrame
+	//what is []string? is it used bc of dynamic storage?
 	cachedData []string
 	err        *utils.ResettableError
 	isRunning  bool

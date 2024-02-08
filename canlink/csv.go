@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type Asc struct {
+type Csv struct {
 	suffix     string
 	dir        string
 	busName    string
@@ -16,8 +16,8 @@ type Asc struct {
 	l          *zap.Logger
 }
 
-func NewAsc(suffix string, dir string, busName string, cachedData []string, l *zap.Logger) *Asc {
-	asc := &Asc{
+func NewCsv(suffix string, dir string, busName string, cachedData []string, l *zap.Logger) *Csv {
+	csv := &Csv{
 		suffix:     suffix,
 		dir:        dir,
 		busName:    busName,
@@ -25,12 +25,12 @@ func NewAsc(suffix string, dir string, busName string, cachedData []string, l *z
 		l:          l.Named(_loggerName),
 	}
 
-	return asc
+	return csv
 }
 
-func (a *Asc) dumpToFile(file *os.File) error {
-	for _, value := range a.cachedData {
-		_, err := file.WriteString(value + "\n")
+func (c *Csv) dumpToFile(file *os.File) error {
+	for _, value := range c.cachedData {
+		_, err := file.WriteString(value + ",")
 		if err != nil {
 			return errors.Wrap(err, "write string to file")
 		}
@@ -39,16 +39,16 @@ func (a *Asc) dumpToFile(file *os.File) error {
 	return nil
 }
 
-func (a *Asc) getFile() (*os.File, error) {
+func (c *Csv) getFile() (*os.File, error) {
 	var file *os.File
 	var builder strings.Builder
 
-	_, err := builder.WriteString(a.dir + "/")
+	_, err := builder.WriteString(c.dir + "/")
 	if err != nil {
 		return &os.File{}, errors.Wrap(err, "add directory to filepath")
 	}
 
-	_, err = builder.WriteString(a.busName + "_")
+	_, err = builder.WriteString(c.busName + "_")
 	if err != nil {
 		return &os.File{}, errors.Wrap(err, "add bus name to file name")
 	}
@@ -63,7 +63,7 @@ func (a *Asc) getFile() (*os.File, error) {
 		return &os.File{}, errors.Wrap(err, "add time to file name")
 	}
 
-	_, err = builder.WriteString(a.suffix)
+	_, err = builder.WriteString(c.suffix)
 	if err != nil {
 		return &os.File{}, errors.Wrap(err, "add file type to file name")
 	}
