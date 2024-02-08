@@ -30,7 +30,11 @@ func main() {
 		logger,
 		nil,
 		canlink.WithBusName(config.BusName),
-		canlink.WithTimeout(3*time.Second))
+		canlink.WithTimeout(3*time.Second),
+		canlink.InitAscii(),
+		//canlink.InitMcap()
+		//canlink.InitCSV() -- will be added once main has regained functionality
+	)
 
 	err = tracer.Open(ctx)
 	if err != nil {
