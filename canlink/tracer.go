@@ -59,6 +59,7 @@ func NewTracer(
 	l *zap.Logger,
 	types []FileType,
 	opts ...TracerOption) *Tracer {
+	types = make([]FileType, 5) // NEEDA FIX THIS
 	tracer := &Tracer{
 		l:            l.Named(_loggerName),
 		cachedData:   []string{},
@@ -163,19 +164,19 @@ func (t *Tracer) StopTrace() error {
 		for files := range t.types {
 
 			filetype := t.types[files]
-			//filetype.l.Info("getting file name") - Don't know why logger isn't working
+			t.l.Info("ASCII: getting file name") //- Don't know why logger isn't working
 			//Do we have to define writing to the logger as a function within the interface?
 
 			file, err := filetype.getFile()
 			if err != nil {
-				return errors.Wrap(err, "get pointer to file")
+				return errors.Wrap(err, "ASCII: get pointer to file")
 			}
 
 			//filetype.l.Info("dumping to file")
 			err = filetype.dumpToFile(file)
 
 			if err != nil {
-				return errors.Wrap(err, "dump cached contents to file")
+				return errors.Wrap(err, "ASCII: dump cached contents to file")
 			}
 		}
 

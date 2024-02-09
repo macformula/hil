@@ -22,7 +22,7 @@ func NewAsc(suffix string, dir string, busName string, cachedData []string, l *z
 		dir:        dir,
 		busName:    busName,
 		cachedData: cachedData,
-		l:          l.Named(_loggerName),
+		l:          l.Named("ascii_logger"),
 	}
 
 	return asc

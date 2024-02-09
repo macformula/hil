@@ -24,7 +24,7 @@ func main() {
 
 	cfg := zap.NewDevelopmentConfig()
 	formattedTime := time.Now().Format("2006.01.02_15.04.05")
-	fileName := fmt.Sprintf("/opt/macfe/traces/file_%s.log", formattedTime)
+	fileName := fmt.Sprintf("/opt/macfe/traces/logs/file_%s.log", formattedTime)
 	cfg.OutputPaths = []string{fileName}
 	logger, err := cfg.Build()
 
