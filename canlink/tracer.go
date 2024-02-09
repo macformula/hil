@@ -59,7 +59,7 @@ func NewTracer(
 	l *zap.Logger,
 	types []FileType,
 	opts ...TracerOption) *Tracer {
-	types = make([]FileType, 5) // NEEDA FIX THIS
+
 	tracer := &Tracer{
 		l:            l.Named(_loggerName),
 		cachedData:   []string{},
@@ -69,7 +69,7 @@ func NewTracer(
 		canInterface: canInterface,
 		directory:    directory,
 		busName:      canInterface,
-		types:        types,
+		types:        make([]FileType, 5), // NEEDA FIX THIS,
 	}
 	//types := [ascii]types
 	//for items in types:
