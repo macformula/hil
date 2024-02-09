@@ -32,7 +32,7 @@ func main() {
 		config.CanInterface,
 		config.TracerDirectory,
 		logger,
-		nil,
+		make([]canlink.FileType, 5), // NEEDA FIX THIS
 		canlink.WithBusName(config.BusName),
 		canlink.WithTimeout(3*time.Second),
 		canlink.InitAscii(),
