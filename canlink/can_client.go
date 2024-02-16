@@ -53,7 +53,7 @@ func (c *CANClient) Read(ctx context.Context, msgsToRead ...generated.Message) (
 			if len(msgsToRead) == 0 {
 				msg, err := c.md.UnmarshalFrame(frame)
 				if err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "unmarshal frame")
 				}
 				return msg, nil
 			}
@@ -62,7 +62,7 @@ func (c *CANClient) Read(ctx context.Context, msgsToRead ...generated.Message) (
 				if frame.ID == msgToRead.Frame().ID {
 					msg, err := c.md.UnmarshalFrame(frame)
 					if err != nil {
-						return nil, err
+						return nil, errors.Wrap(err, "unmarshal frame")
 					}
 					return msg, nil
 				}
@@ -73,7 +73,11 @@ func (c *CANClient) Read(ctx context.Context, msgsToRead ...generated.Message) (
 
 // StartTracking initiates the tracking goroutine. This is so we can check how many CAN frames of a certain type have
 // come through the CAN bus in a given time.
-func (c *CANClient) StartTracking() {
+func (c *CANClient) StartTracking() error {
+	if c.isTracking {
+		return errors.New("tracker is already running")
+	}
+
 	c.tracker = make(map[uint32]uint32)
 	c.stopSignal = make(chan struct{})
 	c.isTracking = true
@@ -93,12 +97,14 @@ func (c *CANClient) StartTracking() {
 			}
 		}
 	}(c)
+
+	return nil
 }
 
 // StopTracking stops the tracker goroutine and returns the obtained frame counts.
 func (c *CANClient) StopTracking() (map[uint32]uint32, error) {
 	if !c.isTracking {
-		return nil, errors.New("CANClient tracker was never started")
+		return nil, errors.New("tracker was never started")
 	}
 
 	close(c.stopSignal)
