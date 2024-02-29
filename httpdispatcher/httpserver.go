@@ -3,9 +3,10 @@ package httpdispatcher
 import (
 	"context"
 	"encoding/json"
-	"github.com/macformula/hil/test"
+	"github.com/google/uuid"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/websocket"
 	"github.com/macformula/hil/flow"
@@ -21,7 +22,7 @@ type HttpServer struct {
 	cancelTest       chan orchestrator.CancelTestSignal
 	recoverFromFatal chan orchestrator.RecoverFromFatalSignal
 	shutdown         chan orchestrator.ShutdownSignal
-	sequences        []flow.Sequence
+	sequences        map[int]flow.Sequence
 }
 
 func NewHttpServer(l *zap.Logger) *HttpServer {
@@ -37,7 +38,12 @@ func NewHttpServer(l *zap.Logger) *HttpServer {
 }
 
 func (h *HttpServer) Open(ctx context.Context, sequences []flow.Sequence) error {
-	h.sequences = sequences
+	// Create a map of Sequences with an int ID
+	seqMap := make(map[int]flow.Sequence)
+	for i, seq := range sequences {
+		seqMap[i] = seq
+	}
+	h.sequences = seqMap
 
 	err := h.setupServer()
 	if err != nil {
@@ -104,7 +110,7 @@ func (h *HttpServer) setupServer() error {
 
 // Prepares the HTTP server to handle WebSocket upgrade requests
 func (h *HttpServer) setupDispatcherStatusEndpoint() error {
-	http.HandleFunc("/dispatcher", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			h.l.Error("Failed to upgrade to websocket", zap.Error(err))
@@ -155,16 +161,60 @@ func (h *HttpServer) setupSequencesEndpoint() error {
 			// Log the received message
 			h.l.Info("Received message", zap.String("message", string(message)))
 
-			// Function to create a map of Sequences with an int ID
-			seqMap := make(map[int]flow.Sequence)
-			for i, seq := range test.Sequences {
-				seqMap[i] = seq
-			}
-
-			jsonData, err := json.Marshal(seqMap)
+			jsonData, err := json.Marshal(h.sequences)
 
 			// Echo the message back to the client
 			if err := conn.WriteMessage(messageType, jsonData); err != nil {
+				h.l.Error("Write error", zap.Error(err))
+				return
+			}
+		}
+	})
+
+	return nil
+}
+
+func (h *HttpServer) setupStartTestEndpoint() error {
+	http.HandleFunc("/starttest", func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			h.l.Error("Failed to upgrade to websocket", zap.Error(err))
+			return
+		}
+		defer conn.Close()
+
+		// Handle incoming messages in a separate goroutine
+		for {
+
+			messageType, message, err := conn.ReadMessage()
+			if err != nil {
+				h.l.Error("Read error", zap.Error(err))
+				break
+			}
+
+			messageInt, err := strconv.Atoi(string(message))
+			if err != nil {
+				h.l.Error("The message is not an integer.", zap.Error(err))
+				break
+			}
+
+			// Log the received message
+			h.l.Info("Received message", zap.String("message", string(message)))
+			var httpCode string
+			if sequence, ok := h.sequences[messageInt]; ok {
+				// key exists in sequences map
+				h.start <- orchestrator.StartSignal{
+					TestId:   uuid.New(),
+					Seq:      sequence,
+					Metadata: nil,
+				}
+				httpCode = "204"
+			} else {
+				httpCode = "400"
+			}
+
+			// Echo the message back to the client
+			if err := conn.WriteMessage(messageType, []byte(httpCode)); err != nil {
 				h.l.Error("Write error", zap.Error(err))
 				return
 			}
