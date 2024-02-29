@@ -105,6 +105,11 @@ func (h *HttpServer) setupServer() error {
 		return err
 	}
 
+	err = h.setupStartTestEndpoint()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
