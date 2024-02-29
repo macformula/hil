@@ -107,9 +107,10 @@ func (h *HttpServer) setupServer() error {
 				}
 				// Log the received message
 				h.l.Info("Received message", zap.String("message", string(message)))
-
+				prefix := "Sending: "
+				msg := append([]byte(prefix), message...)
 				// Echo the message back to the client
-				if err := c.WriteMessage(messageType, message); err != nil {
+				if err := c.WriteMessage(messageType, msg); err != nil {
 					h.l.Error("Write error", zap.Error(err))
 					return
 				}
