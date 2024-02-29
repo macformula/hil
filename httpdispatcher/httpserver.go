@@ -97,25 +97,23 @@ func (h *HttpServer) setupServer() error {
 		defer conn.Close()
 
 		// Handle incoming messages in a separate goroutine
-		go func(c *websocket.Conn) {
-			for {
+		for {
 
-				messageType, message, err := c.ReadMessage()
-				if err != nil {
-					h.l.Error("Read error", zap.Error(err))
-					break
-				}
-				// Log the received message
-				h.l.Info("Received message", zap.String("message", string(message)))
-				prefix := "Sending: "
-				msg := append([]byte(prefix), message...)
-				// Echo the message back to the client
-				if err := c.WriteMessage(messageType, msg); err != nil {
-					h.l.Error("Write error", zap.Error(err))
-					return
-				}
+			messageType, message, err := conn.ReadMessage()
+			if err != nil {
+				h.l.Error("Read error", zap.Error(err))
+				break
 			}
-		}(conn)
+			// Log the received message
+			h.l.Info("Received message", zap.String("message", string(message)))
+			prefix := "Sending: "
+			msg := append([]byte(prefix), message...)
+			// Echo the message back to the client
+			if err := conn.WriteMessage(messageType, msg); err != nil {
+				h.l.Error("Write error", zap.Error(err))
+				return
+			}
+		}
 	})
 
 	return nil
