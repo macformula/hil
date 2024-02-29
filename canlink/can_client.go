@@ -89,7 +89,7 @@ func (c *CANClient) StartTracking() error {
 				c.isTracking = false
 				return
 			default:
-				msg, err := c.Read(nil, nil)
+				msg, err := c.Read(context.Background())
 				if err != nil { // TODO: maybe log these errors?
 					continue
 				}
