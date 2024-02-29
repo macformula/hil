@@ -2,6 +2,8 @@ package httpdispatcher
 
 import (
 	"context"
+	"encoding/json"
+	"github.com/macformula/hil/test"
 	"log"
 	"net/http"
 
@@ -38,7 +40,6 @@ func (h *HttpServer) Open(ctx context.Context, sequences []flow.Sequence) error 
 	h.sequences = sequences
 
 	err := h.setupServer()
-	err = h.setupServer2()
 	if err != nil {
 		return err
 	}
@@ -87,8 +88,22 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-// Prepares the HTTP server to handle WebSocket upgrade requests
 func (h *HttpServer) setupServer() error {
+	err := h.setupDispatcherStatusEndpoint()
+	if err != nil {
+		return err
+	}
+
+	err = h.setupSequencesEndpoint()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Prepares the HTTP server to handle WebSocket upgrade requests
+func (h *HttpServer) setupDispatcherStatusEndpoint() error {
 	http.HandleFunc("/dispatcher", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -120,7 +135,7 @@ func (h *HttpServer) setupServer() error {
 	return nil
 }
 
-func (h *HttpServer) setupServer2() error {
+func (h *HttpServer) setupSequencesEndpoint() error {
 	http.HandleFunc("/sequences", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -139,9 +154,17 @@ func (h *HttpServer) setupServer2() error {
 			}
 			// Log the received message
 			h.l.Info("Received message", zap.String("message", string(message)))
-			msg := []byte("Sending sequences")
+
+			// Function to create a map of Sequences with an int ID
+			seqMap := make(map[int]flow.Sequence)
+			for i, seq := range test.Sequences {
+				seqMap[i] = seq
+			}
+
+			jsonData, err := json.Marshal(seqMap)
+
 			// Echo the message back to the client
-			if err := conn.WriteMessage(messageType, msg); err != nil {
+			if err := conn.WriteMessage(messageType, jsonData); err != nil {
 				h.l.Error("Write error", zap.Error(err))
 				return
 			}
