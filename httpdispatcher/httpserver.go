@@ -38,6 +38,7 @@ func (h *HttpServer) Open(ctx context.Context, sequences []flow.Sequence) error 
 	h.sequences = sequences
 
 	err := h.setupServer()
+	err = h.setupServer2()
 	if err != nil {
 		return err
 	}
@@ -108,6 +109,37 @@ func (h *HttpServer) setupServer() error {
 			h.l.Info("Received message", zap.String("message", string(message)))
 			prefix := "Sending: "
 			msg := append([]byte(prefix), message...)
+			// Echo the message back to the client
+			if err := conn.WriteMessage(messageType, msg); err != nil {
+				h.l.Error("Write error", zap.Error(err))
+				return
+			}
+		}
+	})
+
+	return nil
+}
+
+func (h *HttpServer) setupServer2() error {
+	http.HandleFunc("/sequences", func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			h.l.Error("Failed to upgrade to websocket", zap.Error(err))
+			return
+		}
+		defer conn.Close()
+
+		// Handle incoming messages in a separate goroutine
+		for {
+
+			messageType, message, err := conn.ReadMessage()
+			if err != nil {
+				h.l.Error("Read error", zap.Error(err))
+				break
+			}
+			// Log the received message
+			h.l.Info("Received message", zap.String("message", string(message)))
+			msg := []byte("Sending sequences")
 			// Echo the message back to the client
 			if err := conn.WriteMessage(messageType, msg); err != nil {
 				h.l.Error("Write error", zap.Error(err))
