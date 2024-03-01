@@ -99,9 +99,7 @@ func WithBusName(name string) TracerOption {
 func InitAscii() TracerOption {
 	return func(t *Tracer) {
 		a := NewAsc(".asc", t.directory, t.busName, t.cachedData, t.l)
-		var f FileType
-		f = a
-		t.types = append(t.types, f)
+		t.types = append(t.types, a)
 	}
 
 }
@@ -171,6 +169,7 @@ func (t *Tracer) StopTrace() error {
 
 			file, err := filetype.getFile()
 			if err != nil {
+				t.l.Error("ASCII: error accessing filename")
 				return errors.Wrap(err, "ASCII: get pointer to file")
 			}
 
@@ -178,13 +177,14 @@ func (t *Tracer) StopTrace() error {
 			err = filetype.dumpToFile(file)
 
 			if err != nil {
+				t.l.Error("ASCII: error dumping cached contents to file")
 				return errors.Wrap(err, "ASCII: dump cached contents to file")
 			}
 		}
 
 		t.cachedData = nil
 	}
-
+	t.l.Info("ASCII: No issues dumping to file.")
 	return nil
 }
 
@@ -298,6 +298,7 @@ func (t *Tracer) dumpToFile(file *os.File) error {
 	for _, value := range t.cachedData {
 		_, err := file.WriteString(value + "\n")
 		if err != nil {
+			t.l.Error("Issue writing to file")
 			return errors.Wrap(err, "write string to file")
 		}
 	}
