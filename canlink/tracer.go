@@ -99,7 +99,9 @@ func WithBusName(name string) TracerOption {
 func InitAscii() TracerOption {
 	return func(t *Tracer) {
 		a := NewAsc(".asc", t.directory, t.busName, t.cachedData, t.l)
-		t.types = append(t.types, a)
+		var f FileType
+		f = a
+		t.types = append(t.types, f)
 	}
 
 }
