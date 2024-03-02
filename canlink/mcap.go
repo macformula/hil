@@ -15,17 +15,17 @@ type Mcap struct {
 	suffix     string
 	dir        string
 	busName    string
-	cachedData []string
+	cachedData *[]string
 	l          *zap.Logger
 }
 
-func NewMcap(suffix string, dir string, busName string, cachedData []string, l *zap.Logger) *Mcap {
+func NewMcap(suffix string, dir string, busName string, cachedData *[]string, l *zap.Logger) *Mcap {
 	mcap := &Mcap{
 		suffix:     suffix,
 		dir:        dir,
 		busName:    busName,
 		cachedData: cachedData,
-		l:          l.Named(_loggerName),
+		l:          l.Named("mcap_logger"),
 	}
 
 	return mcap
@@ -70,8 +70,8 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 	if err != nil {
 		panic("FAILED")
 	}
-
-	for _, value := range m.cachedData {
+	dataSlice := *m.cachedData
+	for _, value := range dataSlice {
 
 		message, err := json.Marshal(value)
 		if err != nil {

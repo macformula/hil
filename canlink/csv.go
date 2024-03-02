@@ -22,7 +22,7 @@ func NewCsv(suffix string, dir string, busName string, cachedData *[]string, l *
 		dir:        dir,
 		busName:    busName,
 		cachedData: cachedData,
-		l:          l.Named(_loggerName),
+		l:          l.Named("CSV_logger"),
 	}
 
 	return csv
