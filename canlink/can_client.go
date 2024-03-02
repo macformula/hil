@@ -20,6 +20,9 @@ type CANClient struct {
 	md MessagesDescriptor
 	rx *socketcan.Receiver
 
+	rxChan  chan can.Frame
+	reading bool
+
 	// tracker keeps track of how many CAN messages have been received (per message type)
 	tracker    map[uint32]uint32
 	tracking   bool
@@ -31,24 +34,45 @@ func NewCANClient(messages MessagesDescriptor, conn net.Conn) CANClient {
 	return CANClient{
 		md:       messages,
 		rx:       socketcan.NewReceiver(conn),
+		rxChan:   make(chan can.Frame),
+		reading:  false,
 		tracking: false,
+	}
+}
+
+// Open starts the background receiver.
+func (c *CANClient) Open() {
+	go c.receive()
+}
+
+// Close closes the socketcan receiver. This also kills the receive() goroutine.
+func (c *CANClient) Close() error {
+	err := c.rx.Close()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// receive sends received frames through rxChan, only if a frame is available and Read is in progress. It is meant to be
+// called asynchronously with Read. Otherwise, rx.Receive() could block the thread while executing a switch statement
+// case, preventing it from being cancelled via context.
+func (c *CANClient) receive() {
+	for c.rx.Receive() && c.reading {
+		c.rxChan <- c.rx.Frame()
 	}
 }
 
 // Read is a blocking function for reading a single CAN message. If given multiple possible message types to read, it
 // will return the first message received from those types. If no types are given, it will return the first message available.
 func (c *CANClient) Read(ctx context.Context, msgsToRead ...generated.Message) (generated.Message, error) {
+	defer func() { c.reading = false }()
+
 	for {
 		select { // TODO: maybe implement a max timeout here just to be safe?
 		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-			// No available frame, break out of select
-			if !c.rx.Receive() {
-				break
-			}
-
-			frame := c.rx.Frame()
+			return nil, nil
+		case frame := <-c.rxChan:
 			// No message types were specified, return first frame of any type
 			if len(msgsToRead) == 0 {
 				msg, err := c.md.UnmarshalFrame(frame)
@@ -67,6 +91,11 @@ func (c *CANClient) Read(ctx context.Context, msgsToRead ...generated.Message) (
 					return msg, nil
 				}
 			}
+		default:
+			// Setting this in the default instead of at the top of the function to prevent a CAN frame from getting sent
+			// over rxChan just in between c.reading being set and the switch statement being executed (?). Which would
+			// cause a deadlock.
+			c.reading = true
 		}
 	}
 }
