@@ -19,6 +19,7 @@ type MessagesDescriptor interface {
 type CANClient struct {
 	md MessagesDescriptor
 	rx *socketcan.Receiver
+	tx *socketcan.Transmitter
 
 	rxChan  chan can.Frame
 	reading bool
@@ -34,6 +35,7 @@ func NewCANClient(messages MessagesDescriptor, conn net.Conn) CANClient {
 	return CANClient{
 		md:       messages,
 		rx:       socketcan.NewReceiver(conn),
+		tx:       socketcan.NewTransmitter(conn),
 		rxChan:   make(chan can.Frame),
 		reading:  false,
 		tracking: false,
@@ -95,6 +97,14 @@ func (c *CANClient) Read(ctx context.Context, msgsToRead ...generated.Message) (
 			c.reading = true
 		}
 	}
+}
+
+// Send sends a CAN frame over the bus.
+func (c *CANClient) Send(ctx context.Context, frame can.Frame) error {
+	if err := c.tx.TransmitFrame(ctx, frame); err != nil {
+		return errors.Wrap(err, "transmit frame")
+	}
+	return nil
 }
 
 // StartTracking initiates the tracking goroutine. This is so we can check how many CAN frames of a certain type have
