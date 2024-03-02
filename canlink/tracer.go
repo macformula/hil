@@ -69,7 +69,7 @@ func NewTracer(
 		canInterface: canInterface,
 		directory:    directory,
 		busName:      canInterface,
-		types:        make([]FileType, 5), // NEEDA FIX THIS,
+		types:        []FileType{}, // NEEDA FIX THIS,
 	}
 	//types := [ascii]types
 	//for items in types:
@@ -323,40 +323,41 @@ func (t *Tracer) dumpToFile(file *os.File) error {
 	return nil
 }
 
+// COMMENTED OUT FOR NOW
 // getFile makes the file name based on parameters provided
-func (t *Tracer) getFile() (*os.File, error) {
-	var file *os.File
-	var builder strings.Builder
-
-	_, err := builder.WriteString(t.directory + "/")
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add directory to filepath")
-	}
-
-	_, err = builder.WriteString(t.busName + "_")
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add bus name to file name")
-	}
-
-	_, err = builder.WriteString(time.Now().Format(_filenameDateFormat) + "_")
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add date to file name")
-	}
-
-	_, err = builder.WriteString(time.Now().Format(_filenameTimeFormat))
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add time to file name")
-	}
-
-	_, err = builder.WriteString(t.fileType)
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add file type to file name")
-	}
-
-	file, err = os.Create(builder.String())
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "create file")
-	}
-
-	return file, nil
-}
+//func (t *Tracer) getFile() (*os.File, error) {
+//	var file *os.File
+//	var builder strings.Builder
+//
+//	_, err := builder.WriteString(t.directory + "/")
+//	if err != nil {
+//		return &os.File{}, errors.Wrap(err, "add directory to filepath")
+//	}
+//
+//	_, err = builder.WriteString(t.busName + "_")
+//	if err != nil {
+//		return &os.File{}, errors.Wrap(err, "add bus name to file name")
+//	}
+//
+//	_, err = builder.WriteString(time.Now().Format(_filenameDateFormat) + "_")
+//	if err != nil {
+//		return &os.File{}, errors.Wrap(err, "add date to file name")
+//	}
+//
+//	_, err = builder.WriteString(time.Now().Format(_filenameTimeFormat))
+//	if err != nil {
+//		return &os.File{}, errors.Wrap(err, "add time to file name")
+//	}
+//
+//	_, err = builder.WriteString(t.fileType)
+//	if err != nil {
+//		return &os.File{}, errors.Wrap(err, "add file type to file name")
+//	}
+//
+//	file, err = os.Create(builder.String())
+//	if err != nil {
+//		return &os.File{}, errors.Wrap(err, "create file")
+//	}
+//
+//	return file, nil
+//}

@@ -40,6 +40,7 @@ func (a *Asc) dumpToFile(file *os.File) error {
 }
 
 func (a *Asc) getFile() (*os.File, error) {
+	a.l.Info("ASCII: entered getFile")
 	var file *os.File
 	var builder strings.Builder
 
