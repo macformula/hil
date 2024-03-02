@@ -53,21 +53,24 @@ func main() {
 		logger.Error("start trace", zap.Error(err))
 	}
 
-	time.Sleep(5 * time.Second)
+	//time.Sleep(5 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	err = tracer.StopTrace()
 	if err != nil {
 		logger.Error("stop trace", zap.Error(err))
 	}
 
-	time.Sleep(2 * time.Second)
+	//time.Sleep(2 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	err = tracer.StartTrace(ctx)
 	if err != nil {
 		logger.Error("start trace", zap.Error(err))
 	}
 
-	time.Sleep(2 * time.Second)
+	//time.Sleep(2 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	err = tracer.StopTrace()
 	if err != nil {
