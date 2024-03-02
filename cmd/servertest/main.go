@@ -5,7 +5,6 @@ import (
 	"github.com/macformula/hil/cli"
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/orchestrator"
-	"github.com/macformula/hil/results/client"
 	"github.com/macformula/hil/test"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -28,9 +27,9 @@ func main() {
 	}
 	defer logger.Sync()
 
-	//rp := test.SimpleResultProcessor{}
-	resultProcessor := client.NewResultsClient(_resultProcessorIp, _resultProcessorPort, _pushToGithub)
-	sequencer := flow.NewSequencer(resultProcessor, logger)
+	rp := test.SimpleResultProcessor{}
+	//resultProcessor := client.NewResultsClient(_resultProcessorIp, _resultProcessorPort, _pushToGithub)
+	sequencer := flow.NewSequencer(&rp, logger)
 	cliDispatcher := cli.NewCliDispatcher(test.Sequences, logger)
 	simpleDispatcher := test.NewSimpleDispatcher(logger, 5*time.Second, 10*time.Second)
 	//server := httpdispatcher.NewServerDispatcher(test.Sequences, httpdispatcher.NewHttpServer(logger), logger)
