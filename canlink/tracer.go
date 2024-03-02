@@ -144,6 +144,7 @@ func (t *Tracer) StartTrace(ctx context.Context) error {
 
 // StopTrace stops the receiving and caching frames, then dumps them to a file as long as the tracer is not stopped
 func (t *Tracer) StopTrace() error {
+	newAscFile := NewAsc(t.fileType, t.directory, t.busName, t.cachedData, t.l)
 	if t.isRunning {
 		t.l.Info("sending stop signal")
 
@@ -151,36 +152,50 @@ func (t *Tracer) StopTrace() error {
 		t.isRunning = false
 
 		close(t.stop)
-
+		//implementation without for loop or t.types
 		t.l.Info("getting file name")
+		AscFile, err := newAscFile.getFile()
+		if err != nil {
+			t.l.Error("ASCII: errors getting pointer to ascii file")
+			return errors.Wrap(err, "get pointer to ascii file (CANDASHBOARD)")
+		}
+		t.l.Info("dumping to file")
+		//err = t.dumpToFile(file)
+		err = newAscFile.dumpToFile(AscFile)
+		if err != nil {
+			t.l.Error("ASCII: errors dumping cached contents to ascii file")
+			return errors.Wrap(err, "dump cached contents to ascii file (CANDASHBOARD")
+		}
+
+		//t.l.Info("getting file name")
 		//file, err := t.getFile() -- Replaced with type loop
 		//if err != nil {
 		//	return errors.Wrap(err, "get pointer to file")
 		//}
 
-		t.l.Info("dumping to file")
+		//t.l.Info("dumping to file")
 
 		// Will eventually put into a loop to iterate through all file types, for now hardcoding
-		for files := range t.types {
-
-			filetype := t.types[files]
-			t.l.Info("ASCII: getting file name") //- Don't know why logger isn't working
-			//Do we have to define writing to the logger as a function within the interface?
-
-			file, err := filetype.getFile()
-			if err != nil {
-				t.l.Error("ASCII: error accessing filename")
-				return errors.Wrap(err, "ASCII: get pointer to file")
-			}
-
-			//filetype.l.Info("dumping to file")
-			err = filetype.dumpToFile(file)
-
-			if err != nil {
-				t.l.Error("ASCII: error dumping cached contents to file")
-				return errors.Wrap(err, "ASCII: dump cached contents to file")
-			}
-		}
+		//for files := range t.types {
+		//
+		//	filetype := t.types[files]
+		//	t.l.Info("ASCII: getting file name") //- Don't know why logger isn't working
+		//	//Do we have to define writing to the logger as a function within the interface?
+		//
+		//	file, err := filetype.getFile()
+		//	if err != nil {
+		//		t.l.Error("ASCII: error accessing filename")
+		//		return errors.Wrap(err, "ASCII: get pointer to file")
+		//	}
+		//
+		//	//filetype.l.Info("dumping to file")
+		//	err = filetype.dumpToFile(file)
+		//
+		//	if err != nil {
+		//		t.l.Error("ASCII: error dumping cached contents to file")
+		//		return errors.Wrap(err, "ASCII: dump cached contents to file")
+		//	}
+		//}
 
 		t.cachedData = nil
 	}
