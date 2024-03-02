@@ -2,6 +2,7 @@ package canlink
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -35,10 +36,9 @@ type TracerOption func(*Tracer)
 
 // Tracer listens on a CAN bus and records all traffic during a specified period
 type Tracer struct {
-	l       *zap.Logger
-	stop    chan struct{}
-	frameCh chan TimestampedFrame
-	//what is []string? is it used bc of dynamic storage?
+	l          *zap.Logger
+	stop       chan struct{}
+	frameCh    chan TimestampedFrame
 	cachedData []string
 	err        *utils.ResettableError
 	isRunning  bool
@@ -49,7 +49,7 @@ type Tracer struct {
 	timeout      time.Duration
 	busName      string
 	fileType     string
-	types        []FileType
+	types        []FileType //
 }
 
 // NewTracer returns a new Tracer
@@ -59,6 +59,7 @@ func NewTracer(
 	l *zap.Logger,
 	types []FileType,
 	opts ...TracerOption) *Tracer {
+
 	tracer := &Tracer{
 		l:            l.Named(_loggerName),
 		cachedData:   []string{},
@@ -68,8 +69,11 @@ func NewTracer(
 		canInterface: canInterface,
 		directory:    directory,
 		busName:      canInterface,
-		types:        types,
+		types:        []FileType{},
 	}
+	//types := [ascii]types
+	//for items in types:
+	//	items.dumpToFile()
 
 	for _, o := range opts {
 		o(tracer)
@@ -89,6 +93,20 @@ func WithTimeout(timeout time.Duration) TracerOption {
 func WithBusName(name string) TracerOption {
 	return func(t *Tracer) {
 		t.busName = name
+	}
+}
+
+func WithAscii() TracerOption {
+	return func(t *Tracer) {
+		a := NewAsc(".asc", t.directory, t.busName, &t.cachedData, t.l)
+		t.types = append(t.types, a)
+	}
+}
+
+func WithCSV() TracerOption {
+	return func(t *Tracer) {
+		c := NewCsv(".csv", t.directory, t.busName, &t.cachedData, t.l)
+		t.types = append(t.types, c)
 	}
 }
 
@@ -140,21 +158,28 @@ func (t *Tracer) StopTrace() error {
 
 		close(t.stop)
 
-		t.l.Info("getting file name")
-		file, err := t.getFile()
-		if err != nil {
-			return errors.Wrap(err, "get pointer to file")
-		}
+		for _, files := range t.types {
 
-		t.l.Info("dumping to file")
-		err = t.dumpToFile(file)
-		if err != nil {
-			return errors.Wrap(err, "dump cached contents to file")
+			//t.l.Info("ASCII: getting file name") //- Don't know why logger isn't working
+			//Do we have to define writing to the logger as a function within the interface?
+
+			file, err := files.getFile()
+			if err != nil {
+				//t.l.Error("ASCII: error accessing filename")
+				return errors.Wrap(err, "ASCII: get pointer to file")
+			}
+
+			err = files.dumpToFile(file)
+
+			if err != nil {
+				//t.l.Error("ASCII: error dumping cached contents to file")
+				return errors.Wrap(err, "ASCII: dump cached contents to file")
+			}
 		}
 
 		t.cachedData = nil
 	}
-
+	//t.l.Info("ASCII: No issues dumping to file.")
 	return nil
 }
 
@@ -225,6 +250,8 @@ func (t *Tracer) receiveData(ctx context.Context) {
 			return
 		case receivedFrame := <-t.frameCh:
 			t.cachedData = append(t.cachedData, t.parseString(receivedFrame))
+			logMessage := fmt.Sprintf("Adding '%s' to tracer's cachedData", receivedFrame)
+			t.l.Info(logMessage)
 		}
 	}
 }
@@ -268,6 +295,7 @@ func (t *Tracer) dumpToFile(file *os.File) error {
 	for _, value := range t.cachedData {
 		_, err := file.WriteString(value + "\n")
 		if err != nil {
+			t.l.Error("Issue writing to file")
 			return errors.Wrap(err, "write string to file")
 		}
 	}
@@ -275,40 +303,41 @@ func (t *Tracer) dumpToFile(file *os.File) error {
 	return nil
 }
 
+// COMMENTED OUT FOR NOW
 // getFile makes the file name based on parameters provided
-func (t *Tracer) getFile() (*os.File, error) {
-	var file *os.File
-	var builder strings.Builder
-
-	_, err := builder.WriteString(t.directory + "/")
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add directory to filepath")
-	}
-
-	_, err = builder.WriteString(t.busName + "_")
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add bus name to file name")
-	}
-
-	_, err = builder.WriteString(time.Now().Format(_filenameDateFormat) + "_")
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add date to file name")
-	}
-
-	_, err = builder.WriteString(time.Now().Format(_filenameTimeFormat))
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add time to file name")
-	}
-
-	_, err = builder.WriteString(t.fileType)
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add file type to file name")
-	}
-
-	file, err = os.Create(builder.String())
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "create file")
-	}
-
-	return file, nil
-}
+//func (t *Tracer) getFile() (*os.File, error) {
+//	var file *os.File
+//	var builder strings.Builder
+//
+//	_, err := builder.WriteString(t.directory + "/")
+//	if err != nil {
+//		return &os.File{}, errors.Wrap(err, "add directory to filepath")
+//	}
+//
+//	_, err = builder.WriteString(t.busName + "_")
+//	if err != nil {
+//		return &os.File{}, errors.Wrap(err, "add bus name to file name")
+//	}
+//
+//	_, err = builder.WriteString(time.Now().Format(_filenameDateFormat) + "_")
+//	if err != nil {
+//		return &os.File{}, errors.Wrap(err, "add date to file name")
+//	}
+//
+//	_, err = builder.WriteString(time.Now().Format(_filenameTimeFormat))
+//	if err != nil {
+//		return &os.File{}, errors.Wrap(err, "add time to file name")
+//	}
+//
+//	_, err = builder.WriteString(t.fileType)
+//	if err != nil {
+//		return &os.File{}, errors.Wrap(err, "add file type to file name")
+//	}
+//
+//	file, err = os.Create(builder.String())
+//	if err != nil {
+//		return &os.File{}, errors.Wrap(err, "create file")
+//	}
+//
+//	return file, nil
+//}

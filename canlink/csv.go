@@ -12,25 +12,27 @@ type Csv struct {
 	suffix     string
 	dir        string
 	busName    string
-	cachedData []string
+	cachedData *[]string
 	l          *zap.Logger
 }
 
-func NewCsv(suffix string, dir string, busName string, cachedData []string, l *zap.Logger) *Csv {
+func NewCsv(suffix string, dir string, busName string, cachedData *[]string, l *zap.Logger) *Csv {
 	csv := &Csv{
 		suffix:     suffix,
 		dir:        dir,
 		busName:    busName,
 		cachedData: cachedData,
-		l:          l.Named(_loggerName),
+		l:          l.Named("CSV_logger"),
 	}
 
 	return csv
 }
 
 func (c *Csv) dumpToFile(file *os.File) error {
+	//<<<<<<< HEAD
+	dataSlice := *c.cachedData
 
-	for _, value := range c.cachedData {
+	for _, value := range dataSlice {
 		holderArray := strings.Fields(value)
 
 		for _, word := range holderArray {
@@ -40,6 +42,11 @@ func (c *Csv) dumpToFile(file *os.File) error {
 			}
 		}
 		_, err := file.WriteString("\n")
+		//=======
+		//	dataSlice := *c.cachedData
+		//	for _, value := range dataSlice {
+		//		_, err := file.WriteString(value + ",")
+		//>>>>>>> 9c4d69a2299b72a506edb6124e042135b622b671
 		if err != nil {
 			return errors.Wrap(err, "starting new line in file")
 		}
@@ -49,6 +56,7 @@ func (c *Csv) dumpToFile(file *os.File) error {
 }
 
 func (c *Csv) getFile() (*os.File, error) {
+	c.l.Info("CSV: entered getFile")
 	var file *os.File
 	var builder strings.Builder
 

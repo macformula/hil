@@ -12,24 +12,29 @@ type Asc struct {
 	suffix     string
 	dir        string
 	busName    string
-	cachedData []string
+	cachedData *[]string
 	l          *zap.Logger
 }
 
-func NewAsc(suffix string, dir string, busName string, cachedData []string, l *zap.Logger) *Asc {
+func NewAsc(suffix string, dir string, busName string, cachedData *[]string, l *zap.Logger) *Asc {
 	asc := &Asc{
 		suffix:     suffix,
 		dir:        dir,
 		busName:    busName,
 		cachedData: cachedData,
-		l:          l.Named(_loggerName),
+		l:          l.Named("ascii_logger"),
 	}
 
 	return asc
 }
 
 func (a *Asc) dumpToFile(file *os.File) error {
-	for _, value := range a.cachedData {
+	a.l.Info("ASCII: Entered dumpToFile")
+	dataSlice := *a.cachedData
+	for i, value := range dataSlice {
+		if i < 3 {
+			a.l.Info(value)
+		}
 		_, err := file.WriteString(value + "\n")
 		if err != nil {
 			return errors.Wrap(err, "write string to file")
@@ -40,6 +45,7 @@ func (a *Asc) dumpToFile(file *os.File) error {
 }
 
 func (a *Asc) getFile() (*os.File, error) {
+	a.l.Info("ASCII: entered getFile")
 	var file *os.File
 	var builder strings.Builder
 
@@ -63,7 +69,7 @@ func (a *Asc) getFile() (*os.File, error) {
 		return &os.File{}, errors.Wrap(err, "add time to file name")
 	}
 
-	_, err = builder.WriteString(a.suffix)
+	_, err = builder.WriteString(".asc")
 	if err != nil {
 		return &os.File{}, errors.Wrap(err, "add file type to file name")
 	}

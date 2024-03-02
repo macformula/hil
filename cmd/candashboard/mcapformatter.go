@@ -13,6 +13,7 @@ type MyData struct {
 }
 
 type mcapmessage struct {
+	//Name string
 	Data int
 }
 
@@ -74,16 +75,19 @@ func main() {
 
 	data := MyData{
 		Data: []byte{5, 6, 7, 8},
+		//Data: []byte{1},
 	}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		panic("FAILED")
 	}
 	err = w.WriteMessage(&mcap.Message{
-		ChannelID:   1,
-		Sequence:    0,
-		LogTime:     0,
-		PublishTime: 0,
+		ChannelID: 1,
+		Sequence:  0,
+		//LogTime:   0,
+		LogTime: uint64(time.Now().Nanosecond()),
+		//PublishTime: 0,
+		PublishTime: uint64(time.Now().Nanosecond()),
 		Data:        jsonData,
 	})
 	if err != nil {
@@ -104,20 +108,45 @@ func main() {
 	//	panic("FAILED")
 	//}
 
+	//<<<<<<< HEAD
+	//t_holder := uint64(time.Now().UnixNano())
+	//t_hold := t_holder
+
+	//for i := 1; i <= 20; i++ {
+	//=======
 	for i := 1; i <= 30; i++ {
+		//>>>>>>> ad68f81de7c506df9abdeefd616992cfcda527a4
 		//channelid := uint16(1)
 		//if i%2 == 1 {
 		//	channelid = uint16(2)
 		//}
 
-		m := mcapmessage{i * 5}
+		//<<<<<<< HEAD
+		//what is happening here
+		m := mcapmessage{
+			//"Engine",
+			i * 5}
+		//=======
+		//m := mcapmessage{i * 5}
+		//>>>>>>> ad68f81de7c506df9abdeefd616992cfcda527a4
 		d, err := json.Marshal(m)
+
+		//fmt.Println("m: ", m.Data)
+		//fmt.Println("d: ", d)
+
 		if err != nil {
 			fmt.Println("Error marshalling message data into json format:", err)
 			return //what is the point of this return keyword
 		}
 
 		//binary.LittleEndian.PutUint64(bytearray, uint64(i*5))
+		//<<<<<<< HEAD
+		//t := uint64(time.Now().Nanosecond())
+
+		//t := uint64(time.Now().UnixNano())
+		//t := uint64(time.Now().Second() + i*1000000)
+		//fmt.Println("Current time ", i, ":", time.Now().Second())
+		//=======
 
 		// Facing two errors - either data is unserializable or the time frame is so large it won't display
 		// Unix returns the amount of SECONDS since epoch - Unserializable data
@@ -125,18 +154,24 @@ func main() {
 		// UnixMicro returns the amount of MICROSECONDS since epoch - Too large of duration
 		// Mcap docs specify that Timestamp is uint64 nanoseconds since a user-understood epoch (i.e unix epoch, robot boot time, etc.)
 		//t := uint64(time.Now().Unix())
+		//>>>>>>> ad68f81de7c506df9abdeefd616992cfcda527a4
 		t := uint64(i * 1000000000)
 		err = w.WriteMessage(&mcap.Message{
 			ChannelID: 2,
-			LogTime:   t, //Wrong time formatting
-			//PublishTime: t,
+			LogTime:   t, // - t_holder, //Wrong time formatting
+			//PublishTime: t - t_holder,
 			Data: d,
 		})
 		if err != nil {
 			fmt.Println("Error writing message to mcap file on iteration", i, " :", err)
 			return
 		}
-		time.Sleep(100 * time.Millisecond)
+		//<<<<<<< HEAD
+		time.Sleep(1000 * time.Millisecond)
+		//time.Sleep(3000 * time.Millisecond)
+		//=======
+		//time.Sleep(100 * time.Millisecond)
+		//>>>>>>> ad68f81de7c506df9abdeefd616992cfcda527a4
 	}
 
 	//fmt.Println(buf)
