@@ -24,11 +24,12 @@ type Mcap struct {
 
 func NewMcap(suffix string, dir string, busName string, cachedData *[]string, l *zap.Logger) *Mcap {
 	mcap := &Mcap{
-		suffix:     suffix,
-		dir:        dir,
-		busName:    busName,
-		cachedData: cachedData,
-		l:          l.Named("mcap_logger"),
+		suffix:          suffix,
+		dir:             dir,
+		busName:         busName,
+		cachedData:      cachedData,
+		l:               l.Named("mcap_logger"),
+		createdChannels: make(map[string]int),
 	}
 
 	return mcap
