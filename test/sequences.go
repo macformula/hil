@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	Sequences = []flow.Sequence{DoNothingSequence, SleepSequence, FatalErrorSequence, ErrorSequence}
+	Sequences = []flow.Sequence{DoNothingSequence, SleepSequence, PanicSequence, FatalErrorSequence, ErrorSequence}
 )
 
 var DoNothingSequence = flow.Sequence{
@@ -48,6 +48,19 @@ var FatalErrorSequence = flow.Sequence{
 		&SleepState{SleepTime: 3 * time.Second},
 		&SleepState{SleepTime: 1 * time.Second},
 		&RunFatalErrorState{},
+		&SleepState{SleepTime: 2 * time.Second},
+		&SleepState{SleepTime: 3 * time.Second},
+	},
+}
+
+var PanicSequence = flow.Sequence{
+	Name: "Panic 😨",
+	Desc: "This will panic the hil app.",
+	States: []flow.State{
+		&SleepState{SleepTime: 1 * time.Second},
+		&SleepState{SleepTime: 1 * time.Second},
+		&SleepState{SleepTime: 1 * time.Second},
+		&PanicState{},
 		&SleepState{SleepTime: 2 * time.Second},
 		&SleepState{SleepTime: 3 * time.Second},
 	},
