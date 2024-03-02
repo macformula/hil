@@ -80,7 +80,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 		if m.createdChannels[tempArray[1]] != 1 {
 			err = w.WriteChannel(&mcap.Channel{
 				ID:              signalID,
-				Topic:           tempArray[1],
+				Topic:           tempArray[1], //contactorfeedback.positive
 				MessageEncoding: "json",
 				SchemaID:        1, //change
 				Metadata: map[string]string{
@@ -93,20 +93,20 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 			m.createdChannels[tempArray[1]] = 1
 		}
 
-		//creating channels for each message
-		err = w.WriteChannel(&mcap.Channel{
-			ID:              1,              //change to message ID
-			Topic:           "message_name", //change to message
-			MessageEncoding: "json",
-			SchemaID:        1, //change
-			//ChannelID: 1,
-			Metadata: map[string]string{
-				"callerid": "100", // cspell:disable-line
-			},
-		})
-		if err != nil {
-			panic("FAILED")
-		}
+		////creating channels for each message
+		//err = w.WriteChannel(&mcap.Channel{
+		//	ID:              1,              //change to message ID
+		//	Topic:           "message_name", //change to message
+		//	MessageEncoding: "json",
+		//	SchemaID:        1, //change
+		//	//ChannelID: 1,
+		//	Metadata: map[string]string{
+		//		"callerid": "100", // cspell:disable-line
+		//	},
+		//})
+		//if err != nil {
+		//	panic("FAILED")
+		//}
 
 		//taking message from the cached data
 		message, err := json.Marshal(tempArray[3])

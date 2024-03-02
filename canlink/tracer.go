@@ -98,14 +98,13 @@ func WithBusName(name string) TracerOption {
 
 func InitAscii() TracerOption {
 	return func(t *Tracer) {
-		m := make(map[string]int) //used when making mcap file type
+		//m := make(map[string]int) //used when making mcap file type
 		//converting a into FileType
 		a := NewAsc(t.fileType, t.directory, t.busName, t.cachedData, t.l)
 		//var f FileType
 		//f = a
 		t.types = append(t.types, a)
 	}
-
 }
 
 // Open opens a receiver and spawns a fetchData routine
