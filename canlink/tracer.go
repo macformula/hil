@@ -110,6 +110,13 @@ func WithCSV() TracerOption {
 	}
 }
 
+func WithMcap() TracerOption {
+	return func(t *Tracer) {
+		m := NewMcap(".mcap", t.directory, t.busName, &t.cachedData, t.l)
+		t.types = append(t.types, m)
+	}
+}
+
 // Open opens a receiver and spawns a fetchData routine
 func (t *Tracer) Open(ctx context.Context) error {
 	t.l.Info("creating socketcan connection")

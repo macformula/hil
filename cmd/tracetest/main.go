@@ -39,7 +39,7 @@ func main() {
 		canlink.WithBusName(config.BusName),
 		canlink.WithTimeout(3*time.Second),
 		canlink.WithAscii(),
-		//canlink.InitMcap()
+		canlink.WithMcap(),
 		canlink.WithCSV())
 
 	err = tracer.Open(ctx)
