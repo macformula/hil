@@ -49,7 +49,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 
 	err := w.WriteHeader(&mcap.Header{})
 	if err != nil {
-		panic("FAILED")
+		panic("FAILED creating header")
 	}
 
 	//parsing the signalID
@@ -68,7 +68,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 		Data:     []byte(`{"type":"object"}`),
 	})
 	if err != nil {
-		panic("FAILED")
+		panic("FAILED creating schema")
 	}
 
 	dataSlice := *m.cachedData
@@ -77,8 +77,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 		parser, err := strconv.ParseUint(tempArray[1], 16, 16)
 		signalID := uint16(parser)
 
-		//creating channels for each signal
-		if m.createdChannels[tempArray[1]] != 1 {
+		if m.createdChannels[tempArray[1]] != 1 { //tempArray[1]
 			err = w.WriteChannel(&mcap.Channel{
 				ID:              signalID,
 				Topic:           tempArray[1], //contactorfeedback.positive
@@ -89,10 +88,13 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 				},
 			})
 			if err != nil {
-				panic("FAILED")
+				panic("FAILED creating channels")
 			}
 			m.createdChannels[tempArray[1]] = 1
 		}
+
+		//creating channels for each signal
+		//m.checkChannel(value)
 
 		////creating channels for each message
 		//err = w.WriteChannel(&mcap.Channel{
@@ -136,7 +138,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 			Data:        message,
 		})
 		if err != nil {
-			panic("FAILED")
+			panic("FAILED writing message")
 		}
 	}
 
@@ -184,3 +186,25 @@ func (m *Mcap) getFile() (*os.File, error) {
 	return file, nil
 
 }
+
+//func (m *Mcap) checkChannel(value string) (int) {
+//	tempArray := strings.Fields(value)
+//	parser, err := strconv.ParseUint(tempArray[1], 16, 16)
+//	signalID := uint16(parser)
+//
+//	if m.createdChannels[tempArray[1]] != 1 { //tempArray[1]
+//		err = w.WriteChannel(&mcap.Channel{
+//			ID:              signalID,
+//			Topic:           tempArray[1], //contactorfeedback.positive
+//			MessageEncoding: "json",
+//			SchemaID:        1, //change
+//			Metadata: map[string]string{
+//				"callerid": "100", // cspell:disable-line
+//			},
+//		})
+//		if err != nil {
+//			panic("FAILED")
+//		}
+//		m.createdChannels[tempArray[1]] = 1
+//	}
+//}
