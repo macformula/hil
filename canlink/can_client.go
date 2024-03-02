@@ -22,16 +22,16 @@ type CANClient struct {
 
 	// tracker keeps track of how many CAN messages have been received (per message type)
 	tracker    map[uint32]uint32
-	isTracking bool
+	tracking   bool
 	stopSignal chan struct{}
 }
 
 // NewCANClient creates a new CANClient with socketcan connection.
 func NewCANClient(messages MessagesDescriptor, conn net.Conn) CANClient {
 	return CANClient{
-		md:         messages,
-		rx:         socketcan.NewReceiver(conn),
-		isTracking: false,
+		md:       messages,
+		rx:       socketcan.NewReceiver(conn),
+		tracking: false,
 	}
 }
 
@@ -74,19 +74,18 @@ func (c *CANClient) Read(ctx context.Context, msgsToRead ...generated.Message) (
 // StartTracking initiates the tracking goroutine. This is so we can check how many CAN frames of a certain type have
 // come through the CAN bus in a given time.
 func (c *CANClient) StartTracking() error {
-	if c.isTracking {
+	if c.tracking {
 		return errors.New("tracker is already running")
 	}
 
 	c.tracker = make(map[uint32]uint32)
 	c.stopSignal = make(chan struct{})
-	c.isTracking = true
+	c.tracking = true
 
 	go func(c *CANClient) {
 		for {
 			select {
 			case <-c.stopSignal:
-				c.isTracking = false
 				return
 			default:
 				msg, err := c.Read(context.Background())
@@ -103,10 +102,16 @@ func (c *CANClient) StartTracking() error {
 
 // StopTracking stops the tracker goroutine and returns the obtained frame counts.
 func (c *CANClient) StopTracking() (map[uint32]uint32, error) {
-	if !c.isTracking {
+	if !c.tracking {
 		return nil, errors.New("tracker was never started")
 	}
 
 	close(c.stopSignal)
+	c.tracking = false
 	return c.tracker, nil
+}
+
+// IsTracking returns whether the tracker is running or not.
+func (c *CANClient) IsTracking() bool {
+	return c.tracking
 }
