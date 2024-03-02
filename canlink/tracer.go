@@ -169,13 +169,13 @@ func (t *Tracer) StopTrace() error {
 		//	return errors.Wrap(err, "dump cached contents to ascii file (CANDASHBOARD")
 		//}
 
-		t.l.Info("getting file name")
+		//t.l.Info("getting file name")
 		//file, err := t.getFile() // Replaced with type loop
 		//if err != nil {
 		//	return errors.Wrap(err, "get pointer to file")
 		//}
 
-		t.l.Info("dumping to file")
+		//t.l.Info("dumping to file")
 
 		//Will eventually put into a loop to iterate through all file types, for now hardcoding
 		for _, files := range t.types {
