@@ -38,10 +38,9 @@ func main() {
 		make([]canlink.FileType, 5), // NEEDA FIX THIS
 		canlink.WithBusName(config.BusName),
 		canlink.WithTimeout(3*time.Second),
-		canlink.InitAscii(),
+		canlink.WithAscii(),
 		//canlink.InitMcap()
-		//canlink.InitCSV() -- will be added once main has regained functionality
-	)
+		canlink.WithCSV())
 
 	err = tracer.Open(ctx)
 	if err != nil {
