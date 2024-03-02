@@ -49,6 +49,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 
 	err := w.WriteHeader(&mcap.Header{})
 	if err != nil {
+		m.l.Info("error creating headers")
 		panic("FAILED creating header")
 	}
 
@@ -61,6 +62,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 	//}
 
 	//initializing schema (only need one)
+	m.l.Info("schema created")
 	err = w.WriteSchema(&mcap.Schema{
 		ID:       1,         //change (cannot be 0)
 		Name:     m.busName, //change
@@ -68,6 +70,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 		Data:     []byte(`{"type":"object"}`),
 	})
 	if err != nil {
+		m.l.Info("error creating schemas")
 		panic("FAILED creating schema")
 	}
 
@@ -78,6 +81,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 		signalID := uint16(parser)
 
 		if m.createdChannels[tempArray[1]] != 1 { //tempArray[1]
+			m.l.Info("channel created")
 			err = w.WriteChannel(&mcap.Channel{
 				ID:              signalID,
 				Topic:           tempArray[1], //contactorfeedback.positive
@@ -88,6 +92,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 				},
 			})
 			if err != nil {
+				m.l.Info("error creating channels")
 				panic("FAILED creating channels")
 			}
 			m.createdChannels[tempArray[1]] = 1
@@ -130,15 +135,18 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 		}
 		t := uint64(parsedTime.Unix())
 
+		m.l.Info("message created")
 		err = w.WriteMessage(&mcap.Message{
-			ChannelID: 1, //change
+			ChannelID: signalID, //change
 			//Sequence:    0,	(removed since it wasn't included in one of the message loops)
 			LogTime:     t,
 			PublishTime: t, //should publishtime be the same as logtime? is it even needed?
 			Data:        message,
 		})
 		if err != nil {
+			m.l.Info("error creating messages")
 			panic("FAILED writing message")
+
 		}
 	}
 
