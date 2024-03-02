@@ -73,22 +73,19 @@ func (c *CANClient) Read(ctx context.Context, msgsToRead ...generated.Message) (
 		case <-ctx.Done():
 			return nil, nil
 		case frame := <-c.rxChan:
+			msg, err := c.md.UnmarshalFrame(frame)
+			if err != nil {
+				return nil, errors.Wrap(err, "unmarshal frame")
+			}
+
 			// No message types were specified, return first frame of any type
 			if len(msgsToRead) == 0 {
-				msg, err := c.md.UnmarshalFrame(frame)
-				if err != nil {
-					return nil, errors.Wrap(err, "unmarshal frame")
-				}
 				return msg, nil
 			}
 
 			for _, msgToRead := range msgsToRead {
 				if frame.ID == msgToRead.Frame().ID {
-					msg, err := c.md.UnmarshalFrame(frame)
-					if err != nil {
-						return nil, errors.Wrap(err, "unmarshal frame")
-					}
-					return msg, nil
+					return msg, err
 				}
 			}
 		default:
