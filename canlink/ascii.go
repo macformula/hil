@@ -45,11 +45,14 @@ func (a *Asc) getFile() (*os.File, error) {
 
 	_, err := builder.WriteString(a.dir + "/")
 	if err != nil {
+		a.l.Error("ASCII: Error adding directory to filepath")
 		return &os.File{}, errors.Wrap(err, "add directory to filepath")
 	}
 
 	_, err = builder.WriteString(a.busName + "_")
 	if err != nil {
+		a.l.Error("ASCII: Error adding bus name to filename")
+
 		return &os.File{}, errors.Wrap(err, "add bus name to file name")
 	}
 
@@ -63,7 +66,7 @@ func (a *Asc) getFile() (*os.File, error) {
 		return &os.File{}, errors.Wrap(err, "add time to file name")
 	}
 
-	_, err = builder.WriteString(a.suffix)
+	_, err = builder.WriteString(".asc")
 	if err != nil {
 		return &os.File{}, errors.Wrap(err, "add file type to file name")
 	}
