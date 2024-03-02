@@ -35,9 +35,10 @@ type TracerOption func(*Tracer)
 
 // Tracer listens on a CAN bus and records all traffic during a specified period
 type Tracer struct {
-	l          *zap.Logger
-	stop       chan struct{}
-	frameCh    chan TimestampedFrame
+	l       *zap.Logger
+	stop    chan struct{}
+	frameCh chan TimestampedFrame
+	//what is []string? is it used bc of dynamic storage?
 	cachedData []string
 	err        *utils.ResettableError
 	isRunning  bool
@@ -48,6 +49,7 @@ type Tracer struct {
 	timeout      time.Duration
 	busName      string
 	fileType     string
+	types        []FileType //
 }
 
 // NewTracer returns a new Tracer
@@ -55,7 +57,9 @@ func NewTracer(
 	canInterface string,
 	directory string,
 	l *zap.Logger,
+	types []FileType,
 	opts ...TracerOption) *Tracer {
+
 	tracer := &Tracer{
 		l:            l.Named(_loggerName),
 		cachedData:   []string{},
@@ -65,7 +69,11 @@ func NewTracer(
 		canInterface: canInterface,
 		directory:    directory,
 		busName:      canInterface,
+		types:        make([]FileType, 5), // NEEDA FIX THIS,
 	}
+	//types := [ascii]types
+	//for items in types:
+	//	items.dumpToFile()
 
 	for _, o := range opts {
 		o(tracer)
@@ -86,6 +94,18 @@ func WithBusName(name string) TracerOption {
 	return func(t *Tracer) {
 		t.busName = name
 	}
+}
+
+func InitAscii() TracerOption {
+	return func(t *Tracer) {
+		m := make(map[string]int) //used when making mcap file type
+		//converting a into FileType
+		a := NewAsc(t.fileType, t.directory, t.busName, t.cachedData, t.l)
+		//var f FileType
+		//f = a
+		t.types = append(t.types, a)
+	}
+
 }
 
 // Open opens a receiver and spawns a fetchData routine
@@ -137,15 +157,31 @@ func (t *Tracer) StopTrace() error {
 		close(t.stop)
 
 		t.l.Info("getting file name")
-		file, err := t.getFile()
-		if err != nil {
-			return errors.Wrap(err, "get pointer to file")
-		}
+		//file, err := t.getFile() -- Replaced with type loop
+		//if err != nil {
+		//	return errors.Wrap(err, "get pointer to file")
+		//}
 
 		t.l.Info("dumping to file")
-		err = t.dumpToFile(file)
-		if err != nil {
-			return errors.Wrap(err, "dump cached contents to file")
+
+		// Will eventually put into a loop to iterate through all file types, for now hardcoding
+		for _, files := range t.types {
+
+			//filetype := t.types[files]
+			t.l.Info("ASCII: getting file name") //- Don't know why logger isn't working
+			//Do we have to define writing to the logger as a function within the interface?
+
+			file, err := files.getFile()
+			if err != nil {
+				return errors.Wrap(err, "ASCII: get pointer to file")
+			}
+
+			//filetype.l.Info("dumping to file")
+			err = files.dumpToFile(file)
+
+			if err != nil {
+				return errors.Wrap(err, "ASCII: dump cached contents to file")
+			}
 		}
 
 		t.cachedData = nil

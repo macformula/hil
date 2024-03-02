@@ -22,14 +22,25 @@ func main() {
 	ctx := context.Background()
 
 	cfg := zap.NewDevelopmentConfig()
+	//formattedTime := time.Now().Format("2006.01.02_15.04.05")
+	//fileName := fmt.Sprintf("/opt/macfe/traces/logs/file_%s.log", formattedTime)
+	//cfg.OutputPaths = []string{fileName}
 	logger, err := cfg.Build()
+	if err != nil {
+		panic(err)
+	}
 
 	tracer := canlink.NewTracer(
 		config.CanInterface,
 		config.TracerDirectory,
 		logger,
+		make([]canlink.FileType, 3, 3), // NEEDA FIX THIS
 		canlink.WithBusName(config.BusName),
-		canlink.WithTimeout(3*time.Second))
+		canlink.WithTimeout(3*time.Second),
+		canlink.InitAscii(),
+		//canlink.InitMcap()
+		//canlink.InitCSV() -- will be added once main has regained functionality
+	)
 
 	err = tracer.Open(ctx)
 	if err != nil {
