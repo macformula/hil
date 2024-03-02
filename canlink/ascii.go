@@ -12,11 +12,11 @@ type Asc struct {
 	suffix     string
 	dir        string
 	busName    string
-	cachedData []string
+	cachedData *[]string
 	l          *zap.Logger
 }
 
-func NewAsc(suffix string, dir string, busName string, cachedData []string, l *zap.Logger) *Asc {
+func NewAsc(suffix string, dir string, busName string, cachedData *[]string, l *zap.Logger) *Asc {
 	asc := &Asc{
 		suffix:     suffix,
 		dir:        dir,
@@ -30,7 +30,8 @@ func NewAsc(suffix string, dir string, busName string, cachedData []string, l *z
 
 func (a *Asc) dumpToFile(file *os.File) error {
 	a.l.Info("ASCII: Entered dumpToFile")
-	for i, value := range a.cachedData {
+	dataSlice := *a.cachedData
+	for i, value := range dataSlice {
 		if i < 3 {
 			a.l.Info(value)
 		}
