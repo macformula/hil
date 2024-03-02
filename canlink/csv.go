@@ -29,10 +29,19 @@ func NewCsv(suffix string, dir string, busName string, cachedData []string, l *z
 }
 
 func (c *Csv) dumpToFile(file *os.File) error {
+
 	for _, value := range c.cachedData {
-		_, err := file.WriteString(value + ",")
+		holderArray := strings.Fields(value)
+
+		for _, word := range holderArray {
+			_, err := file.WriteString(word + ",")
+			if err != nil {
+				return errors.Wrap(err, "write string to file")
+			}
+		}
+		_, err := file.WriteString("\n")
 		if err != nil {
-			return errors.Wrap(err, "write string to file")
+			return errors.Wrap(err, "starting new line in file")
 		}
 	}
 
