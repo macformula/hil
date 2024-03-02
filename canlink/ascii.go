@@ -30,7 +30,10 @@ func NewAsc(suffix string, dir string, busName string, cachedData []string, l *z
 
 func (a *Asc) dumpToFile(file *os.File) error {
 	a.l.Info("ASCII: Entered dumpToFile")
-	for _, value := range a.cachedData {
+	for i, value := range a.cachedData {
+		if i < 3 {
+			a.l.Info(value)
+		}
 		_, err := file.WriteString(value + "\n")
 		if err != nil {
 			a.l.Error("ASCII: error writing string to file")
