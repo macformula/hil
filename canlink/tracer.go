@@ -2,6 +2,7 @@ package canlink
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -69,7 +70,7 @@ func NewTracer(
 		canInterface: canInterface,
 		directory:    directory,
 		busName:      canInterface,
-		types:        []FileType{}, // NEEDA FIX THIS,
+		types:        []FileType{},
 	}
 	//types := [ascii]types
 	//for items in types:
@@ -272,6 +273,8 @@ func (t *Tracer) receiveData(ctx context.Context) {
 			return
 		case receivedFrame := <-t.frameCh:
 			t.cachedData = append(t.cachedData, t.parseString(receivedFrame))
+			logMessage := fmt.Sprintf("Adding '%s' to tracer's cachedData", receivedFrame)
+			t.l.Info(logMessage)
 		}
 	}
 }
