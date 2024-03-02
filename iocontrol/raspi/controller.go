@@ -9,6 +9,11 @@ func NewController() *Controller {
 	return nil
 }
 
+// Open configures the controller
+func (c *Controller) Open() error {
+	return nil
+}
+
 // SetDigital sets an output digital pin for a Raspberry Pi digital pin
 func (c *Controller) SetDigital(output *DigitalPin, b bool) error {
 	return nil
