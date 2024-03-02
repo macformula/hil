@@ -96,12 +96,19 @@ func WithBusName(name string) TracerOption {
 	}
 }
 
-func InitAscii() TracerOption {
+func WithAscii() TracerOption {
 	return func(t *Tracer) {
 		a := NewAsc(".asc", t.directory, t.busName, &t.cachedData, t.l)
 		t.types = append(t.types, a)
 	}
 
+}
+
+func WithCSV() TracerOption {
+	return func(t *Tracer) {
+		c := NewCsv(".csv", t.directory, t.busName, &t.cachedData, t.l)
+		t.types = append(t.types, c)
+	}
 }
 
 // Open opens a receiver and spawns a fetchData routine
@@ -154,26 +161,26 @@ func (t *Tracer) StopTrace() error {
 
 		for _, files := range t.types {
 
-			t.l.Info("ASCII: getting file name") //- Don't know why logger isn't working
+			//t.l.Info("ASCII: getting file name") //- Don't know why logger isn't working
 			//Do we have to define writing to the logger as a function within the interface?
 
 			file, err := files.getFile()
 			if err != nil {
-				t.l.Error("ASCII: error accessing filename")
+				//t.l.Error("ASCII: error accessing filename")
 				return errors.Wrap(err, "ASCII: get pointer to file")
 			}
 
 			err = files.dumpToFile(file)
 
 			if err != nil {
-				t.l.Error("ASCII: error dumping cached contents to file")
+				//t.l.Error("ASCII: error dumping cached contents to file")
 				return errors.Wrap(err, "ASCII: dump cached contents to file")
 			}
 		}
 
 		t.cachedData = nil
 	}
-	t.l.Info("ASCII: No issues dumping to file.")
+	//t.l.Info("ASCII: No issues dumping to file.")
 	return nil
 }
 

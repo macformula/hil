@@ -37,7 +37,6 @@ func (a *Asc) dumpToFile(file *os.File) error {
 		}
 		_, err := file.WriteString(value + "\n")
 		if err != nil {
-			a.l.Error("ASCII: error writing string to file")
 			return errors.Wrap(err, "write string to file")
 		}
 	}
@@ -52,14 +51,11 @@ func (a *Asc) getFile() (*os.File, error) {
 
 	_, err := builder.WriteString(a.dir + "/")
 	if err != nil {
-		a.l.Error("ASCII: Error adding directory to filepath")
 		return &os.File{}, errors.Wrap(err, "add directory to filepath")
 	}
 
 	_, err = builder.WriteString(a.busName + "_")
 	if err != nil {
-		a.l.Error("ASCII: Error adding bus name to filename")
-
 		return &os.File{}, errors.Wrap(err, "add bus name to file name")
 	}
 

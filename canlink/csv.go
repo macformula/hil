@@ -12,11 +12,11 @@ type Csv struct {
 	suffix     string
 	dir        string
 	busName    string
-	cachedData []string
+	cachedData *[]string
 	l          *zap.Logger
 }
 
-func NewCsv(suffix string, dir string, busName string, cachedData []string, l *zap.Logger) *Csv {
+func NewCsv(suffix string, dir string, busName string, cachedData *[]string, l *zap.Logger) *Csv {
 	csv := &Csv{
 		suffix:     suffix,
 		dir:        dir,
@@ -29,7 +29,8 @@ func NewCsv(suffix string, dir string, busName string, cachedData []string, l *z
 }
 
 func (c *Csv) dumpToFile(file *os.File) error {
-	for _, value := range c.cachedData {
+	dataSlice := *c.cachedData
+	for _, value := range dataSlice {
 		_, err := file.WriteString(value + ",")
 		if err != nil {
 			return errors.Wrap(err, "write string to file")
@@ -40,6 +41,7 @@ func (c *Csv) dumpToFile(file *os.File) error {
 }
 
 func (c *Csv) getFile() (*os.File, error) {
+	c.l.Info("CSV: entered getFile")
 	var file *os.File
 	var builder strings.Builder
 
