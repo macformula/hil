@@ -35,7 +35,7 @@ func main() {
 		config.CanInterface,
 		config.TracerDirectory,
 		logger,
-		make([]canlink.FileType, 5), // NEEDA FIX THIS
+		make([]canlink.FileType, 3, 3), // NEEDA FIX THIS
 		canlink.WithBusName(config.BusName),
 		canlink.WithTimeout(3*time.Second),
 		canlink.WithAscii(),

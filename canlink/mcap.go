@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -17,6 +18,8 @@ type Mcap struct {
 	busName    string
 	cachedData *[]string
 	l          *zap.Logger
+	//map[key]value{}
+	createdChannels map[string]int
 }
 
 func NewMcap(suffix string, dir string, busName string, cachedData *[]string, l *zap.Logger) *Mcap {
@@ -48,9 +51,18 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 		panic("FAILED")
 	}
 
+	//parsing the signalID
+	//holderArray := strings.Fields(m.cachedData[0])
+	//parser, err := strconv.ParseUint(holderArray[1], 16, 16)
+	//signalID := uint16(parser)
+	//if err != nil {
+	//	fmt.Println("Error parsing signal ID into uint16:", err)
+	//}
+
+	//initializing schema (only need one)
 	err = w.WriteSchema(&mcap.Schema{
-		ID:       1,        //change
-		Name:     "schema", //change
+		ID:       1,         //change (cannot be 0)
+		Name:     m.busName, //change
 		Encoding: "jsonschema",
 		Data:     []byte(`{"type":"object"}`),
 	})
@@ -58,28 +70,62 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 		panic("FAILED")
 	}
 
-	err = w.WriteChannel(&mcap.Channel{
-		ID:              1, //change
-		Topic:           m.busName,
-		MessageEncoding: "json",
-		SchemaID:        0, //change
-		Metadata: map[string]string{
-			"callerid": "100", // cspell:disable-line
-		},
-	})
-	if err != nil {
-		panic("FAILED")
-	}
 	dataSlice := *m.cachedData
 	for _, value := range dataSlice {
+		tempArray := strings.Fields(value)
+		parser, err := strconv.ParseUint(tempArray[1], 16, 16)
+		signalID := uint16(parser)
 
-		message, err := json.Marshal(value)
+		//creating channels for each signal
+		if m.createdChannels[tempArray[1]] != 1 {
+			err = w.WriteChannel(&mcap.Channel{
+				ID:              signalID,
+				Topic:           tempArray[1], //contactorfeedback.positive
+				MessageEncoding: "json",
+				SchemaID:        1, //change
+				Metadata: map[string]string{
+					"callerid": "100", // cspell:disable-line
+				},
+			})
+			if err != nil {
+				panic("FAILED")
+			}
+			m.createdChannels[tempArray[1]] = 1
+		}
+
+		////creating channels for each message
+		//err = w.WriteChannel(&mcap.Channel{
+		//	ID:              1,              //change to message ID
+		//	Topic:           "message_name", //change to message
+		//	MessageEncoding: "json",
+		//	SchemaID:        1, //change
+		//	//ChannelID: 1,
+		//	Metadata: map[string]string{
+		//		"callerid": "100", // cspell:disable-line
+		//	},
+		//})
+		//if err != nil {
+		//	panic("FAILED")
+		//}
+
+		//taking message from the cached data
+		message, err := json.Marshal(tempArray[3])
 		if err != nil {
 			fmt.Println("Error marshalling message data into json format:", err)
 			//return (ask about)
 		}
 
-		t := uint64(time.Now().Nanosecond())
+		//time should be time of the signal
+		//data is in the form: 14:51:53.0772 1574 Rx 1 2
+		//t := uint64(time.Now().Nanosecond())
+
+		//parsing time from the cached data
+		parsedTime, err := time.Parse("15:04:05.0000", tempArray[0])
+		if err != nil {
+			fmt.Println("Error parsing string into time format:", err)
+			//return (ask about)
+		}
+		t := uint64(parsedTime.Unix())
 
 		err = w.WriteMessage(&mcap.Message{
 			ChannelID: 1, //change

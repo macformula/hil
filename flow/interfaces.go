@@ -3,11 +3,13 @@ package flow
 import (
 	"context"
 	"github.com/google/uuid"
+	"io"
 	"time"
 )
 
 // ResultProcessorIface will be used to get pass/fail statuses on tags.
 type ResultProcessorIface interface {
+	io.Closer
 	// Open will be called at the start of the app.
 	Open(context.Context) error
 	// SubmitTag will return the passing status of a given tag.

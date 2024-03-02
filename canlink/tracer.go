@@ -49,7 +49,7 @@ type Tracer struct {
 	timeout      time.Duration
 	busName      string
 	fileType     string
-	types        []FileType
+	types        []FileType //
 }
 
 // NewTracer returns a new Tracer
@@ -101,7 +101,6 @@ func WithAscii() TracerOption {
 		a := NewAsc(".asc", t.directory, t.busName, &t.cachedData, t.l)
 		t.types = append(t.types, a)
 	}
-
 }
 
 func WithCSV() TracerOption {

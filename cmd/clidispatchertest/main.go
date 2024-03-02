@@ -5,17 +5,19 @@ import (
 	"time"
 
 	"github.com/macformula/hil/cli"
-	dtest "github.com/macformula/hil/cli/test"
 	"github.com/macformula/hil/flow"
-	ftest "github.com/macformula/hil/flow/test"
 	"github.com/macformula/hil/orchestrator"
-	otest "github.com/macformula/hil/orchestrator/test"
+	"github.com/macformula/hil/results/client"
+	"github.com/macformula/hil/test"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
 const (
-	_loggerName = "main.log"
+	_loggerName          = "main.log"
+	_resultProcessorAddr = "localhost:31763"
+	_configPath          = "./config/hil-config/config.yaml"
+	_resultServerPath    = "./results/server/main.py"
 )
 
 func main() {
@@ -27,18 +29,39 @@ func main() {
 	}
 	defer logger.Sync()
 
-	rp := ftest.NewSimpleResultProcessor(logger)
-	s := flow.NewSequencer(rp, logger)
-	d := cli.NewCliDispatcher(dtest.Sequences, logger)
-	d2 := otest.NewSimpleDispatcher(logger, 5*time.Second, 10*time.Second)
-	o := orchestrator.NewOrchestrator(s, logger, d, d2)
+	resultProcessor := results.NewResultProcessor(logger,
+		_resultProcessorAddr,
+		results.WithPushReportsToGithub(),
+		results.WithServerAutoStart(_configPath, _resultServerPath),
+	)
+	sequencer := flow.NewSequencer(resultProcessor, logger)
+	cliDispatcher := cli.NewCliDispatcher(test.Sequences, logger)
+	simpleDispatcher := test.NewSimpleDispatcher(logger, 5*time.Second, 10*time.Second)
+	orchestrator := orchestrator.NewOrchestrator(sequencer, logger, cliDispatcher, simpleDispatcher)
 
-	err = o.Open(context.Background())
+	err = orchestrator.Open(context.Background())
 	if err != nil {
 		panic(errors.Wrap(err, "orchestrator open"))
 	}
 
-	err = o.Run(context.Background())
+	defer func() {
+		panicMsg := recover()
+
+		if panicMsg != nil {
+			logger.Error("panic recovered", zap.Any("panic", panicMsg))
+		}
+
+		err = orchestrator.Close()
+		if err != nil {
+			logger.Error("orchestrator close", zap.Error(err))
+		}
+
+		if panicMsg != nil {
+			panic(panicMsg)
+		}
+	}()
+
+	err = orchestrator.Run(context.Background())
 	if err != nil {
 		panic(errors.Wrap(err, "orchestrator run"))
 	}
