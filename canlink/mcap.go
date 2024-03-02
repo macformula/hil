@@ -47,6 +47,14 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 		Chunked: false,
 	})
 
+	defer func() {
+		err := w.Close()
+		if err != nil {
+			fmt.Println("Error closing mcap file:", err)
+			return
+		}
+	}()
+
 	err := w.WriteHeader(&mcap.Header{})
 	if err != nil {
 		m.l.Info("error creating headers")
