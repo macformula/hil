@@ -242,3 +242,20 @@ func (h *HttpServer) closeServer() error {
 	//TODO
 	return nil
 }
+
+func (h *HttpServer) monitorDispatcher(ctx context.Context) {
+	for {
+		select {
+		case <-h.status:
+			h.l.Info("status signal received")
+
+		case <-h.results:
+			h.l.Info("results signal received")
+
+		case <-ctx.Done():
+			h.l.Info("context done signal received")
+
+			return
+		}
+	}
+}
