@@ -32,7 +32,7 @@ func main() {
 	resultProcessor := results.NewResultProcessor(logger,
 		_resultProcessorAddr,
 		results.WithPushReportsToGithub(),
-		results.WithServerAutoStart(_configPath, _resultServerPath),
+		//results.WithServerAutoStart(_configPath, _resultServerPath),
 	)
 	sequencer := flow.NewSequencer(resultProcessor, logger)
 	cliDispatcher := cli.NewCliDispatcher(test.Sequences, logger)
