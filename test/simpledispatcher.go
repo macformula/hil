@@ -38,6 +38,8 @@ func NewSimpleDispatcher(l *zap.Logger, durations ...time.Duration) *SimpleDispa
 }
 
 func (s *SimpleDispatcher) Close() error {
+	s.l.Info("closing simple dispatcher")
+
 	return nil
 }
 

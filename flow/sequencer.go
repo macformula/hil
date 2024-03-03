@@ -83,7 +83,7 @@ func (s *Sequencer) Run(
 
 	isPassing, err := s.runSequence(ctx, seq, cancelTest, testId)
 	if err != nil {
-		testErrors := s.testErrors
+		testErrors := append(s.testErrors, errors.Wrap(err, "run sequence"))
 		s.testErrors = []error{}
 
 		return false, s.failedTags, testErrors, errors.Wrap(err, "run sequence")
@@ -104,6 +104,17 @@ func (s *Sequencer) FatalError() error {
 // ResetFatalError sets the fatal error to nil.
 func (s *Sequencer) ResetFatalError() {
 	s.fatalErr.Reset()
+}
+
+func (s *Sequencer) Close() error {
+	s.l.Info("closing sequencer")
+
+	err := s.rp.Close()
+	if err != nil {
+		return errors.Wrap(err, "result processor close")
+	}
+
+	return nil
 }
 
 func (s *Sequencer) runSequence(ctx context.Context, seq Sequence, cancelTest chan struct{}, testId uuid.UUID) (bool, error) {

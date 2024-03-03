@@ -10,6 +10,7 @@ import (
 
 // SequencerIface is responsible for managing execution of a sequence of test states.
 type SequencerIface interface {
+	io.Closer
 	// Open sets up the Sequencer.
 	Open(ctx context.Context) error
 	// SubscribeToProgress subscribes to the progress of the Sequencer across its Sequence runs.
