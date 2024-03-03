@@ -156,15 +156,14 @@ func (r *ResultProcessor) startServer(errCh chan error) {
 	if runtime.GOOS == _winOs {
 		r.serverCmd = exec.Command(_pythonWin, r.serverPath, configFlag)
 	} else {
-		println(r.serverCmd.String())
 		r.serverCmd = exec.Command(_pythonUnix, r.serverPath, configFlag)
 	}
 
 	r.l.Info("starting results server", zap.String("command", r.serverCmd.String()))
 
-	err := r.serverCmd.Run()
+	out, err := r.serverCmd.Output()
 	if err != nil {
-		errCh <- errors.Wrap(err, "run")
+		errCh <- errors.Wrap(err, "run output: "+string(out))
 	}
 }
 
