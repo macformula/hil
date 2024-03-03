@@ -50,6 +50,8 @@ func (h *HttpServer) Open(ctx context.Context, sequences []flow.Sequence) error 
 		return err
 	}
 
+	go h.monitorDispatcher(ctx)
+
 	go h.startServer()
 
 	return nil
