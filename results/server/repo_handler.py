@@ -12,6 +12,7 @@ class RepoHandler:
         self.git_email = git_email
 
     def push_to_github_pages(self, test_id) -> None:
+        print("START OF PUSH")
         repo = git.Repo(self.pages_repo_dir)
 
         # Set Git user name and email for the repository
@@ -35,5 +36,6 @@ class RepoHandler:
 
         # Push the changes, forcing the update to the remote branch
         repo.git.push()
+        print("END OF PUSH")
 
         return

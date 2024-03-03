@@ -44,6 +44,8 @@ func (c *CliDispatcher) Shutdown() <-chan orchestrator.ShutdownSignal {
 
 // Close should close all objects held by the dispatcher.
 func (c *CliDispatcher) Close() error {
+	c.l.Info("closing cli dispatcher")
+
 	err := c.cli.Close()
 	return err
 }
