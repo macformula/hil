@@ -6,6 +6,7 @@ import (
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/httpdispatcher"
 	"github.com/macformula/hil/orchestrator"
+	results "github.com/macformula/hil/results/client"
 	"github.com/macformula/hil/test"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -13,9 +14,9 @@ import (
 
 const (
 	_loggerName          = "main.log"
-	_resultProcessorIp   = "localhost"
-	_resultProcessorPort = "31763"
-	_pushToGithub        = true
+	_resultProcessorAddr = "localhost:31763"
+	_configPath          = "./config/hil-config/config.yaml"
+	_resultServerPath    = "./results/server/main.py"
 )
 
 func main() {
@@ -27,9 +28,13 @@ func main() {
 	}
 	defer logger.Sync()
 
-	rp := test.NewSimpleResultProcessor(logger)
-	//resultProcessor := client.NewResultsClient(_resultProcessorIp, _resultProcessorPort, _pushToGithub)
-	sequencer := flow.NewSequencer(rp, logger)
+	//rp := test.NewSimpleResultProcessor(logger)
+	resultProcessor := results.NewResultProcessor(logger,
+		_resultProcessorAddr,
+		results.WithPushReportsToGithub(),
+		results.WithServerAutoStart(_configPath, _resultServerPath),
+	)
+	sequencer := flow.NewSequencer(resultProcessor, logger)
 	cliDispatcher := cli.NewCliDispatcher(test.Sequences, logger)
 	//simpleDispatcher := test.NewSimpleDispatcher(logger, 5*time.Second, 10*time.Second)
 	server := httpdispatcher.NewServerDispatcher(test.Sequences, httpdispatcher.NewHttpServer(logger), logger)
