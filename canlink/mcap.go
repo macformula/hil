@@ -177,14 +177,14 @@ func (m *Mcap) getFile() (*os.File, error) {
 		return &os.File{}, errors.Wrap(err, "add bus name to file name")
 	}
 
-	_, err = builder.WriteString(time.Now().Format("2006.01.02") + "_")
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add time to file name")
-	}
-
-	_, err = builder.WriteString(time.Now().Format("15.04.05"))
+	_, err = builder.WriteString(time.Now().Format("15.04.05") + "_")
 	if err != nil {
 		return &os.File{}, errors.Wrap(err, "add date to file name")
+	}
+
+	_, err = builder.WriteString(time.Now().Format("2006.01.02"))
+	if err != nil {
+		return &os.File{}, errors.Wrap(err, "add time to file name")
 	}
 
 	_, err = builder.WriteString(m.suffix)
