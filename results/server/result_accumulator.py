@@ -138,8 +138,10 @@ class ResultAccumulator:
         has_errors = len(self.error_submissions) > 0
         overall_pass_fail = self.all_tags_passing and (not has_errors)
 
+        print("after overall_pass_fail")
         self.__update_historic_tests(test_id, sequence_name, date_time, overall_pass_fail)
         if push_to_github:
+            print("pushing to github next...")
             self.repo_handler.push_to_github_pages(test_id)
 
         # reset cached submissions
