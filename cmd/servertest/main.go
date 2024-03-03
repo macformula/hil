@@ -45,6 +45,23 @@ func main() {
 		panic(errors.Wrap(err, "orchestrator open"))
 	}
 
+	defer func() {
+		panicMsg := recover()
+
+		if panicMsg != nil {
+			logger.Error("panic recovered", zap.Any("panic", panicMsg))
+		}
+
+		err = o.Close()
+		if err != nil {
+			logger.Error("orchestrator close", zap.Error(err))
+		}
+
+		if panicMsg != nil {
+			panic(panicMsg)
+		}
+	}()
+
 	err = o.Run(context.Background())
 	if err != nil {
 		panic(errors.Wrap(err, "orchestrator run"))

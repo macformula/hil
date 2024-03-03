@@ -156,6 +156,7 @@ func (r *ResultProcessor) startServer(errCh chan error) {
 	if runtime.GOOS == _winOs {
 		r.serverCmd = exec.Command(_pythonWin, r.serverPath, configFlag)
 	} else {
+		r.l.Info("tyler comment", zap.String("command", r.serverCmd.String()))
 		r.serverCmd = exec.Command(_pythonUnix, r.serverPath, configFlag)
 	}
 
