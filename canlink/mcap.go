@@ -141,11 +141,14 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 			fmt.Println("Error parsing string into time format:", err)
 			//return (ask about)
 		}
+
+		//hardcoded time to test foxglove plotting
 		t := uint64(parsedTime.Unix())
+		//t := uint64(1000000000)
 
 		m.l.Info("message created")
 		err = w.WriteMessage(&mcap.Message{
-			ChannelID: signalID, //change
+			ChannelID: signalID,
 			//Sequence:    0,	(removed since it wasn't included in one of the message loops)
 			LogTime:     t,
 			PublishTime: t, //should publishtime be the same as logtime? is it even needed?
@@ -177,14 +180,14 @@ func (m *Mcap) getFile() (*os.File, error) {
 		return &os.File{}, errors.Wrap(err, "add bus name to file name")
 	}
 
-	_, err = builder.WriteString(time.Now().Format("15.04.05") + "_")
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add date to file name")
-	}
-
-	_, err = builder.WriteString(time.Now().Format("2006.01.02"))
+	_, err = builder.WriteString(time.Now().Format("2006.01.02") + "_")
 	if err != nil {
 		return &os.File{}, errors.Wrap(err, "add time to file name")
+	}
+
+	_, err = builder.WriteString(time.Now().Format("15.04.05"))
+	if err != nil {
+		return &os.File{}, errors.Wrap(err, "add date to file name")
 	}
 
 	_, err = builder.WriteString(m.suffix)
