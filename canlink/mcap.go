@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// defining MCAP properties
 type Mcap struct {
 	suffix     string
 	dir        string
@@ -22,6 +23,14 @@ type Mcap struct {
 	createdChannels map[string]int
 }
 
+//defining CAN frame properties
+//type CANFrame struct {
+//	timestamp uint64
+//	signalID  int
+//	message   []int
+//}
+
+// instantiates a new Mcap object
 func NewMcap(suffix string, dir string, busName string, cachedData *[]string, l *zap.Logger) *Mcap {
 	mcap := &Mcap{
 		suffix:          suffix,
@@ -35,18 +44,24 @@ func NewMcap(suffix string, dir string, busName string, cachedData *[]string, l 
 	return mcap
 }
 
-func (m *Mcap) dumpToFile(file *os.File) error {
-	//for _, value := range m.cachedData {
-	//	_, err := file.WriteString(value + "\n")
-	//	if err != nil {
-	//		return errors.Wrap(err, "write string to file")
-	//	}
-	//}
+//instantiates new CANFrame object
+//func NewCANFrame(timestamp uint64, signalID int, message []int) *CANFrame {
+//	canframe := &CANFrame{
+//		timestamp: timestamp,
+//		signalID: signalID,
+//		message: message,
+//	}
+//}
 
+// dumps all contents from cached data to Mcap file
+func (m *Mcap) dumpToFile(file *os.File) error {
+
+	//creating new instance of writer
 	w, _ := mcap.NewWriter(file, &mcap.WriterOptions{
 		Chunked: false,
 	})
 
+	//declaring footer
 	defer func() {
 		err := w.Close()
 		if err != nil {
@@ -55,6 +70,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 		}
 	}()
 
+	//creating header
 	err := w.WriteHeader(&mcap.Header{})
 	if err != nil {
 		m.l.Info("error creating headers")
@@ -69,10 +85,10 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 	//	fmt.Println("Error parsing signal ID into uint16:", err)
 	//}
 
-	//initializing schema (only need one)
+	//creating the schema (only need one)
 	m.l.Info("schema created")
 	err = w.WriteSchema(&mcap.Schema{
-		ID:       1,         //change (cannot be 0)
+		ID:       1,
 		Name:     m.busName, //change
 		Encoding: "jsonschema",
 		Data:     []byte(`{"type":"object"}`),
@@ -82,19 +98,27 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 		panic("FAILED creating schema")
 	}
 
+	//dataSlice stores all the content of cachedData
 	dataSlice := *m.cachedData
+	//iterates through cachedData (every value is of format: 14:51:53.0772 1574 Rx 1 2)
 	for _, value := range dataSlice {
+		//separating the string by blank spaces
 		tempArray := strings.Fields(value)
-		parser, err := strconv.ParseUint(tempArray[1], 16, 16)
+		//converting the signalID into uint16
+		parser, err := strconv.ParseUint(tempArray[1], 16, 16) //signalID is stored in the second index of array
 		signalID := uint16(parser)
 
+		//checking map to see if channel for the signalID is already created
 		if m.createdChannels[tempArray[1]] != 1 { //tempArray[1]
+			//if map doesn't return 1, channel doesn't exist and must be created
 			m.l.Info("channel created")
+			//creating channel
 			err = w.WriteChannel(&mcap.Channel{
-				ID:              signalID,
-				Topic:           tempArray[1], //contactorfeedback.positive
+				ID:    signalID,
+				Topic: tempArray[1], //contactorfeedback.positive,
+				//use canclient to find signal name and message name
 				MessageEncoding: "json",
-				SchemaID:        1, //change
+				SchemaID:        1,
 				Metadata: map[string]string{
 					"callerid": "100", // cspell:disable-line
 				},
@@ -103,49 +127,28 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 				m.l.Info("error creating channels")
 				panic("FAILED creating channels")
 			}
+			//adding created channel into the map using signalID as key and setting value as 1
 			m.createdChannels[tempArray[1]] = 1
 		}
 
-		//creating channels for each signal
-		//m.checkChannel(value)
-
-		////creating channels for each message
-		//err = w.WriteChannel(&mcap.Channel{
-		//	ID:              1,              //change to message ID
-		//	Topic:           "message_name", //change to message
-		//	MessageEncoding: "json",
-		//	SchemaID:        1, //change
-		//	//ChannelID: 1,
-		//	Metadata: map[string]string{
-		//		"callerid": "100", // cspell:disable-line
-		//	},
-		//})
-		//if err != nil {
-		//	panic("FAILED")
-		//}
-
-		//taking message from the cached data
+		//taking message from cachedData and marshaling (will be replaced with canclient implementation)
 		message, err := json.Marshal(tempArray[3])
 		if err != nil {
 			fmt.Println("Error marshalling message data into json format:", err)
 			//return (ask about)
 		}
 
-		//time should be time of the signal
-		//data is in the form: 14:51:53.0772 1574 Rx 1 2
-		//t := uint64(time.Now().Nanosecond())
-
-		//parsing time from the cached data
+		//parsing time from the cached data to set as message timestamp
 		parsedTime, err := time.Parse("15:04:05.0000", tempArray[0])
 		if err != nil {
 			fmt.Println("Error parsing string into time format:", err)
 			//return (ask about)
 		}
-
-		//hardcoded time to test foxglove plotting
 		t := uint64(parsedTime.Unix())
 		//t := uint64(1000000000)
+		//t := uint64(time.Now().Nanosecond())
 
+		//creating messages
 		m.l.Info("message created")
 		err = w.WriteMessage(&mcap.Message{
 			ChannelID: signalID,
@@ -164,6 +167,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 	return nil
 }
 
+// getting MCAP file that will be used to dump contents of cachedData to
 func (m *Mcap) getFile() (*os.File, error) {
 	var file *os.File
 	var builder strings.Builder
