@@ -139,13 +139,13 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 		}
 
 		//parsing time from the cached data to set as message timestamp
-		parsedTime, err := time.Parse("15:04:05.0000", tempArray[0])
-		if err != nil {
-			fmt.Println("Error parsing string into time format:", err)
-			//return (ask about)
-		}
-		t := uint64(parsedTime.Unix())
-		//t := uint64(1000000000)
+		//parsedTime, err := time.Parse("15:04:05.0000", tempArray[0])
+		//if err != nil {
+		//	fmt.Println("Error parsing string into time format:", err)
+		//	//return (ask about)
+		//}
+		//t := uint64(parsedTime.Unix())
+		t := uint64(1000000000)
 		//t := uint64(time.Now().Nanosecond())
 
 		//creating messages
