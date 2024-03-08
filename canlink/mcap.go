@@ -152,7 +152,8 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 			Data:        message,
 		})
 		if err != nil {
-			m.l.Info("error creating messages")
+			logmsg := fmt.Sprintf("Failed to write MCAP message: ChannelID: %d, Logtime: %d", signalID, t)
+			m.l.Info(logmsg)
 			panic("FAILED writing message")
 
 		}
