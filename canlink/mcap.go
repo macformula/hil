@@ -64,6 +64,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 	//declaring footer
 	defer func() {
 		err := w.Close()
+		m.l.Info("MCAP: Mcap file is closing and writer turned off ")
 		if err != nil {
 			fmt.Println("Error closing mcap file:", err)
 			return
