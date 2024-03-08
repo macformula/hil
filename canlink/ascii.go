@@ -31,10 +31,7 @@ func NewAsc(suffix string, dir string, busName string, cachedData *[]string, l *
 func (a *Asc) dumpToFile(file *os.File) error {
 	a.l.Info("ASCII: Entered dumpToFile")
 	dataSlice := *a.cachedData
-	for i, value := range dataSlice {
-		if i < 3 {
-			a.l.Info(value)
-		}
+	for _, value := range dataSlice {
 		_, err := file.WriteString(value + "\n")
 		if err != nil {
 			return errors.Wrap(err, "write string to file")

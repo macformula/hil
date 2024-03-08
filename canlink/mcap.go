@@ -64,6 +64,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 	//declaring footer
 	defer func() {
 		err := w.Close()
+		m.l.Info("MCAP: Mcap file is closing and writer turned off ")
 		if err != nil {
 			fmt.Println("Error closing mcap file:", err)
 			return
@@ -149,7 +150,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 		//t := uint64(time.Now().Nanosecond())
 
 		//creating messages
-		m.l.Info("message created")
+
 		err = w.WriteMessage(&mcap.Message{
 			ChannelID: signalID,
 			//Sequence:    0,	(removed since it wasn't included in one of the message loops)
@@ -162,6 +163,8 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 			m.l.Info(logmsg)
 			panic("FAILED writing message")
 
+		} else {
+			m.l.Info("message created")
 		}
 	}
 
