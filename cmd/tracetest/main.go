@@ -66,24 +66,29 @@ func main() {
 	}
 
 	// First Test
-	go send(tx, CANBMScan.NewContactor_Feedback().Frame(), 50, 10*time.Millisecond)
-	//msg, err := client.Read(context.Background(), CANBMScan.NewContactor_Feedback(), CANBMScan.NewPack_SOC())
-	//if err != nil {
-	//	logger.Error("client read", zap.Error(err))
-	//}
-	time.Sleep(time.Second)
+	for i := 0; i < 15; i++ {
+		c := can.Frame{
+			ID:         1600,
+			Length:     0,
+			Data:       can.Data{byte(i)},
+			IsRemote:   false,
+			IsExtended: false,
+		}
+		send(tx, c, 1, 10*time.Millisecond)
+	}
 
-	//logger.Info("CAN msg", zap.String("msg.string", msg.String()))
-	go send(tx, CANBMScan.NewContactor_Feedback().Frame(), 10, 50*time.Millisecond)
-	//msg, err = client.Read(context.Background(), CANBMScan.NewContactor_Feedback(), CANBMScan.NewPack_SOC())
-	//if err != nil {
-	//	logger.Error("client read", zap.Error(err))
-	//}
-
-	//logger.Info("CAN msg", zap.String("msg.string", msg.String()))
-
-	//time.Sleep(5 * time.Second)
 	time.Sleep(2 * time.Second)
+
+	for i := 0; i < 10; i++ {
+		c := can.Frame{
+			ID:         1600,
+			Length:     0,
+			Data:       can.Data{byte(i)},
+			IsRemote:   false,
+			IsExtended: false,
+		}
+		send(tx, c, 1, 50*time.Millisecond)
+	}
 
 	err = tracer.StopTrace()
 	if err != nil {
