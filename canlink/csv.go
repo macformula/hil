@@ -14,15 +14,17 @@ type Csv struct {
 	busName    string
 	cachedData *[]string
 	l          *zap.Logger
+	c          *CANClient
 }
 
-func NewCsv(suffix string, dir string, busName string, cachedData *[]string, l *zap.Logger) *Csv {
+func NewCsv(suffix string, dir string, busName string, cachedData *[]string, l *zap.Logger, c *CANClient) *Csv {
 	csv := &Csv{
 		suffix:     suffix,
 		dir:        dir,
 		busName:    busName,
 		cachedData: cachedData,
 		l:          l.Named("CSV_logger"),
+		c:          c,
 	}
 
 	return csv

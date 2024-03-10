@@ -21,6 +21,7 @@ type Mcap struct {
 	l          *zap.Logger
 	//map[key]value{}
 	createdChannels map[string]int
+	c               *CANClient
 }
 
 //defining CAN frame properties
@@ -31,7 +32,7 @@ type Mcap struct {
 //}
 
 // instantiates a new Mcap object
-func NewMcap(suffix string, dir string, busName string, cachedData *[]string, l *zap.Logger) *Mcap {
+func NewMcap(suffix string, dir string, busName string, cachedData *[]string, l *zap.Logger, c *CANClient) *Mcap {
 	mcap := &Mcap{
 		suffix:          suffix,
 		dir:             dir,
@@ -39,6 +40,7 @@ func NewMcap(suffix string, dir string, busName string, cachedData *[]string, l 
 		cachedData:      cachedData,
 		l:               l.Named("mcap_logger"),
 		createdChannels: make(map[string]int),
+		c:               c,
 	}
 
 	return mcap

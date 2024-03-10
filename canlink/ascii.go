@@ -14,15 +14,17 @@ type Asc struct {
 	busName    string
 	cachedData *[]string
 	l          *zap.Logger
+	c          *CANClient
 }
 
-func NewAsc(suffix string, dir string, busName string, cachedData *[]string, l *zap.Logger) *Asc {
+func NewAsc(suffix string, dir string, busName string, cachedData *[]string, l *zap.Logger, c *CANClient) *Asc {
 	asc := &Asc{
 		suffix:     suffix,
 		dir:        dir,
 		busName:    busName,
 		cachedData: cachedData,
 		l:          l.Named("ascii_logger"),
+		c:          c,
 	}
 
 	return asc

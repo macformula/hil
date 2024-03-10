@@ -3,6 +3,7 @@ package canlink
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -50,6 +51,7 @@ type Tracer struct {
 	busName      string
 	fileType     string
 	types        []FileType //
+	conn         net.Conn
 }
 
 // NewTracer returns a new Tracer
@@ -57,7 +59,7 @@ func NewTracer(
 	canInterface string,
 	directory string,
 	l *zap.Logger,
-	types []FileType,
+	conn net.Conn,
 	opts ...TracerOption) *Tracer {
 
 	tracer := &Tracer{
@@ -70,6 +72,7 @@ func NewTracer(
 		directory:    directory,
 		busName:      canInterface,
 		types:        []FileType{},
+		conn:         conn,
 	}
 	//types := [ascii]types
 	//for items in types:
@@ -96,23 +99,23 @@ func WithBusName(name string) TracerOption {
 	}
 }
 
-func WithAscii() TracerOption {
+func WithAscii(c *CANClient) TracerOption {
 	return func(t *Tracer) {
-		a := NewAsc(".asc", t.directory, t.busName, &t.cachedData, t.l)
+		a := NewAsc(".asc", t.directory, t.busName, &t.cachedData, t.l, c)
 		t.types = append(t.types, a)
 	}
 }
 
-func WithCSV() TracerOption {
+func WithCSV(c *CANClient) TracerOption {
 	return func(t *Tracer) {
-		c := NewCsv(".csv", t.directory, t.busName, &t.cachedData, t.l)
+		c := NewCsv(".csv", t.directory, t.busName, &t.cachedData, t.l, c)
 		t.types = append(t.types, c)
 	}
 }
 
-func WithMcap() TracerOption {
+func WithMcap(c *CANClient) TracerOption {
 	return func(t *Tracer) {
-		m := NewMcap(".mcap", t.directory, t.busName, &t.cachedData, t.l)
+		m := NewMcap(".mcap", t.directory, t.busName, &t.cachedData, t.l, c)
 		t.types = append(t.types, m)
 	}
 }
@@ -121,12 +124,7 @@ func WithMcap() TracerOption {
 func (t *Tracer) Open(ctx context.Context) error {
 	t.l.Info("creating socketcan connection")
 
-	conn, err := socketcan.DialContext(ctx, "can", t.canInterface)
-	if err != nil {
-		return errors.Wrap(err, "dial into socket")
-	}
-
-	t.receiver = socketcan.NewReceiver(conn)
+	t.receiver = socketcan.NewReceiver(t.conn)
 
 	t.l.Info("canlink receiver created")
 
