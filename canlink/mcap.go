@@ -118,7 +118,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 			//creating channel
 			err = w.WriteChannel(&mcap.Channel{
 				ID:    signalID,
-				Topic: "contactorfeedback",
+				Topic: "frame-1600",
 				//use canclient to find signal name and message name
 				MessageEncoding: "json",
 				SchemaID:        1,
@@ -135,7 +135,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 		}
 
 		//taking message from cachedData and marshaling (will be replaced with canclient implementation)
-		message, err := json.Marshal(tempArray[3])
+		message, err := json.Marshal(tempArray[3]) // Might be an issue with how this is being processed
 		if err != nil {
 			fmt.Println("Error marshalling message data into json format:", err)
 			//return (ask about)

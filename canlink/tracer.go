@@ -2,7 +2,7 @@ package canlink
 
 import (
 	"context"
-	"fmt"
+	//"fmt"
 	"net"
 	"os"
 	"strconv"
@@ -255,8 +255,8 @@ func (t *Tracer) receiveData(ctx context.Context) {
 			return
 		case receivedFrame := <-t.frameCh:
 			t.cachedData = append(t.cachedData, t.parseString(receivedFrame))
-			logMessage := fmt.Sprintf("Adding '%s' to tracer's cachedData", receivedFrame)
-			t.l.Info(logMessage)
+			//logMessage := fmt.Sprintf("Adding '%s' to tracer's cachedData", receivedFrame)
+			//t.l.Info(logMessage)
 		}
 	}
 }
@@ -265,7 +265,7 @@ func (t *Tracer) receiveData(ctx context.Context) {
 func (t *Tracer) parseString(data TimestampedFrame) string {
 	var builder strings.Builder
 
-	_, err := builder.WriteString(time.Now().Format(_messageTimeFormat))
+	_, err := builder.WriteString(data.Time.Format(_messageTimeFormat))
 	if err != nil {
 		t.err.Set(errors.Wrap(err, "parse frame time"))
 	}
