@@ -67,19 +67,20 @@ func main() {
 
 	// First Test
 	go send(tx, CANBMScan.NewContactor_Feedback().Frame(), 50, 10*time.Millisecond)
-	msg, err := client.Read(context.Background(), CANBMScan.NewContactor_Feedback(), CANBMScan.NewPack_SOC())
-	if err != nil {
-		logger.Error("client read", zap.Error(err))
-	}
+	//msg, err := client.Read(context.Background(), CANBMScan.NewContactor_Feedback(), CANBMScan.NewPack_SOC())
+	//if err != nil {
+	//	logger.Error("client read", zap.Error(err))
+	//}
+	time.Sleep(time.Second)
 
-	logger.Info("CAN msg", zap.String("msg.string", msg.String()))
+	//logger.Info("CAN msg", zap.String("msg.string", msg.String()))
 	go send(tx, CANBMScan.NewContactor_Feedback().Frame(), 10, 50*time.Millisecond)
-	msg, err = client.Read(context.Background(), CANBMScan.NewContactor_Feedback(), CANBMScan.NewPack_SOC())
-	if err != nil {
-		logger.Error("client read", zap.Error(err))
-	}
+	//msg, err = client.Read(context.Background(), CANBMScan.NewContactor_Feedback(), CANBMScan.NewPack_SOC())
+	//if err != nil {
+	//	logger.Error("client read", zap.Error(err))
+	//}
 
-	logger.Info("CAN msg", zap.String("msg.string", msg.String()))
+	//logger.Info("CAN msg", zap.String("msg.string", msg.String()))
 
 	//time.Sleep(5 * time.Second)
 	time.Sleep(2 * time.Second)
