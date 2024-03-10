@@ -66,7 +66,7 @@ func main() {
 	}
 
 	// First Test
-	go send(tx, CANBMScan.NewContactor_Feedback().Frame(), 1, time.Second)
+	go send(tx, CANBMScan.NewContactor_Feedback().Frame(), 10, time.Second)
 	msg, err := client.Read(context.Background(), CANBMScan.NewContactor_Feedback(), CANBMScan.NewPack_SOC())
 	if err != nil {
 		logger.Error("client read", zap.Error(err))
