@@ -69,7 +69,7 @@ func main() {
 	for i := 0; i < 15; i++ {
 		c := can.Frame{
 			ID:         1600,
-			Length:     0,
+			Length:     8,
 			Data:       can.Data{byte(i)},
 			IsRemote:   false,
 			IsExtended: false,
@@ -82,7 +82,7 @@ func main() {
 	for i := 0; i < 10; i++ {
 		c := can.Frame{
 			ID:         1600,
-			Length:     0,
+			Length:     8,
 			Data:       can.Data{byte(i)},
 			IsRemote:   false,
 			IsExtended: false,
