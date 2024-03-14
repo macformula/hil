@@ -23,8 +23,7 @@ func NewClient(conn *websocket.Conn) *Client {
 	}
 }
 
-func (c *Client) addTestToQueue(conn *websocket.Conn, queueNumber int, testID uuid.UUID) {
-	c.conn = conn
+func (c *Client) addTestToQueue(queueNumber int, testID uuid.UUID) {
 	//add queuenumber and testID to testQueue
 	newItem := TestQueueItem{
 		queueNumber: queueNumber,
