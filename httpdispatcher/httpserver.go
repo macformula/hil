@@ -144,15 +144,88 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 
 		switch msg.task {
 		case StartTest:
-			h.startTest(client, msg.parameter)
+			h.startClientTest(client, msg.parameter)
 		case CancelTest:
-			// h.cancelTest(client, cancelIndex)
+			h.cancelClientTest(client, msg.parameter)
 		case RecoverFromFatal:
 			// h.recoverTest()
 		}
 	}
 
 	//
+}
+
+func (h *HttpServer) startClientTest(client *Client, parameter string) {
+	var messageInt int
+	var err error
+
+	// If no parameter is provided, send the list of sequences to the client.
+	if parameter == "" {
+		sequencesJSON, _ := json.Marshal(h.sequences)
+		if err := client.conn.WriteMessage(websocket.TextMessage, sequencesJSON); err != nil {
+			h.l.Error("Write error", zap.Error(err))
+		}
+		return
+	} else {
+		// If a parameter is provided, convert it to an integer.
+		messageInt, err = strconv.Atoi(string(parameter))
+		if err != nil {
+			h.l.Error("The message is not an integer.", zap.Error(err))
+			return
+		}
+	}
+
+	var httpCode string
+	if sequence, ok := h.sequences[messageInt]; ok {
+		// Send start signal
+		newTestID := uuid.New()
+		// Add test to client test list
+		queuePosition := (<-h.status).QueueLength
+		client.addTest(queuePosition, newTestID)
+		h.start <- orchestrator.StartSignal{
+			TestId:   newTestID,
+			Seq:      sequence,
+			Metadata: nil,
+		}
+		httpCode = http.StatusText(http.StatusOK)
+	} else {
+		httpCode = http.StatusText(http.StatusBadRequest)
+	}
+	httpCodeJSON, _ := json.Marshal(httpCode)
+	client.conn.WriteMessage(websocket.TextMessage, httpCodeJSON)
+}
+
+func (h *HttpServer) cancelClientTest(client *Client, parameter string) {
+	var testIndex int
+	var err error
+
+	// Send client cancellable tests
+	if parameter == "" {
+		testQueueJSON, _ := json.Marshal(client.testQueue)
+		if err := client.conn.WriteMessage(websocket.TextMessage, testQueueJSON); err != nil {
+			h.l.Error("Write error", zap.Error(err))
+		}
+		return
+	} else {
+		testIndex, err = strconv.Atoi(string(parameter))
+		if err != nil {
+			h.l.Error("The message is not an integer.", zap.Error(err))
+			return
+		}
+	}
+
+	var httpCode string
+	if testIndex >= 0 && testIndex < len(client.testQueue) {
+		h.cancelTest <- orchestrator.CancelTestSignal{
+			TestId: client.testQueue[testIndex].UUID,
+		}
+		client.removeTest(testIndex)
+		httpCode = http.StatusText(http.StatusOK)
+	} else {
+		httpCode = http.StatusText(http.StatusBadRequest)
+	}
+	httpCodeJSON, _ := json.Marshal(httpCode)
+	client.conn.WriteMessage(websocket.TextMessage, httpCodeJSON)
 }
 
 func (h *HttpServer) readWS(conn *websocket.Conn) *Message {
@@ -168,46 +241,6 @@ func (h *HttpServer) readWS(conn *websocket.Conn) *Message {
 	}
 	h.l.Info("Extracted values", zap.String("task", msg.task), zap.String("parameter", msg.parameter))
 	return &msg
-}
-
-func (h *HttpServer) startTest(client *Client, parameter string) {
-	var messageInt int
-	var err error
-
-	// If no parameter is provided, send the list of sequences to the client.
-	if parameter == "" {
-		sequencesJSON, _ := json.Marshal(h.sequences)
-		if err := client.conn.WriteMessage(websocket.TextMessage, sequencesJSON); err != nil {
-			h.l.Error("Write error", zap.Error(err))
-			return
-		}
-	} else {
-		// If a parameter is provided, convert it to an integer.
-		messageInt, err = strconv.Atoi(string(parameter))
-		if err != nil {
-			h.l.Error("The message is not an integer.", zap.Error(err))
-			return
-		}
-	}
-
-	var httpCode string
-	if sequence, ok := h.sequences[messageInt]; ok {
-		newTestID := uuid.New()
-		// Add test to client test list
-		queuePosition := (<-h.status).QueueLength
-		client.addTestToQueue(queuePosition, newTestID)
-		// Send start signal
-		h.start <- orchestrator.StartSignal{
-			TestId:   newTestID,
-			Seq:      sequence,
-			Metadata: nil,
-		}
-		httpCode = http.StatusText(http.StatusOK)
-	} else {
-		httpCode = http.StatusText(http.StatusBadRequest)
-	}
-	httpCodeJSON, _ := json.Marshal(httpCode)
-	client.conn.WriteMessage(websocket.TextMessage, httpCodeJSON)
 }
 
 func (h *HttpServer) startServer() {

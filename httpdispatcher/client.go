@@ -23,11 +23,25 @@ func NewClient(conn *websocket.Conn) *Client {
 	}
 }
 
-func (c *Client) addTestToQueue(queueNumber int, testID uuid.UUID) {
+func (c *Client) addTest(queueNumber int, testID uuid.UUID) {
 	//add queuenumber and testID to testQueue
 	newItem := TestQueueItem{
 		queueNumber: queueNumber,
 		UUID:        testID,
 	}
 	c.testQueue = append(c.testQueue, newItem)
+}
+
+func (c *Client) removeTest(testIndex int) {
+	c.testQueue = append(c.testQueue[:testIndex], c.testQueue[testIndex+1:]...)
+}
+
+func (c *Client) updateTests() {
+	for i := range c.testQueue {
+		if c.testQueue[i].queueNumber > 0 {
+			c.testQueue[i].queueNumber -= 1
+		} else {
+			c.removeTest(i)
+		}
+	}
 }
