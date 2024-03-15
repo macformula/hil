@@ -41,12 +41,12 @@ func (c *Client) removeTest(testIndex int) {
 	c.testQueue = append(c.testQueue[:testIndex], c.testQueue[testIndex+1:]...)
 }
 
-func (c *Client) updateTests() {
-	for i := range c.testQueue {
-		if c.testQueue[i].queueNumber > 0 {
-			c.testQueue[i].queueNumber -= 1
-		} else {
-			c.removeTest(i)
-		}
-	}
-}
+// func (c *Client) updateTests() {
+// 	for i := range c.testQueue {
+// 		if c.testQueue[i].queueNumber > 0 {
+// 			c.testQueue[i].queueNumber -= 1
+// 		} else {
+// 			c.removeTest(i)
+// 		}
+// 	}
+// }

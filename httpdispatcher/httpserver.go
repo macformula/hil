@@ -188,18 +188,21 @@ func (h *HttpServer) startClientTest(client *Client, parameter string) {
 	if sequence, ok := h.sequences[messageInt]; ok {
 		// Send start signal
 		newTestID := uuid.New()
-		// Add test to client test list
-		queuePosition := (<-client.status).QueueLength
-		client.addTest(queuePosition, newTestID)
 		h.start <- orchestrator.StartSignal{
 			TestId:   newTestID,
 			Seq:      sequence,
 			Metadata: nil,
 		}
+		// Add test to client test list
+		queuePosition := (<-client.status).QueueLength - 1
+		client.addTest(queuePosition, newTestID)
+
 		// Send queue position and new test ID
-		client.conn.WriteMessage(websocket.TextMessage, []byte(strconv.Itoa(queuePosition)+", "+newTestID.String()))
+		testData, _ := json.Marshal(strconv.Itoa(queuePosition) + ", " + newTestID.String())
+		client.conn.WriteMessage(websocket.TextMessage, testData)
 	} else {
-		client.conn.WriteMessage(websocket.TextMessage, []byte(string(http.StatusBadRequest)))
+		badRequest, _ := json.Marshal(http.StatusBadRequest)
+		client.conn.WriteMessage(websocket.TextMessage, badRequest)
 	}
 }
 
@@ -247,7 +250,7 @@ func (h *HttpServer) readWS(conn *websocket.Conn) *Message {
 		h.l.Error("JSON Unmarshal error", zap.Error(err))
 		return nil
 	}
-	conn.WriteMessage(websocket.TextMessage, []byte(msg.Task))
+	conn.WriteMessage(websocket.TextMessage, []byte(msg.Parameter))
 	h.l.Info("Extracted values", zap.String("task", msg.Task), zap.String("parameter", msg.Parameter))
 	return &msg
 }
