@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	// "github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/event"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/macformula/hil/flow"
@@ -36,6 +36,8 @@ type HttpServer struct {
 	recoverFromFatal chan orchestrator.RecoverFromFatalSignal
 	shutdown         chan orchestrator.ShutdownSignal
 	sequences        map[int]flow.Sequence
+	statusFeed       event.Feed
+	resultsFeed      event.Feed
 }
 
 func NewHttpServer(l *zap.Logger) *HttpServer {
@@ -47,6 +49,8 @@ func NewHttpServer(l *zap.Logger) *HttpServer {
 		cancelTest:       make(chan orchestrator.CancelTestSignal),
 		recoverFromFatal: make(chan orchestrator.RecoverFromFatalSignal),
 		shutdown:         make(chan orchestrator.ShutdownSignal),
+		statusFeed:       event.Feed{},
+		resultsFeed:      event.Feed{},
 	}
 }
 
@@ -103,9 +107,9 @@ func (h *HttpServer) Results() chan<- orchestrator.ResultsSignal {
 	return h.results
 }
 
-// func (h *HttpServer) SubscribeToProgress(progressChan chan orchestrator.StatusSignal, resultsChan chan orchestrator.ResultsSignal) (progressSub event.Subscription, resultSub event.Subscription) {
-// 	return h.statusFeed.Subscribe(progressChan), h.resultsFeed.Subscribe(resultsChan) // TODO make results/status feed - update in monitordispatcher
-// }
+func (h *HttpServer) SubscribeToFeeds(progressChan chan orchestrator.StatusSignal, resultsChan chan orchestrator.ResultsSignal) (progressSub event.Subscription, resultSub event.Subscription) {
+	return h.statusFeed.Subscribe(progressChan), h.resultsFeed.Subscribe(resultsChan) // TODO make results/status feed - update in monitordispatcher
+}
 
 // upgrade from http to websocket
 var upgrader = websocket.Upgrader{
@@ -133,16 +137,19 @@ func (h *HttpServer) createWS(w http.ResponseWriter, r *http.Request) *websocket
 	return conn
 }
 
+// Websocket endpoints
 func (h *HttpServer) setupServer() {
 	http.HandleFunc("/test", h.serveTest) // start/sequences - cancel - recover
-	// http.HandleFunc("/sequences", h.serveSequences) - remove later
 	// http.HandleFunc("/status", h.serveStatus)
 }
 
 func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 	conn := h.createWS(w, r)
 	client := NewClient(conn)
-	defer conn.Close()
+	progressSub, resultsSub := h.SubscribeToFeeds(client.status, client.results)
+	defer client.conn.Close()
+	defer progressSub.Unsubscribe()
+	defer resultsSub.Unsubscribe()
 
 	for {
 		msg := h.readWS(conn)
@@ -178,24 +185,22 @@ func (h *HttpServer) startClientTest(client *Client, parameter string) {
 		}
 	}
 
-	var httpCode string
 	if sequence, ok := h.sequences[messageInt]; ok {
 		// Send start signal
 		newTestID := uuid.New()
 		// Add test to client test list
-		queuePosition := (<-h.status).QueueLength // replace this line with subscription
+		queuePosition := (<-client.status).QueueLength
 		client.addTest(queuePosition, newTestID)
 		h.start <- orchestrator.StartSignal{
 			TestId:   newTestID,
 			Seq:      sequence,
 			Metadata: nil,
 		}
-		httpCode = http.StatusText(http.StatusOK)
+		// Send queue position and new test ID
+		client.conn.WriteMessage(websocket.TextMessage, []byte(strconv.Itoa(queuePosition)+", "+newTestID.String()))
 	} else {
-		httpCode = http.StatusText(http.StatusBadRequest)
+		client.conn.WriteMessage(websocket.TextMessage, []byte(string(http.StatusBadRequest)))
 	}
-	httpCodeJSON, _ := json.Marshal(httpCode)
-	client.conn.WriteMessage(websocket.TextMessage, httpCodeJSON)
 }
 
 func (h *HttpServer) cancelClientTest(client *Client, parameter string) {
@@ -264,8 +269,9 @@ func (h *HttpServer) closeServer() error {
 func (h *HttpServer) monitorDispatcher(ctx context.Context) {
 	for {
 		select {
-		case <-h.status:
+		case stats := <-h.status:
 			h.l.Info("status signal received")
+			h.statusFeed.Send(stats)
 
 		case <-h.results:
 			h.l.Info("results signal received")

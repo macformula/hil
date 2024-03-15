@@ -3,6 +3,7 @@ package httpdispatcher
 import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/macformula/hil/orchestrator"
 )
 
 type TestQueueItem struct {
@@ -13,6 +14,8 @@ type TestQueueItem struct {
 type Client struct {
 	conn      *websocket.Conn
 	testQueue []TestQueueItem
+	status    chan orchestrator.StatusSignal
+	results   chan orchestrator.ResultsSignal
 }
 
 func NewClient(conn *websocket.Conn) *Client {
@@ -20,6 +23,8 @@ func NewClient(conn *websocket.Conn) *Client {
 		conn: conn,
 		// testQueue: make(chan TestQueueItem, 10),
 		testQueue: make([]TestQueueItem, 0),
+		status:    make(chan orchestrator.StatusSignal),
+		results:   make(chan orchestrator.ResultsSignal),
 	}
 }
 
