@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	// "github.com/ethereum/go-ethereum/event"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/macformula/hil/flow"
@@ -102,6 +103,10 @@ func (h *HttpServer) Results() chan<- orchestrator.ResultsSignal {
 	return h.results
 }
 
+// func (h *HttpServer) SubscribeToProgress(progressChan chan orchestrator.StatusSignal, resultsChan chan orchestrator.ResultsSignal) (progressSub event.Subscription, resultSub event.Subscription) {
+// 	return h.statusFeed.Subscribe(progressChan), h.resultsFeed.Subscribe(resultsChan) // TODO make results/status feed - update in monitordispatcher
+// }
+
 // upgrade from http to websocket
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -180,7 +185,7 @@ func (h *HttpServer) startClientTest(client *Client, parameter string) {
 		// Send start signal
 		newTestID := uuid.New()
 		// Add test to client test list
-		queuePosition := (<-h.status).QueueLength
+		queuePosition := (<-h.status).QueueLength // replace this line with subscription
 		client.addTest(queuePosition, newTestID)
 		h.start <- orchestrator.StartSignal{
 			TestId:   newTestID,
