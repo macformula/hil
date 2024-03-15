@@ -16,8 +16,8 @@ import (
 )
 
 type Message struct {
-	task      string
-	parameter string
+	Task      string `json:"task"`
+	Parameter string `json:"parameter"`
 }
 
 // message task values
@@ -147,17 +147,15 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 	for {
 		msg := h.readWS(conn)
 
-		switch msg.task {
+		switch msg.Task {
 		case StartTest:
-			h.startClientTest(client, msg.parameter)
+			h.startClientTest(client, msg.Parameter)
 		case CancelTest:
-			h.cancelClientTest(client, msg.parameter)
+			h.cancelClientTest(client, msg.Parameter)
 		case RecoverFromFatal:
 			// h.recoverTest()
 		}
 	}
-
-	//
 }
 
 func (h *HttpServer) startClientTest(client *Client, parameter string) {
@@ -244,7 +242,8 @@ func (h *HttpServer) readWS(conn *websocket.Conn) *Message {
 		h.l.Error("JSON Unmarshal error", zap.Error(err))
 		return nil
 	}
-	h.l.Info("Extracted values", zap.String("task", msg.task), zap.String("parameter", msg.parameter))
+	conn.WriteMessage(websocket.TextMessage, []byte(msg.Task))
+	h.l.Info("Extracted values", zap.String("task", msg.Task), zap.String("parameter", msg.Parameter))
 	return &msg
 }
 
