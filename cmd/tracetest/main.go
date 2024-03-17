@@ -66,20 +66,6 @@ func main() {
 	}
 
 	// First Test
-	for i := 3; i < 14; i++ {
-		c := can.Frame{
-			ID:         1601,
-			Length:     8,
-			Data:       can.Data{byte(i)},
-			IsRemote:   false,
-			IsExtended: false,
-		}
-		send(tx, c, 1, 10*time.Millisecond)
-	}
-
-	time.Sleep(2 * time.Second)
-
-	// First Test
 	for i := 0; i < 20; i++ {
 		c := can.Frame{
 			ID:         1600,
