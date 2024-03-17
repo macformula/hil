@@ -118,7 +118,7 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 			//creating channel
 			err = w.WriteChannel(&mcap.Channel{
 				ID:    signalID,
-				Topic: "frame-1600",
+				Topic: "frame-" + tempArray[1],
 				//use canclient to find signal name and message name
 				MessageEncoding: "json",
 				SchemaID:        1,
