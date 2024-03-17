@@ -81,7 +81,7 @@ func main() {
 
 	for i := 0; i < 10; i++ {
 		c := can.Frame{
-			ID:         1572,
+			ID:         15,
 			Length:     8,
 			Data:       can.Data{byte(i)},
 			IsRemote:   false,
