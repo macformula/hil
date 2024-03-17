@@ -143,10 +143,10 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 
 		//parsing time from the cached data to set as message timestamp
 		parsedTime, err := time.Parse("15:04:05.0000", tempArray[0])
-		t := uint64(parsedTime.Nanosecond())
-		m.l.Info("Parsed time" + strconv.FormatUint(t, 10))
-		tSeconds := uint64(parsedTime.Second())
-		m.l.Info("Parsed time in seconds" + strconv.FormatUint(tSeconds, 10))
+		tSeconds := uint64(parsedTime.Second()) * 1000000000
+		t := uint64(parsedTime.Nanosecond()) + tSeconds
+		m.l.Info("Parsed time: " + strconv.FormatUint(t, 10) + "\n")
+		//m.l.Info("Parsed time in seconds" + strconv.FormatUint(tSeconds, 10))
 
 		//creating messages
 
