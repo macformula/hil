@@ -66,7 +66,7 @@ func main() {
 	}
 
 	// First Test
-	for i := 0; i < 15; i++ {
+	for i := 0; i < 20; i++ {
 		c := can.Frame{
 			ID:         1600,
 			Length:     8,
