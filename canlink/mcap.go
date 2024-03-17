@@ -140,8 +140,8 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 			fmt.Println("Error marshalling message data into json format:", err)
 			//return (ask about)
 		}
-		message2 := []byte(tempArray[4])
-		m.l.Info("Message2: " + string(message2) + "\n")
+		//message2 := []byte(tempArray[4])
+		//m.l.Info("Message2: " + string(message2) + "\n")
 
 		//parsing time from the cached data to set as message timestamp
 		parsedTime, err := time.Parse("15:04:05.0000", tempArray[0])
