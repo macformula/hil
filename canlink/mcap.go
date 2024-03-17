@@ -1,6 +1,7 @@
 package canlink
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/foxglove/mcap/go/mcap"
 	"github.com/pkg/errors"
@@ -134,12 +135,13 @@ func (m *Mcap) dumpToFile(file *os.File) error {
 		}
 
 		//taking message from cachedData and marshaling (will be replaced with canclient implementation)
-		//message, err := json.Marshal(tempArray[4]) // Might be an issue with how this is being processed
-		message := []byte(tempArray[4])
-		//if err != nil {
-		//fmt.Println("Error marshalling message data into json format:", err)
-		//return (ask about)
-		//}
+		message, err := json.Marshal(tempArray[4]) // Might be an issue with how this is being processed
+		if err != nil {
+			fmt.Println("Error marshalling message data into json format:", err)
+			//return (ask about)
+		}
+		message2 := []byte(tempArray[4])
+		m.l.Info("Message2: " + string(message2) + "\n")
 
 		//parsing time from the cached data to set as message timestamp
 		parsedTime, err := time.Parse("15:04:05.0000", tempArray[0])
