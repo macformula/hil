@@ -107,10 +107,6 @@ func (h *HttpServer) Results() chan<- orchestrator.ResultsSignal {
 	return h.results
 }
 
-func (h *HttpServer) SubscribeToFeeds(progressChan chan orchestrator.StatusSignal, resultsChan chan orchestrator.ResultsSignal) (progressSub event.Subscription, resultSub event.Subscription) {
-	return h.statusFeed.Subscribe(progressChan), h.resultsFeed.Subscribe(resultsChan) // TODO make results/status feed - update in monitordispatcher
-}
-
 // upgrade from http to websocket
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -137,10 +133,14 @@ func (h *HttpServer) createWS(w http.ResponseWriter, r *http.Request) *websocket
 	return conn
 }
 
+func (h *HttpServer) SubscribeToFeeds(progressChan chan orchestrator.StatusSignal, resultsChan chan orchestrator.ResultsSignal) (progressSub event.Subscription, resultSub event.Subscription) {
+	return h.statusFeed.Subscribe(progressChan), h.resultsFeed.Subscribe(resultsChan) // TODO make results/status feed - update in monitordispatcher
+}
+
 // Websocket endpoints
 func (h *HttpServer) setupServer() {
 	http.HandleFunc("/test", h.serveTest) // start/sequences - cancel - recover
-	// http.HandleFunc("/status", h.serveStatus)
+	http.HandleFunc("/status", h.serveStatus)
 }
 
 func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
@@ -164,6 +164,24 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 			h.cancelClientTest(client, msg.Parameter)
 		case RecoverFromFatal:
 			h.recoverClientFromFatal(client)
+		}
+	}
+}
+
+func (h *HttpServer) serveStatus(w http.ResponseWriter, r *http.Request) {
+	conn := h.createWS(w, r)
+	client := NewClient(conn)
+	progressSub, resultsSub := h.SubscribeToFeeds(client.status, client.results)
+	
+	defer client.conn.Close()
+	defer progressSub.Unsubscribe()
+	defer resultsSub.Unsubscribe()
+
+	for {
+		select {
+		case currentStatus := <- client.status:
+			currentStatusJSON, _ := json.Marshal(currentStatus)
+			client.conn.WriteMessage(websocket.TextMessage, currentStatusJSON)
 		}
 	}
 }
