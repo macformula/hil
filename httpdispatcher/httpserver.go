@@ -147,6 +147,9 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 	conn := h.createWS(w, r)
 	client := NewClient(conn)
 	progressSub, resultsSub := h.SubscribeToFeeds(client.status, client.results)
+
+	go client.updateTests()
+
 	defer client.conn.Close()
 	defer progressSub.Unsubscribe()
 	defer resultsSub.Unsubscribe()
@@ -160,7 +163,7 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 		case CancelTest:
 			h.cancelClientTest(client, msg.Parameter)
 		case RecoverFromFatal:
-			// h.recoverTest()
+			h.recoverClientFromFatal(client)
 		}
 	}
 }
@@ -194,7 +197,7 @@ func (h *HttpServer) startClientTest(client *Client, parameter string) {
 			Metadata: nil,
 		}
 		// Add test to client test list
-		queuePosition := (<-client.status).QueueLength - 1
+		queuePosition := (<-client.status).QueueLength
 		client.addTest(queuePosition, newTestID)
 
 		// Send queue position and new test ID
@@ -239,6 +242,11 @@ func (h *HttpServer) cancelClientTest(client *Client, parameter string) {
 	client.conn.WriteMessage(websocket.TextMessage, httpCodeJSON)
 }
 
+func (h *HttpServer) recoverClientFromFatal(client *Client) {
+	h.recoverFromFatal <- orchestrator.RecoverFromFatalSignal{}
+	client.conn.WriteMessage(websocket.TextMessage, []byte{http.StatusOK})
+}
+
 func (h *HttpServer) readWS(conn *websocket.Conn) *Message {
 	_, message, err := conn.ReadMessage()
 	if err != nil {
@@ -250,7 +258,6 @@ func (h *HttpServer) readWS(conn *websocket.Conn) *Message {
 		h.l.Error("JSON Unmarshal error", zap.Error(err))
 		return nil
 	}
-	conn.WriteMessage(websocket.TextMessage, []byte(msg.Parameter))
 	h.l.Info("Extracted values", zap.String("task", msg.Task), zap.String("parameter", msg.Parameter))
 	return &msg
 }
@@ -274,11 +281,11 @@ func (h *HttpServer) monitorDispatcher(ctx context.Context) {
 		select {
 		case stats := <-h.status:
 			h.l.Info("status signal received")
-			h.statusFeed.Send(stats)
+		    h.statusFeed.Send(stats)
 
-		case <-h.results:
+		case res := <-h.results:
 			h.l.Info("results signal received")
-
+			h.resultsFeed.Send(res)
 		case <-ctx.Done():
 			h.l.Info("context done signal received")
 

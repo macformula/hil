@@ -1,6 +1,8 @@
 package httpdispatcher
 
 import (
+	"encoding/json"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/macformula/hil/orchestrator"
@@ -41,12 +43,18 @@ func (c *Client) removeTest(testIndex int) {
 	c.testQueue = append(c.testQueue[:testIndex], c.testQueue[testIndex+1:]...)
 }
 
-// func (c *Client) updateTests() {
-// 	for i := range c.testQueue {
-// 		if c.testQueue[i].queueNumber > 0 {
-// 			c.testQueue[i].queueNumber -= 1
-// 		} else {
-// 			c.removeTest(i)
-// 		}
-// 	}
-// }
+func (c *Client) updateTests() {
+	select {
+	case <-c.results:
+		// Update queue position of client tests
+		for i := range c.testQueue {
+			if c.testQueue[i].queueNumber > 0 {
+				c.testQueue[i].queueNumber -= 1
+			} else {
+				c.removeTest(i)
+			}
+		}
+		queueData, _ := json.Marshal(c.testQueue)
+		c.conn.WriteMessage(websocket.TextMessage, queueData)
+	}
+}
