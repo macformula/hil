@@ -1,21 +1,60 @@
 package httpdispatcher
 
 import (
+	"encoding/json"
+
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/macformula/hil/orchestrator"
 )
 
-// WebSocket client connection
-type Client struct {
-	Conn           *websocket.Conn // The WebSocket connection
-	Send           chan []byte     // Channel for outgoing messages
-	receiveHandler func([]byte)    // Handler for processing received messages
-	errchannel     chan error
+type TestQueueItem struct {
+	queueNumber int
+	UUID        uuid.UUID
 }
 
-func NewClient(conn *websocket.Conn, receiveHandler func([]byte)) *Client {
+type Client struct {
+	conn      *websocket.Conn
+	testQueue []TestQueueItem
+	status    chan orchestrator.StatusSignal
+	results   chan orchestrator.ResultsSignal
+}
+
+func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
-		Conn:           conn,
-		Send:           make(chan []byte, 256), // Buffered channel for outgoing messages
-		receiveHandler: receiveHandler,
+		conn: conn,
+		// testQueue: make(chan TestQueueItem, 10),
+		testQueue: make([]TestQueueItem, 0),
+		status:    make(chan orchestrator.StatusSignal),
+		results:   make(chan orchestrator.ResultsSignal),
+	}
+}
+
+func (c *Client) addTest(queueNumber int, testID uuid.UUID) {
+	//add queuenumber and testID to testQueue
+	newItem := TestQueueItem{
+		queueNumber: queueNumber,
+		UUID:        testID,
+	}
+	c.testQueue = append(c.testQueue, newItem)
+}
+
+func (c *Client) removeTest(testIndex int) {
+	c.testQueue = append(c.testQueue[:testIndex], c.testQueue[testIndex+1:]...)
+}
+
+func (c *Client) updateTests() {
+	select {
+	case <-c.results:
+		// Update queue position of client tests
+		for i := range c.testQueue {
+			if c.testQueue[i].queueNumber > 0 {
+				c.testQueue[i].queueNumber -= 1
+			} else {
+				c.removeTest(i)
+			}
+		}
+		queueData, _ := json.Marshal(c.testQueue)
+		c.conn.WriteMessage(websocket.TextMessage, queueData)
 	}
 }
