@@ -29,8 +29,7 @@ func NewIOControl(
 	io := &IOControl{
 		sg: nil,
 		rp: nil,
-
-		l: l.Named(_loggerName),
+		l:  l.Named(_loggerName),
 	}
 
 	for _, o := range opts {
@@ -55,18 +54,18 @@ func WithRaspi(rp *raspi.Controller) IOControlOption {
 }
 
 // SetDigital sets an output digital pin for a specified pin
-func (I *IOControl) SetDigital(output DigitalPin, b bool) error {
-	switch t := output.(type) {
+func (io *IOControl) SetDigital(output DigitalPin, b bool) error {
+	switch pin := output.(type) {
 	case *speedgoat.DigitalPin:
-		if I.sg != nil {
-			err := I.sg.SetDigital(t, b)
+		if io.sg != nil {
+			err := io.sg.SetDigital(pin, b)
 			if err != nil {
 				return err
 			}
 		}
 	case *raspi.DigitalPin:
-		if I.rp != nil {
-			err := I.rp.SetDigital(t, b)
+		if io.rp != nil {
+			err := io.rp.SetDigital(pin, b)
 			if err != nil {
 				return err
 			}
@@ -76,21 +75,20 @@ func (I *IOControl) SetDigital(output DigitalPin, b bool) error {
 }
 
 // ReadDigital reads an input digital pin for a specified pin
-func (I *IOControl) ReadDigital(output DigitalPin) (bool, error) {
-
+func (io *IOControl) ReadDigital(input DigitalPin) (bool, error) {
 	var lvl bool
 
-	switch t := output.(type) {
+	switch pin := input.(type) {
 	case *speedgoat.DigitalPin:
-		if I.sg != nil {
-			lvl, err := I.sg.ReadDigital(t)
+		if io.sg != nil {
+			lvl, err := io.sg.ReadDigital(pin)
 			if err != nil {
 				return lvl, err
 			}
 		}
 	case *raspi.DigitalPin:
-		if I.rp != nil {
-			lvl, err := I.rp.ReadDigital(t)
+		if io.rp != nil {
+			lvl, err := io.rp.ReadDigital(pin)
 			if err != nil {
 				return lvl, err
 			}
@@ -100,18 +98,18 @@ func (I *IOControl) ReadDigital(output DigitalPin) (bool, error) {
 }
 
 // WriteVoltage sets a voltage for a specified output analog pin
-func (I *IOControl) WriteVoltage(output AnalogPin, voltage float64) error {
-	switch t := output.(type) {
+func (io *IOControl) WriteVoltage(output AnalogPin, voltage float64) error {
+	switch pin := output.(type) {
 	case *speedgoat.AnalogPin:
-		if I.sg != nil {
-			err := I.sg.WriteVoltage(t, voltage)
+		if io.sg != nil {
+			err := io.sg.WriteVoltage(pin, voltage)
 			if err != nil {
 				return err
 			}
 		}
 	case *raspi.AnalogPin:
-		if I.rp != nil {
-			err := I.rp.WriteVoltage(t, voltage)
+		if io.rp != nil {
+			err := io.rp.WriteVoltage(pin, voltage)
 			if err != nil {
 				return err
 			}
@@ -121,21 +119,20 @@ func (I *IOControl) WriteVoltage(output AnalogPin, voltage float64) error {
 }
 
 // ReadVoltage returns the voltage of a specified input analog pin
-func (I *IOControl) ReadVoltage(output AnalogPin) (float64, error) {
-
+func (io *IOControl) ReadVoltage(input AnalogPin) (float64, error) {
 	var voltage float64
 
-	switch t := output.(type) {
+	switch pin := input.(type) {
 	case *speedgoat.AnalogPin:
-		if I.sg != nil {
-			voltage, err := I.sg.ReadVoltage(t)
+		if io.sg != nil {
+			voltage, err := io.sg.ReadVoltage(pin)
 			if err != nil {
 				return voltage, err
 			}
 		}
 	case *raspi.AnalogPin:
-		if I.rp != nil {
-			voltage, err := I.rp.ReadVoltage(t)
+		if io.rp != nil {
+			voltage, err := io.rp.ReadVoltage(pin)
 			if err != nil {
 				return voltage, err
 			}
@@ -145,18 +142,18 @@ func (I *IOControl) ReadVoltage(output AnalogPin) (float64, error) {
 }
 
 // WriteCurrent sets the current of a specified output analog pin
-func (I *IOControl) WriteCurrent(output AnalogPin, current float64) error {
-	switch t := output.(type) {
+func (io *IOControl) WriteCurrent(output AnalogPin, current float64) error {
+	switch pin := output.(type) {
 	case *speedgoat.AnalogPin:
-		if I.sg != nil {
-			err := I.sg.WriteCurrent(t, current)
+		if io.sg != nil {
+			err := io.sg.WriteCurrent(pin, current)
 			if err != nil {
 				return err
 			}
 		}
 	case *raspi.AnalogPin:
-		if I.rp != nil {
-			err := I.rp.WriteCurrent(t, current)
+		if io.rp != nil {
+			err := io.rp.WriteCurrent(pin, current)
 			if err != nil {
 				return err
 			}
@@ -166,21 +163,20 @@ func (I *IOControl) WriteCurrent(output AnalogPin, current float64) error {
 }
 
 // ReadCurrent returns the current of a specified input analog pin
-func (I *IOControl) ReadCurrent(output AnalogPin) (float64, error) {
-
+func (io *IOControl) ReadCurrent(input AnalogPin) (float64, error) {
 	var current float64
 
-	switch t := output.(type) {
+	switch pin := input.(type) {
 	case *speedgoat.AnalogPin:
-		if I.sg != nil {
-			current, err := I.sg.ReadCurrent(t)
+		if io.sg != nil {
+			current, err := io.sg.ReadCurrent(pin)
 			if err != nil {
 				return current, err
 			}
 		}
 	case *raspi.AnalogPin:
-		if I.rp != nil {
-			current, err := I.rp.ReadCurrent(t)
+		if io.rp != nil {
+			current, err := io.rp.ReadCurrent(pin)
 			if err != nil {
 				return current, err
 			}
