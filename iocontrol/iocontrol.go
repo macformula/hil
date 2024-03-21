@@ -63,6 +63,8 @@ func (io *IOControl) SetDigital(output DigitalPin, b bool) error {
 			if err != nil {
 				return errors.Wrap(err, "set digital")
 			}
+		} else {
+			return errors.New("speedgoat target is nil")
 		}
 	case *raspi.DigitalPin:
 		if io.rp != nil {
@@ -70,6 +72,8 @@ func (io *IOControl) SetDigital(output DigitalPin, b bool) error {
 			if err != nil {
 				return errors.Wrap(err, "set digital")
 			}
+		} else {
+			return errors.New("raspi target is nil")
 		}
 	}
 	return nil
@@ -86,6 +90,8 @@ func (io *IOControl) ReadDigital(input DigitalPin) (bool, error) {
 			if err != nil {
 				return lvl, errors.Wrap(err, "read digital")
 			}
+		} else {
+			return lvl, errors.New("speedgoat target is nil")
 		}
 	case *raspi.DigitalPin:
 		if io.rp != nil {
@@ -93,6 +99,8 @@ func (io *IOControl) ReadDigital(input DigitalPin) (bool, error) {
 			if err != nil {
 				return lvl, errors.Wrap(err, "read digital")
 			}
+		} else {
+			return lvl, errors.New("raspi target is nil")
 		}
 	}
 	return lvl, nil
@@ -107,6 +115,8 @@ func (io *IOControl) WriteVoltage(output AnalogPin, voltage float64) error {
 			if err != nil {
 				return errors.Wrap(err, "write voltage")
 			}
+		} else {
+			return errors.New("speedgoat target is nil")
 		}
 	case *raspi.AnalogPin:
 		if io.rp != nil {
@@ -114,6 +124,8 @@ func (io *IOControl) WriteVoltage(output AnalogPin, voltage float64) error {
 			if err != nil {
 				return errors.Wrap(err, "write voltage")
 			}
+		} else {
+			return errors.New("raspi target is nil")
 		}
 	}
 	return nil
@@ -130,6 +142,8 @@ func (io *IOControl) ReadVoltage(input AnalogPin) (float64, error) {
 			if err != nil {
 				return voltage, errors.Wrap(err, "read voltage")
 			}
+		} else {
+			return voltage, errors.New("speedgoat target is nil")
 		}
 	case *raspi.AnalogPin:
 		if io.rp != nil {
@@ -137,6 +151,8 @@ func (io *IOControl) ReadVoltage(input AnalogPin) (float64, error) {
 			if err != nil {
 				return voltage, errors.Wrap(err, "read voltage")
 			}
+		} else {
+			return voltage, errors.New("raspi target is nil")
 		}
 	}
 	return voltage, nil
@@ -151,6 +167,8 @@ func (io *IOControl) WriteCurrent(output AnalogPin, current float64) error {
 			if err != nil {
 				return errors.Wrap(err, "write current")
 			}
+		} else {
+			return errors.New("speedgoat target is nil")
 		}
 	case *raspi.AnalogPin:
 		if io.rp != nil {
@@ -158,6 +176,8 @@ func (io *IOControl) WriteCurrent(output AnalogPin, current float64) error {
 			if err != nil {
 				return errors.Wrap(err, "write current")
 			}
+		} else {
+			errors.New("raspi target is nil")
 		}
 	}
 	return nil
@@ -174,6 +194,8 @@ func (io *IOControl) ReadCurrent(input AnalogPin) (float64, error) {
 			if err != nil {
 				return current, errors.Wrap(err, "read current")
 			}
+		} else {
+			return current, errors.New("speedgoat target is nil")
 		}
 	case *raspi.AnalogPin:
 		if io.rp != nil {
@@ -181,6 +203,8 @@ func (io *IOControl) ReadCurrent(input AnalogPin) (float64, error) {
 			if err != nil {
 				return current, errors.Wrap(err, "read current")
 			}
+		} else {
+			return current, errors.New("raspi target is nil")
 		}
 	}
 	return current, nil
