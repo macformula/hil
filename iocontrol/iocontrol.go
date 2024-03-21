@@ -1,6 +1,7 @@
 package iocontrol
 
 import (
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
 	"github.com/macformula/hil/iocontrol/raspi"
@@ -60,14 +61,14 @@ func (io *IOControl) SetDigital(output DigitalPin, b bool) error {
 		if io.sg != nil {
 			err := io.sg.SetDigital(pin, b)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "set digital")
 			}
 		}
 	case *raspi.DigitalPin:
 		if io.rp != nil {
 			err := io.rp.SetDigital(pin, b)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "set digital")
 			}
 		}
 	}
@@ -83,14 +84,14 @@ func (io *IOControl) ReadDigital(input DigitalPin) (bool, error) {
 		if io.sg != nil {
 			lvl, err := io.sg.ReadDigital(pin)
 			if err != nil {
-				return lvl, err
+				return lvl, errors.Wrap(err, "read digital")
 			}
 		}
 	case *raspi.DigitalPin:
 		if io.rp != nil {
 			lvl, err := io.rp.ReadDigital(pin)
 			if err != nil {
-				return lvl, err
+				return lvl, errors.Wrap(err, "read digital")
 			}
 		}
 	}
@@ -104,14 +105,14 @@ func (io *IOControl) WriteVoltage(output AnalogPin, voltage float64) error {
 		if io.sg != nil {
 			err := io.sg.WriteVoltage(pin, voltage)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "write voltage")
 			}
 		}
 	case *raspi.AnalogPin:
 		if io.rp != nil {
 			err := io.rp.WriteVoltage(pin, voltage)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "write voltage")
 			}
 		}
 	}
@@ -127,14 +128,14 @@ func (io *IOControl) ReadVoltage(input AnalogPin) (float64, error) {
 		if io.sg != nil {
 			voltage, err := io.sg.ReadVoltage(pin)
 			if err != nil {
-				return voltage, err
+				return voltage, errors.Wrap(err, "read voltage")
 			}
 		}
 	case *raspi.AnalogPin:
 		if io.rp != nil {
 			voltage, err := io.rp.ReadVoltage(pin)
 			if err != nil {
-				return voltage, err
+				return voltage, errors.Wrap(err, "read voltage")
 			}
 		}
 	}
@@ -148,14 +149,14 @@ func (io *IOControl) WriteCurrent(output AnalogPin, current float64) error {
 		if io.sg != nil {
 			err := io.sg.WriteCurrent(pin, current)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "write current")
 			}
 		}
 	case *raspi.AnalogPin:
 		if io.rp != nil {
 			err := io.rp.WriteCurrent(pin, current)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "write current")
 			}
 		}
 	}
@@ -171,14 +172,14 @@ func (io *IOControl) ReadCurrent(input AnalogPin) (float64, error) {
 		if io.sg != nil {
 			current, err := io.sg.ReadCurrent(pin)
 			if err != nil {
-				return current, err
+				return current, errors.Wrap(err, "read current")
 			}
 		}
 	case *raspi.AnalogPin:
 		if io.rp != nil {
 			current, err := io.rp.ReadCurrent(pin)
 			if err != nil {
-				return current, err
+				return current, errors.Wrap(err, "read current")
 			}
 		}
 	}
