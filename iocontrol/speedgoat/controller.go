@@ -1,6 +1,9 @@
 package speedgoat
 
-import "go.uber.org/zap"
+import (
+	"go.uber.org/zap"
+	"net"
+)
 
 const (
 	_digitalPinCount   = 16
@@ -12,10 +15,12 @@ const (
 
 // Controller provides control for various Speedgoat pins
 type Controller struct {
+	ip   net.IP
+	port int
+	l    *zap.Logger
+
 	digital [_digitalPinCount]bool
 	analog  [_analogPinCount]float64
-
-	l *zap.Logger
 }
 
 // NewController returns a new Speedgoat controller
@@ -59,4 +64,13 @@ func (c *Controller) WriteCurrent(output *AnalogPin, current float64) error {
 // ReadCurrent returns the current of a Speedgoat analog pin
 func (c *Controller) ReadCurrent(output *AnalogPin) (float64, error) {
 	return 0.00, nil
+}
+
+func (c *Controller) tickOutputs() {
+	// call a pack function for the digital and analog arrays here, transmit every 10 milliseconds
+}
+
+func (c *Controller) tickInputs() {
+	// call unpack here on digital and analog arrays, receive every 10 milliseconds
+	// if we have not received a tcp packet in over a second, error out
 }
