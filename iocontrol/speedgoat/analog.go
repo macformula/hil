@@ -1,7 +1,17 @@
 package speedgoat
 
 // AnalogPin defines an analog pin for the Raspberry Pi
-type AnalogPin struct{}
+type AnalogPin struct {
+	Index uint8
+}
+
+func NewAnalogPin(idx uint8) *AnalogPin {
+	pin := AnalogPin{
+		Index: idx,
+	}
+
+	return &pin
+}
 
 // String returns the pin type
 func (d *AnalogPin) String() string {

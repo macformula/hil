@@ -1,12 +1,29 @@
 package speedgoat
 
+import "go.uber.org/zap"
+
+const (
+	_digitalPinCount   = 16
+	_analogOutputCount = 4
+	_analogInputCount  = 8
+	_analogPinCount    = 12
+	_loggerName        = "speedgoat_controller"
+)
+
 // Controller provides control for various Speedgoat pins
 type Controller struct {
+	digital [_digitalPinCount]bool
+	analog  [_analogPinCount]float64
+
+	l *zap.Logger
 }
 
 // NewController returns a new Speedgoat controller
-func NewController() *Controller {
-	return nil
+func NewController(l *zap.Logger) *Controller {
+	sg := Controller{
+		l: l,
+	}
+	return &sg
 }
 
 // Open configures the controller
