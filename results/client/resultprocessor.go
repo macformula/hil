@@ -161,9 +161,9 @@ func (r *ResultProcessor) startServer(errCh chan error) {
 
 	r.l.Info("starting results server", zap.String("command", r.serverCmd.String()))
 
-	err := r.serverCmd.Run()
+	out, err := r.serverCmd.Output()
 	if err != nil {
-		errCh <- errors.Wrap(err, "run")
+		errCh <- errors.Wrap(err, "run output: "+string(out))
 	}
 }
 
