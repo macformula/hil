@@ -1,6 +1,6 @@
 package speedgoat
 
-// AnalogPin defines an analog pin for the Raspberry Pi
+// AnalogPin defines an analog pin for the Speedgoat
 type AnalogPin struct {
 	Index uint8
 }

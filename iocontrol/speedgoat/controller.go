@@ -2,11 +2,12 @@ package speedgoat
 
 import (
 	"encoding/binary"
-	"github.com/pkg/errors"
-	"go.uber.org/zap"
 	"math"
 	"net"
 	"time"
+
+	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 const (
@@ -36,7 +37,7 @@ type Controller struct {
 func NewController(l *zap.Logger, address string) *Controller {
 	sg := Controller{
 		addr: address,
-		l:    l,
+		l:    l.Named(_loggerName),
 	}
 	return &sg
 }
@@ -128,14 +129,14 @@ func (c *Controller) tickInputs() {
 		for range ticker.C {
 			data := make([]byte, _digitalPinCount+_analogInputCount*8)
 
-			err := c.conn.SetReadDeadline(time.Now().Add(_tickTime))
+			err := c.conn.SetReadDeadline(time.Now().Add(_readDeadline))
 			if err != nil {
-				c.l.Error("speedgoat controller", zap.Error(errors.Wrap(err, "set read deadline")))
+				c.l.Error("set read deadline", zap.Error(err))
 			}
 
 			_, err = c.conn.Read(data)
 			if err != nil {
-				c.l.Error("speedgoat controller", zap.Error(errors.Wrap(err, "connection read")))
+				c.l.Error("connection read", zap.Error(err))
 			}
 
 			c.unpackInputs(data)

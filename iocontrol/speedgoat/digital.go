@@ -1,6 +1,6 @@
 package speedgoat
 
-// DigitalPin defines a digital pin for the Raspberry Pi
+// DigitalPin defines a digital pin for the Speedgoat
 type DigitalPin struct {
 	Index uint8
 }
