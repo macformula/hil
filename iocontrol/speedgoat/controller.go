@@ -63,6 +63,8 @@ func (c *Controller) Open() error {
 func (c *Controller) Close() error {
 	c.l.Info("closing speedgoat controller")
 
+	c.opened = false
+
 	err := c.conn.Close()
 	if err != nil {
 		return errors.Wrap(err, "close speedgoat connection")
@@ -71,23 +73,23 @@ func (c *Controller) Close() error {
 }
 
 // SetDigital sets an output digital pin for a Speedgoat digital pin.
-func (c *Controller) SetDigital(output *DigitalPin, b bool) error {
-	return nil
+func (c *Controller) SetDigital(output *DigitalPin, b bool) {
+	c.digital[output.Index] = b
 }
 
 // ReadDigital returns the level of a Speedgoat digital pin
-func (c *Controller) ReadDigital(output *DigitalPin) (bool, error) {
-	return false, nil
+func (c *Controller) ReadDigital(output *DigitalPin) bool {
+	return c.digital[output.Index]
 }
 
 // WriteVoltage sets the voltage of a Speedgoat analog pin
-func (c *Controller) WriteVoltage(output *AnalogPin, voltage float64) error {
-	return nil
+func (c *Controller) WriteVoltage(output *AnalogPin, voltage float64) {
+	c.analog[output.Index] = voltage
 }
 
 // ReadVoltage returns the voltage of a Speedgoat analog pin
-func (c *Controller) ReadVoltage(output *AnalogPin) (float64, error) {
-	return 0.00, nil
+func (c *Controller) ReadVoltage(output *AnalogPin) float64 {
+	return c.analog[output.Index]
 }
 
 // WriteCurrent sets the current of a Speedgoat analog pin
