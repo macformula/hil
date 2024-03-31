@@ -143,8 +143,8 @@ func enableCors(w *http.ResponseWriter) {
 
 // Websocket endpoints
 func (h *HttpServer) setupServer() {
-	http.HandleFunc("/test", h.serveTest) // start/sequences - cancel - recover
-	http.HandleFunc("/status", h.serveStatus)
+	//http.HandleFunc("/test", h.serveTest) // start/sequences - cancel - recover
+	//http.HandleFunc("/status", h.serveStatus)
 }
 
 func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
@@ -289,7 +289,10 @@ func (h *HttpServer) readWS(conn *websocket.Conn) *Message {
 func (h *HttpServer) startServer() {
 	addr := ":8080"
 	log.Printf("Starting server on %s\n", addr)
-	err := http.ListenAndServe(addr, nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/test", h.serveTest) // start/sequences - cancel - recover
+	mux.HandleFunc("/status", h.serveStatus)
+	err := http.ListenAndServe(addr, mux)
 	if err != nil {
 		log.Fatalf("Failed to start server: %v\n", err)
 	}
