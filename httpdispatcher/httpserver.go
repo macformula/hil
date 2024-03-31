@@ -137,6 +137,10 @@ func (h *HttpServer) SubscribeToFeeds(progressChan chan orchestrator.StatusSigna
 	return h.statusFeed.Subscribe(progressChan), h.resultsFeed.Subscribe(resultsChan) // TODO make results/status feed - update in monitordispatcher
 }
 
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
+
 // Websocket endpoints
 func (h *HttpServer) setupServer() {
 	http.HandleFunc("/test", h.serveTest) // start/sequences - cancel - recover
@@ -144,6 +148,7 @@ func (h *HttpServer) setupServer() {
 }
 
 func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
 	conn := h.createWS(w, r)
 	client := NewClient(conn)
 	progressSub, resultsSub := h.SubscribeToFeeds(client.status, client.results)
@@ -169,6 +174,7 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HttpServer) serveStatus(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
 	conn := h.createWS(w, r)
 	client := NewClient(conn)
 	progressSub, resultsSub := h.SubscribeToFeeds(client.status, client.results)
