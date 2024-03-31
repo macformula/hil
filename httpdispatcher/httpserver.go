@@ -172,14 +172,14 @@ func (h *HttpServer) serveStatus(w http.ResponseWriter, r *http.Request) {
 	conn := h.createWS(w, r)
 	client := NewClient(conn)
 	progressSub, resultsSub := h.SubscribeToFeeds(client.status, client.results)
-	
+
 	defer client.conn.Close()
 	defer progressSub.Unsubscribe()
 	defer resultsSub.Unsubscribe()
 
 	for {
 		select {
-		case currentStatus := <- client.status:
+		case currentStatus := <-client.status:
 			currentStatusJSON, _ := json.Marshal(currentStatus)
 			client.conn.WriteMessage(websocket.TextMessage, currentStatusJSON)
 		}
@@ -282,8 +282,10 @@ func (h *HttpServer) readWS(conn *websocket.Conn) *Message {
 
 func (h *HttpServer) startServer() {
 	addr := ":8080"
+	keyFile := "/etc/letsencrypt/live/api.macformularacing.com/privkey.pem"
+	certFile := "/etc/letsencrypt/live/api.macformularacing.com/fullchain.pem"
 	log.Printf("Starting server on %s\n", addr)
-	err := http.ListenAndServe(addr, nil)
+	err := http.ListenAndServeTLS(addr, certFile, keyFile, nil)
 	if err != nil {
 		log.Fatalf("Failed to start server: %v\n", err)
 	}
@@ -299,7 +301,7 @@ func (h *HttpServer) monitorDispatcher(ctx context.Context) {
 		select {
 		case stats := <-h.status:
 			h.l.Info("status signal received")
-		    h.statusFeed.Send(stats)
+			h.statusFeed.Send(stats)
 
 		case res := <-h.results:
 			h.l.Info("results signal received")
