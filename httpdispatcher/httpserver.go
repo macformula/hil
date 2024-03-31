@@ -69,7 +69,7 @@ func (h *HttpServer) Open(ctx context.Context, sequences []flow.Sequence) error 
 
 	go h.monitorDispatcher(ctx)
 
-	go h.startServer()
+	go h.StartServer()
 
 	return nil
 }
@@ -286,7 +286,7 @@ func (h *HttpServer) readWS(conn *websocket.Conn) *Message {
 	return &msg
 }
 
-func (h *HttpServer) startServer() {
+func (h *HttpServer) StartServer() {
 	addr := ":8080"
 	log.Printf("Starting server on %s\n", addr)
 	mux := http.NewServeMux()
