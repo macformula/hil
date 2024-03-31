@@ -288,10 +288,8 @@ func (h *HttpServer) readWS(conn *websocket.Conn) *Message {
 
 func (h *HttpServer) startServer() {
 	addr := ":8080"
-	keyFile := "/etc/letsencrypt/live/api.macformularacing.com/privkey.pem"
-	certFile := "/etc/letsencrypt/live/api.macformularacing.com/fullchain.pem"
 	log.Printf("Starting server on %s\n", addr)
-	err := http.ListenAndServeTLS(addr, certFile, keyFile, nil)
+	err := http.ListenAndServe(addr, nil)
 	if err != nil {
 		log.Fatalf("Failed to start server: %v\n", err)
 	}
