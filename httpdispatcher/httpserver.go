@@ -168,8 +168,11 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 	defer resultsSub.Unsubscribe()
 
 	for {
-		msg := h.readWS(conn)
+		msg, err := h.readWS(conn)
 		status := StatusMessage{Code: 200}
+		if err != nil {
+			status.Code = 400
+		}
 
 		switch msg.Task {
 		case StartTest:
@@ -181,6 +184,8 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 		case RecoverFromFatal:
 			h.recoverClientFromFatal(client)
 			status.Message = "Recovered From Fatal"
+		default:
+			status.Message = "Invalid Message Received"
 		}
 
 		jsonString, err := json.Marshal(status)
@@ -292,19 +297,19 @@ func (h *HttpServer) recoverClientFromFatal(client *Client) {
 	client.conn.WriteMessage(websocket.TextMessage, []byte{http.StatusOK})
 }
 
-func (h *HttpServer) readWS(conn *websocket.Conn) *Message {
+func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {
 	_, message, err := conn.ReadMessage()
 	if err != nil {
 		h.l.Error("Read error", zap.Error(err))
-		return nil
+		return &Message{}, err
 	}
 	var msg Message
-	if err := json.Unmarshal(message, &msg); err != nil {
+	if err = json.Unmarshal(message, &msg); err != nil {
 		h.l.Error("JSON Unmarshal error", zap.Error(err))
-		return nil
+		return &Message{}, err
 	}
 	h.l.Info("Extracted values", zap.String("task", msg.Task), zap.String("parameter", msg.Parameter))
-	return &msg
+	return &msg, nil
 }
 
 func (h *HttpServer) closeServer() error {
