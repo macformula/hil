@@ -1,9 +1,8 @@
-package httpdispatcher
+package main
 
 import (
 	"context"
 	"encoding/json"
-	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -19,11 +18,6 @@ import (
 type Message struct {
 	Task      string `json:"task"`
 	Parameter string `json:"parameter"`
-}
-
-type StatusMessage struct {
-	Message string `json:"message"`
-	Code    int    `json:"code"`
 }
 
 // message task values
@@ -67,6 +61,11 @@ func (h *HttpServer) Open(ctx context.Context, sequences []flow.Sequence) error 
 		seqMap[i] = seq
 	}
 	h.sequences = seqMap
+
+	h.setupServer()
+	// if err != nil {
+	// 	return err
+	// }
 
 	go h.monitorDispatcher(ctx)
 
@@ -125,19 +124,6 @@ var upgrader = websocket.Upgrader{
 	// },
 }
 
-func (h *HttpServer) StartServer() {
-	addr := ":8080"
-	log.Printf("Starting server on %s\n", addr)
-	mux := http.NewServeMux()
-	mux.HandleFunc("/test", h.serveTest) // start/sequences - cancel - recover
-	mux.HandleFunc("/status", h.serveStatus)
-
-	err := http.ListenAndServe(addr, mux)
-	if err != nil {
-		log.Fatalf("Failed to start server: %v\n", err)
-	}
-}
-
 func (h *HttpServer) createWS(w http.ResponseWriter, r *http.Request) *websocket.Conn {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -155,6 +141,12 @@ func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
+// Websocket endpoints
+func (h *HttpServer) setupServer() {
+	//http.HandleFunc("/test", h.serveTest) // start/sequences - cancel - recover
+	//http.HandleFunc("/status", h.serveStatus)
+}
+
 func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	conn := h.createWS(w, r)
@@ -168,29 +160,17 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 	defer resultsSub.Unsubscribe()
 
 	for {
-		msg := h.readWS(conn)
-		status := StatusMessage{Code: 200}
+		_, err := h.readWS(conn)
+		if err != nil { // Websocket was closed (or other error)
+			break
+		}
+		println("msg read")
 
-		switch msg.Task {
-		case StartTest:
-			h.startClientTest(client, msg.Parameter)
-			status.Message = "Client Test Started"
-		case CancelTest:
-			h.cancelClientTest(client, msg.Parameter)
-			status.Message = "Client Test Cancelled"
-		case RecoverFromFatal:
-			h.recoverClientFromFatal(client)
-			status.Message = "Recovered From Fatal"
-		}
-
-		jsonString, err := json.Marshal(status)
+		err = conn.WriteMessage(websocket.TextMessage, []byte{100})
 		if err != nil {
-			h.l.Error(err.Error())
+			panic(err)
 		}
-		err = conn.WriteMessage(websocket.TextMessage, jsonString)
-		if err != nil {
-			h.l.Error(errors.Wrap(err, "couldn't send back websocket message").Error())
-		}
+		println("msg write")
 	}
 }
 
@@ -208,7 +188,7 @@ func (h *HttpServer) serveStatus(w http.ResponseWriter, r *http.Request) {
 		select {
 		case currentStatus := <-client.status:
 			currentStatusJSON, _ := json.Marshal(currentStatus)
-			conn.WriteMessage(websocket.TextMessage, currentStatusJSON)
+			client.conn.WriteMessage(websocket.TextMessage, currentStatusJSON)
 		}
 	}
 }
@@ -226,7 +206,7 @@ func (h *HttpServer) startClientTest(client *Client, parameter string) {
 		return
 	} else {
 		// If a parameter is provided, convert it to an integer.
-		messageInt, err = strconv.Atoi(parameter)
+		messageInt, err = strconv.Atoi(string(parameter))
 		if err != nil {
 			h.l.Error("The message is not an integer.", zap.Error(err))
 			return
@@ -292,19 +272,29 @@ func (h *HttpServer) recoverClientFromFatal(client *Client) {
 	client.conn.WriteMessage(websocket.TextMessage, []byte{http.StatusOK})
 }
 
-func (h *HttpServer) readWS(conn *websocket.Conn) *Message {
+func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {
 	_, message, err := conn.ReadMessage()
+	println("ws:" + string(message[:]))
+
 	if err != nil {
 		h.l.Error("Read error", zap.Error(err))
-		return nil
+		return nil, err
 	}
-	var msg Message
-	if err := json.Unmarshal(message, &msg); err != nil {
-		h.l.Error("JSON Unmarshal error", zap.Error(err))
-		return nil
+
+	return nil, nil
+}
+
+func (h *HttpServer) StartServer() {
+	addr := ":8080"
+	log.Printf("Starting server on %s\n", addr)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/test", h.serveTest) // start/sequences - cancel - recover
+	mux.HandleFunc("/status", h.serveStatus)
+
+	err := http.ListenAndServe(addr, mux)
+	if err != nil {
+		log.Fatalf("Failed to start server: %v\n", err)
 	}
-	h.l.Info("Extracted values", zap.String("task", msg.Task), zap.String("parameter", msg.Parameter))
-	return &msg
 }
 
 func (h *HttpServer) closeServer() error {
@@ -329,3 +319,9 @@ func (h *HttpServer) monitorDispatcher(ctx context.Context) {
 		}
 	}
 }
+
+//
+//func main() {
+//	server := NewHttpServer(zap.L())
+//	server.StartServer()
+//}
