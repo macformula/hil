@@ -188,7 +188,7 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 			h.l.Info("serveTest Invalid Message Received")
 			status.Message = "Invalid Message Received"
 		}
-		
+
 		err = conn.WriteJSON(status)
 		if err != nil {
 			h.l.Error(errors.Wrap(err, "couldn't send back websocket message").Error())
@@ -298,12 +298,18 @@ func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {
 	_, message, err := conn.ReadMessage()
 	if err != nil {
 		h.l.Error("Read error", zap.Error(err))
-		return &Message{}, err
+		return &Message{
+			Task:      "",
+			Parameter: "",
+		}, err
 	}
 	var msg Message
 	if err = json.Unmarshal(message, &msg); err != nil {
 		h.l.Error("JSON Unmarshal error", zap.Error(err))
-		return &Message{}, err
+		return &Message{
+			Task:      "",
+			Parameter: "",
+		}, err
 	}
 	h.l.Info("Extracted values", zap.String("task", msg.Task), zap.String("parameter", msg.Parameter))
 	return &msg, nil
