@@ -185,14 +185,11 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 			h.recoverClientFromFatal(client)
 			status.Message = "Recovered From Fatal"
 		default:
+			h.l.Info("serveTest Invalid Message Received")
 			status.Message = "Invalid Message Received"
 		}
-
-		jsonString, err := json.Marshal(status)
-		if err != nil {
-			h.l.Error(err.Error())
-		}
-		err = conn.WriteMessage(websocket.TextMessage, jsonString)
+		
+		err = conn.WriteJSON(status)
 		if err != nil {
 			h.l.Error(errors.Wrap(err, "couldn't send back websocket message").Error())
 		}
