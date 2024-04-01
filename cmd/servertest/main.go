@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/macformula/hil/cli"
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/httpdispatcher"
 	"github.com/macformula/hil/orchestrator"
@@ -35,10 +34,10 @@ func main() {
 		results.WithServerAutoStart(_configPath, _resultServerPath),
 	)
 	sequencer := flow.NewSequencer(resultProcessor, logger)
-	cliDispatcher := cli.NewCliDispatcher(test.Sequences, logger)
+	//cliDispatcher := cli.NewCliDispatcher(test.Sequences, logger)
 	//simpleDispatcher := test.NewSimpleDispatcher(logger, 5*time.Second, 10*time.Second)
 	server := httpdispatcher.NewServerDispatcher(test.Sequences, httpdispatcher.NewHttpServer(logger), logger)
-	o := orchestrator.NewOrchestrator(sequencer, logger, cliDispatcher, server) //cliDispatcher, simpleDispatcher)
+	o := orchestrator.NewOrchestrator(sequencer, logger, server) //cliDispatcher, simpleDispatcher)
 
 	err = o.Open(context.Background())
 	if err != nil {
