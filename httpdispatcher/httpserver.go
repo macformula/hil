@@ -296,6 +296,7 @@ func (h *HttpServer) recoverClientFromFatal(client *Client) {
 
 func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {
 	messageType, message, err := conn.ReadMessage()
+	h.l.Info("Inside readWS")
 	if err != nil {
 		h.l.Error("Read error", zap.Error(err), zap.Any("message", message), zap.Any("messageType", messageType))
 		return &Message{
