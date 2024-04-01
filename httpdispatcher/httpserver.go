@@ -169,7 +169,7 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		msg, err := h.readWS(conn)
-		status := StatusMessage{Code: 200}
+		status := &StatusMessage{Code: 200}
 		if err != nil {
 			status.Code = 400
 		}
@@ -297,7 +297,7 @@ func (h *HttpServer) recoverClientFromFatal(client *Client) {
 func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {
 	_, message, err := conn.ReadMessage()
 	if err != nil {
-		h.l.Error("Read error", zap.Error(err))
+		h.l.Error("Read error", zap.Error(err), zap.Any("", message))
 		return &Message{
 			Task:      "",
 			Parameter: "",
