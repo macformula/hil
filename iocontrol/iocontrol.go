@@ -59,10 +59,7 @@ func (io *IOControl) SetDigital(output DigitalPin, b bool) error {
 	switch pin := output.(type) {
 	case *speedgoat.DigitalPin:
 		if io.sg != nil {
-			err := io.sg.SetDigital(pin, b)
-			if err != nil {
-				return errors.Wrap(err, "set digital")
-			}
+			io.sg.SetDigital(pin, b)
 		} else {
 			return errors.New("speedgoat target is nil")
 		}
@@ -86,10 +83,7 @@ func (io *IOControl) ReadDigital(input DigitalPin) (bool, error) {
 	switch pin := input.(type) {
 	case *speedgoat.DigitalPin:
 		if io.sg != nil {
-			lvl, err := io.sg.ReadDigital(pin)
-			if err != nil {
-				return lvl, errors.Wrap(err, "read digital")
-			}
+			lvl = io.sg.ReadDigital(pin)
 		} else {
 			return lvl, errors.New("speedgoat target is nil")
 		}
@@ -111,10 +105,7 @@ func (io *IOControl) WriteVoltage(output AnalogPin, voltage float64) error {
 	switch pin := output.(type) {
 	case *speedgoat.AnalogPin:
 		if io.sg != nil {
-			err := io.sg.WriteVoltage(pin, voltage)
-			if err != nil {
-				return errors.Wrap(err, "write voltage")
-			}
+			io.sg.WriteVoltage(pin, voltage)
 		} else {
 			return errors.New("speedgoat target is nil")
 		}
@@ -138,10 +129,7 @@ func (io *IOControl) ReadVoltage(input AnalogPin) (float64, error) {
 	switch pin := input.(type) {
 	case *speedgoat.AnalogPin:
 		if io.sg != nil {
-			voltage, err := io.sg.ReadVoltage(pin)
-			if err != nil {
-				return voltage, errors.Wrap(err, "read voltage")
-			}
+			voltage = io.sg.ReadVoltage(pin)
 		} else {
 			return voltage, errors.New("speedgoat target is nil")
 		}
