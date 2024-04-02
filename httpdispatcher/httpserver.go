@@ -189,7 +189,9 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 			status.Message = "Invalid Message Received"
 		}
 
-		err = conn.WriteJSON(status)
+		//err = conn.WriteMessage(status)
+		statusJSON, _ := json.Marshal(status)
+		conn.WriteMessage(websocket.TextMessage, statusJSON)
 		if err != nil {
 			h.l.Error(errors.Wrap(err, "couldn't send back websocket message").Error())
 		}
@@ -306,7 +308,7 @@ func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {
 	}
 	var msg Message
 	if err = json.Unmarshal(message, &msg); err != nil {
-		h.l.Error("JSON Unmarshal error", zap.Error(err), zap.Any("message", message), zap.Any("messageType", messageType))
+		h.l.Error("JSON Unmarshal error", zap.Error(err), zap.Any("message", string(message)), zap.Any("messageType", messageType))
 		return &Message{
 			Task:      "",
 			Parameter: "",
