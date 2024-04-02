@@ -130,7 +130,7 @@ func (h *HttpServer) StartServer() {
 	log.Printf("Starting server on %s\n", addr)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/test", h.serveTest) // start/sequences - cancel - recover
-	//mux.HandleFunc("/status", h.serveStatus)
+	mux.HandleFunc("/status", h.serveStatus)
 
 	err := http.ListenAndServe(addr, mux)
 	if err != nil {
