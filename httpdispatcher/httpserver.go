@@ -194,7 +194,7 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 
 		statusJSON, _ := json.Marshal(status)
 		h.l.Info("sending statusJSON", zap.Any("statusJSON", statusJSON))
-		err = conn.WriteMessage(websocket.TextMessage, statusJSON)
+		err = client.conn.WriteMessage(websocket.TextMessage, statusJSON)
 		if err != nil {
 			h.l.Error(errors.Wrap(err, "couldn't send back websocket message").Error())
 		}
