@@ -168,26 +168,26 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 	defer resultsSub.Unsubscribe()
 
 	for {
-		_, err := h.readWS(conn)
+		msg, err := h.readWS(conn)
 		//status := StatusMessage{Code: "200", Message: ""}
 		//if err != nil {
 		//	status.Code = "400"
 		//}
 		//
-		//switch msg.Task {
-		//case StartTest:
-		//	h.startClientTest(client, msg.Parameter)
-		//	status.Message = "Client Test Started"
-		//case CancelTest:
-		//	h.cancelClientTest(client, msg.Parameter)
-		//	status.Message = "Client Test Cancelled"
-		//case RecoverFromFatal:
-		//	h.recoverClientFromFatal(client)
-		//	status.Message = "Recovered From Fatal"
-		//default:
-		//	h.l.Info("serveTest Invalid Message Received")
-		//	status.Message = "Invalid Message Received"
-		//}
+		switch msg.Task {
+		case StartTest:
+			h.startClientTest(client, msg.Parameter)
+			//status.Message = "Client Test Started"
+		case CancelTest:
+			h.cancelClientTest(client, msg.Parameter)
+			//status.Message = "Client Test Cancelled"
+		case RecoverFromFatal:
+			h.recoverClientFromFatal(client)
+			//status.Message = "Recovered From Fatal"
+		default:
+			h.l.Info("serveTest Invalid Message Received")
+			//status.Message = "Invalid Message Received"
+		}
 
 		//err = conn.WriteMessage(status)
 		//statusJSON, _ := json.Marshal(status)
