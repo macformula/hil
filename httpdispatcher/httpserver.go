@@ -23,7 +23,7 @@ type Message struct {
 
 type StatusMessage struct {
 	Message string `json:"message"`
-	Code    int    `json:"code"`
+	Code    string `json:"code"`
 }
 
 // message task values
@@ -169,9 +169,9 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		msg, err := h.readWS(conn)
-		status := &StatusMessage{Code: 200}
+		status := &StatusMessage{Code: "200"}
 		if err != nil {
-			status.Code = 400
+			status.Code = "400"
 		}
 
 		switch msg.Task {
