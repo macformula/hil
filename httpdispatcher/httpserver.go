@@ -185,7 +185,7 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 			status.Message = "Client Test Cancelled"
 		case RecoverFromFatal:
 			h.l.Info("msg.Task: " + RecoverFromFatal)
-			h.recoverClientFromFatal(client)
+			h.recoverClientFromFatal(&client)
 			status.Message = "Recovered From Fatal"
 		default:
 			h.l.Info("serveTest Invalid Message Received")
@@ -294,9 +294,9 @@ func (h *HttpServer) cancelClientTest(client *Client, parameter string) {
 	client.conn.WriteMessage(websocket.TextMessage, httpCodeJSON)
 }
 
-func (h *HttpServer) recoverClientFromFatal(client *Client) {
+func (h *HttpServer) recoverClientFromFatal(client **Client) {
 	h.recoverFromFatal <- orchestrator.RecoverFromFatalSignal{}
-	//client.conn.WriteMessage(websocket.TextMessage, []byte{200})
+	(*client).conn.WriteMessage(websocket.TextMessage, []byte{200})
 }
 
 func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {
