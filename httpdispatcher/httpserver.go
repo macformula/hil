@@ -306,7 +306,7 @@ func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {
 	}
 	var msg Message
 	if err = json.Unmarshal(message, &msg); err != nil {
-		h.l.Error("JSON Unmarshal error", zap.Error(err))
+		h.l.Error("JSON Unmarshal error", zap.Error(err), zap.Any("message", message), zap.Any("messageType", messageType))
 		return &Message{
 			Task:      "",
 			Parameter: "",
