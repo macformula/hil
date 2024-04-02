@@ -22,8 +22,8 @@ type Message struct {
 }
 
 type StatusMessage struct {
-	Message string `json:"message"`
-	Code    string `json:"code"`
+	Message string
+	Code    string
 }
 
 // message task values
@@ -190,8 +190,9 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//err = conn.WriteMessage(status)
-		//statusJSON, _ := json.Marshal(status)
-		err = conn.WriteMessage(websocket.TextMessage, []byte{100})
+		statusJSON, _ := json.Marshal(status)
+		h.l.Info("sending statusJSON", zap.Any("statusJSON", statusJSON))
+		err = conn.WriteMessage(websocket.TextMessage, statusJSON)
 		if err != nil {
 			h.l.Error(errors.Wrap(err, "couldn't send back websocket message").Error())
 		}
