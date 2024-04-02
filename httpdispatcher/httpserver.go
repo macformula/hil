@@ -192,7 +192,7 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 		//err = conn.WriteMessage(status)
 		statusJSON, _ := json.Marshal(status)
 		h.l.Info("sending statusJSON", zap.Any("statusJSON", statusJSON))
-		err = conn.WriteMessage(websocket.TextMessage, []byte{100})
+		err = conn.WriteMessage(websocket.BinaryMessage, []byte{100})
 		if err != nil {
 			h.l.Error(errors.Wrap(err, "couldn't send back websocket message").Error())
 		}
