@@ -190,8 +190,8 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//err = conn.WriteMessage(status)
-		statusJSON, _ := json.Marshal(status)
-		conn.WriteMessage(websocket.TextMessage, statusJSON)
+		//statusJSON, _ := json.Marshal(status)
+		err = conn.WriteMessage(websocket.TextMessage, []byte{100})
 		if err != nil {
 			h.l.Error(errors.Wrap(err, "couldn't send back websocket message").Error())
 		}
