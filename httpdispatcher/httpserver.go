@@ -194,7 +194,7 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 
 		statusJSON, _ := json.Marshal(status)
 		h.l.Info("sending statusJSON", zap.Any("statusJSON", statusJSON))
-		err = conn.WriteMessage(websocket.TextMessage, []byte{100})
+		//err = conn.WriteMessage(websocket.TextMessage, []byte{100})
 		if err != nil {
 			h.l.Error(errors.Wrap(err, "couldn't send back websocket message").Error())
 		}
@@ -296,7 +296,7 @@ func (h *HttpServer) cancelClientTest(client *Client, parameter string) {
 
 func (h *HttpServer) recoverClientFromFatal(client *Client) {
 	h.recoverFromFatal <- orchestrator.RecoverFromFatalSignal{}
-	//client.conn.WriteMessage(websocket.TextMessage, []byte{200})
+	client.conn.WriteMessage(websocket.TextMessage, []byte{200})
 }
 
 func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {
