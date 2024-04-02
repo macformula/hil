@@ -295,7 +295,7 @@ func (h *HttpServer) cancelClientTest(client *Client, parameter string) {
 }
 
 func (h *HttpServer) recoverClientFromFatal(client *Client) {
-	//h.recoverFromFatal <- orchestrator.RecoverFromFatalSignal{}
+	h.recoverFromFatal <- orchestrator.RecoverFromFatalSignal{}
 	//client.conn.WriteMessage(websocket.TextMessage, []byte{200})
 }
 
