@@ -176,12 +176,15 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 
 		switch msg.Task {
 		case StartTest:
+			h.l.Info("msg.Task: " + StartTest)
 			h.startClientTest(client, msg.Parameter)
 			//status.Message = "Client Test Started"
 		case CancelTest:
+			h.l.Info("msg.Task: " + CancelTest)
 			h.cancelClientTest(client, msg.Parameter)
 			//status.Message = "Client Test Cancelled"
 		case RecoverFromFatal:
+			h.l.Info("msg.Task: " + RecoverFromFatal)
 			h.recoverClientFromFatal(client)
 			//status.Message = "Recovered From Fatal"
 		default:
@@ -189,10 +192,9 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 			//status.Message = "Invalid Message Received"
 		}
 
-		//err = conn.WriteMessage(status)
 		statusJSON, _ := json.Marshal(status)
 		h.l.Info("sending statusJSON", zap.Any("statusJSON", statusJSON))
-		err = conn.WriteMessage(websocket.BinaryMessage, []byte{100})
+		err = conn.WriteMessage(websocket.TextMessage, []byte{100})
 		if err != nil {
 			h.l.Error(errors.Wrap(err, "couldn't send back websocket message").Error())
 		}
@@ -225,7 +227,7 @@ func (h *HttpServer) startClientTest(client *Client, parameter string) {
 	// If no parameter is provided, send the list of sequences to the client.
 	if parameter == "" {
 		sequencesJSON, _ := json.Marshal(h.sequences)
-		if err := client.conn.WriteMessage(websocket.TextMessage, sequencesJSON); err != nil {
+		if err = client.conn.WriteMessage(websocket.TextMessage, sequencesJSON); err != nil {
 			h.l.Error("Write error", zap.Error(err))
 		}
 		return
