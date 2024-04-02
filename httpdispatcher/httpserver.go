@@ -169,7 +169,7 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		msg, err := h.readWS(conn)
-		status := StatusMessage{Code: "200", Message: ""}
+		status := StatusMessage{Code: "200"}
 		if err != nil {
 			status.Code = "400"
 		}
@@ -178,18 +178,18 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 		case StartTest:
 			h.l.Info("msg.Task: " + StartTest)
 			h.startClientTest(client, msg.Parameter)
-			//status.Message = "Client Test Started"
+			status.Message = "Client Test Started"
 		case CancelTest:
 			h.l.Info("msg.Task: " + CancelTest)
 			h.cancelClientTest(client, msg.Parameter)
-			//status.Message = "Client Test Cancelled"
+			status.Message = "Client Test Cancelled"
 		case RecoverFromFatal:
 			h.l.Info("msg.Task: " + RecoverFromFatal)
 			h.recoverClientFromFatal(client)
-			//status.Message = "Recovered From Fatal"
+			status.Message = "Recovered From Fatal"
 		default:
 			h.l.Info("serveTest Invalid Message Received")
-			//status.Message = "Invalid Message Received"
+			status.Message = "Invalid Message Received"
 		}
 
 		statusJSON, _ := json.Marshal(status)
