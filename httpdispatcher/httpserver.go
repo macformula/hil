@@ -169,11 +169,11 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		msg, err := h.readWS(conn)
-		//status := StatusMessage{Code: "200", Message: ""}
-		//if err != nil {
-		//	status.Code = "400"
-		//}
-		//
+		status := StatusMessage{Code: "200", Message: ""}
+		if err != nil {
+			status.Code = "400"
+		}
+
 		switch msg.Task {
 		case StartTest:
 			h.startClientTest(client, msg.Parameter)
@@ -190,9 +190,9 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//err = conn.WriteMessage(status)
-		//statusJSON, _ := json.Marshal(status)
-		//h.l.Info("sending statusJSON", zap.Any("statusJSON", statusJSON))
-		err = conn.WriteMessage(websocket.TextMessage, []byte{100})
+		statusJSON, _ := json.Marshal(status)
+		h.l.Info("sending statusJSON", zap.Any("statusJSON", statusJSON))
+		err = conn.WriteMessage(websocket.TextMessage, statusJSON)
 		if err != nil {
 			h.l.Error(errors.Wrap(err, "couldn't send back websocket message").Error())
 		}
@@ -294,7 +294,7 @@ func (h *HttpServer) cancelClientTest(client *Client, parameter string) {
 
 func (h *HttpServer) recoverClientFromFatal(client *Client) {
 	h.recoverFromFatal <- orchestrator.RecoverFromFatalSignal{}
-	client.conn.WriteMessage(websocket.TextMessage, []byte{http.StatusOK})
+	client.conn.WriteMessage(websocket.TextMessage, []byte{200})
 }
 
 func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {
