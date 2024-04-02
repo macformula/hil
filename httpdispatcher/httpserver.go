@@ -158,12 +158,12 @@ func enableCors(w *http.ResponseWriter) {
 func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	conn := h.createWS(w, r)
-	client := NewClient(conn)
+	client := NewClient(conn, h.l)
 	progressSub, resultsSub := h.SubscribeToFeeds(client.status, client.results)
 
 	go client.updateTests()
 
-	defer client.conn.Close()
+	//defer client.conn.Close()
 	defer progressSub.Unsubscribe()
 	defer resultsSub.Unsubscribe()
 
@@ -185,7 +185,7 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 			status.Message = "Client Test Cancelled"
 		case RecoverFromFatal:
 			h.l.Info("msg.Task: " + RecoverFromFatal)
-			h.recoverClientFromFatal(&client)
+			h.recoverClientFromFatal(client)
 			status.Message = "Recovered From Fatal"
 		default:
 			h.l.Info("serveTest Invalid Message Received")
@@ -194,7 +194,7 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 
 		statusJSON, _ := json.Marshal(status)
 		h.l.Info("sending statusJSON", zap.Any("statusJSON", statusJSON))
-		err = client.conn.WriteMessage(websocket.TextMessage, statusJSON)
+		err = conn.WriteMessage(websocket.TextMessage, statusJSON)
 		if err != nil {
 			h.l.Error(errors.Wrap(err, "couldn't send back websocket message").Error())
 		}
@@ -204,7 +204,7 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 func (h *HttpServer) serveStatus(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	conn := h.createWS(w, r)
-	client := NewClient(conn)
+	client := NewClient(conn, h.l)
 	progressSub, resultsSub := h.SubscribeToFeeds(client.status, client.results)
 
 	defer client.conn.Close()
@@ -294,9 +294,12 @@ func (h *HttpServer) cancelClientTest(client *Client, parameter string) {
 	client.conn.WriteMessage(websocket.TextMessage, httpCodeJSON)
 }
 
-func (h *HttpServer) recoverClientFromFatal(client **Client) {
+func (h *HttpServer) recoverClientFromFatal(client *Client) {
 	h.recoverFromFatal <- orchestrator.RecoverFromFatalSignal{}
-	(*client).conn.WriteMessage(websocket.TextMessage, []byte{200})
+	err := client.conn.WriteMessage(websocket.TextMessage, []byte{200})
+	if err != nil {
+		return
+	}
 }
 
 func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {

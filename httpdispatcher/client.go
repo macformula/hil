@@ -2,6 +2,7 @@ package httpdispatcher
 
 import (
 	"encoding/json"
+	"go.uber.org/zap"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -14,16 +15,17 @@ type TestQueueItem struct {
 }
 
 type Client struct {
+	l         *zap.Logger
 	conn      *websocket.Conn
 	testQueue []TestQueueItem
 	status    chan orchestrator.StatusSignal
 	results   chan orchestrator.ResultsSignal
 }
 
-func NewClient(conn *websocket.Conn) *Client {
+func NewClient(conn *websocket.Conn, l *zap.Logger) *Client {
 	return &Client{
-		conn: conn,
-		// testQueue: make(chan TestQueueItem, 10),
+		l:         l.Named(_clientLoggerName),
+		conn:      conn,
 		testQueue: make([]TestQueueItem, 0),
 		status:    make(chan orchestrator.StatusSignal),
 		results:   make(chan orchestrator.ResultsSignal),
@@ -46,6 +48,7 @@ func (c *Client) removeTest(testIndex int) {
 func (c *Client) updateTests() {
 	select {
 	case <-c.results:
+		c.l.Info("updateTests, result came in")
 		// Update queue position of client tests
 		for i := range c.testQueue {
 			if c.testQueue[i].queueNumber > 0 {

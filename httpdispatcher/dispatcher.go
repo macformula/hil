@@ -12,6 +12,7 @@ import (
 const (
 	_dispatcherLoggerName = "serverDispatcher"
 	_httpLoggerName       = "httpDispatcher"
+	_clientLoggerName     = "clientLogger"
 )
 
 // ServerDispatcher is the server implementation of the orchestrator.DispatcherIface.
