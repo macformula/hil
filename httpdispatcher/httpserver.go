@@ -294,12 +294,12 @@ func (h *HttpServer) cancelClientTest(client *Client, parameter string) {
 	client.conn.WriteMessage(websocket.TextMessage, httpCodeJSON)
 }
 
-func (h *HttpServer) recoverClientFromFatal(client *Client) {
+func (h *HttpServer) recoverClientFromFatal(client *Client) error {
 	h.recoverFromFatal <- orchestrator.RecoverFromFatalSignal{}
-	//err := client.conn.WriteMessage(websocket.TextMessage, []byte{200})
-	//if err != nil {
-	//	return
-	//}
+	err := client.conn.WriteMessage(websocket.TextMessage, []byte{"200"})
+	if err != nil {
+		return err
+	}
 }
 
 func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {
