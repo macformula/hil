@@ -160,7 +160,7 @@ func (c *Controller) packOutputs() []byte {
 
 	for i, analogOutput := range c.analog[_analogOutputIndex:] {
 		// Convert the float64 to uint64 and append it as a byte array
-		binary.LittleEndian.PutUint64(data[_digitalPinCount+i:], math.Float64bits(analogOutput))
+		binary.LittleEndian.PutUint64(data[_digitalPinCount+i*8:], math.Float64bits(analogOutput))
 	}
 
 	return data
