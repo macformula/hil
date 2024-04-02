@@ -130,7 +130,7 @@ func (h *HttpServer) StartServer() {
 	log.Printf("Starting server on %s\n", addr)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/test", h.serveTest) // start/sequences - cancel - recover
-	mux.HandleFunc("/status", h.serveStatus)
+	//mux.HandleFunc("/status", h.serveStatus)
 
 	err := http.ListenAndServe(addr, mux)
 	if err != nil {
@@ -192,7 +192,7 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 		//err = conn.WriteMessage(status)
 		statusJSON, _ := json.Marshal(status)
 		h.l.Info("sending statusJSON", zap.Any("statusJSON", statusJSON))
-		err = conn.WriteMessage(websocket.TextMessage, statusJSON)
+		err = conn.WriteMessage(websocket.TextMessage, []byte{100})
 		if err != nil {
 			h.l.Error(errors.Wrap(err, "couldn't send back websocket message").Error())
 		}
