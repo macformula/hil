@@ -27,8 +27,10 @@ func main() {
 
 	pin := speedgoat.NewDigitalPin(8) // First digital output pin (idx 8-15)
 	controller.SetDigital(pin, true)
+
 	pin2 := speedgoat.NewDigitalPin(15) // Last digital output pin
 	controller.SetDigital(pin2, true)
+
 	pin3 := speedgoat.NewAnalogPin(8) // First analog output pin (idx 8-11)
 	controller.WriteVoltage(pin3, 2.5)
 
