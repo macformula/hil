@@ -12,14 +12,17 @@ import (
 )
 
 const (
-	_digitalPinCount   = 16
-	_analogOutputCount = 4
-	_analogInputCount  = 8
-	_analogOutputIndex = 8
-	_analogPinCount    = 12
-	_loggerName        = "speedgoat_controller"
-	_tickTime          = time.Millisecond * 10
-	_readDeadline      = time.Second
+	_digitalPinCount    = 16
+	_digitalOutputCount = 8
+	_digitalInputCount  = 8
+	_digitalOutputIndex = 8
+	_analogOutputCount  = 4
+	_analogInputCount   = 8
+	_analogOutputIndex  = 8
+	_analogPinCount     = 12
+	_loggerName         = "speedgoat_controller"
+	_tickTime           = time.Millisecond * 10
+	_readDeadline       = time.Second * 5
 )
 
 // Controller provides control for various Speedgoat pins
@@ -58,7 +61,7 @@ func (c *Controller) Open() error {
 	c.opened = true
 
 	go c.tickOutputs()
-	go c.tickInputs()
+	//go c.tickInputs()
 
 	return nil
 }
@@ -80,7 +83,7 @@ func (c *Controller) Close() error {
 func (c *Controller) SetDigital(output *DigitalPin, b bool) {
 	c.muDigital.Lock()
 	c.digital[output.Index] = b
-	c.muDigital.Unlock()
+	c.muDigital.Unlock() //defer
 }
 
 // ReadDigital returns the level of a Speedgoat digital pin
@@ -126,7 +129,6 @@ func (c *Controller) tickOutputs() {
 			_, err := c.conn.Write(c.packOutputs())
 			if err != nil {
 				c.l.Error("speedgoat controller", zap.Error(errors.Wrap(err, "connection write")))
-				panic(err)
 			}
 		}
 	}
@@ -151,6 +153,7 @@ func (c *Controller) tickInputs() {
 			_, err = c.conn.Read(data)
 			if err != nil {
 				c.l.Error("connection read", zap.Error(err))
+				panic(err)
 			}
 
 			c.unpackInputs(data)
@@ -161,21 +164,27 @@ func (c *Controller) tickInputs() {
 
 // packOutputs packs the data in the output arrays so that it can be sent over TCP.
 func (c *Controller) packOutputs() []byte {
-	data := make([]byte, _digitalPinCount+_analogOutputCount*8)
+	data := make([]byte, _digitalOutputCount+_analogOutputCount*8)
 
+	c.muDigital.Lock()
 	// Digital IO will be ordered in the array first, followed by analog outputs
-	for i, digitalPin := range c.digital {
-		if digitalPin {
+	for i, digitalOut := range c.digital[_digitalOutputIndex:] {
+		if digitalOut {
 			data[i] = byte(1)
 		} else {
 			data[i] = byte(0)
 		}
 	}
+	c.muDigital.Unlock()
 
+	c.muAnalog.Lock()
 	for i, analogOutput := range c.analog[_analogOutputIndex:] {
 		// Convert the float64 to uint64 and append it as a byte array
-		binary.LittleEndian.PutUint64(data[_digitalPinCount+i*8:], math.Float64bits(analogOutput))
+		b := make([]byte, 8)
+		binary.LittleEndian.PutUint64(b, math.Float64bits(analogOutput))
+		binary.LittleEndian.PutUint64(data[_digitalOutputIndex+i*8:], math.Float64bits(analogOutput))
 	}
+	c.muAnalog.Unlock()
 
 	return data
 }
@@ -183,14 +192,14 @@ func (c *Controller) packOutputs() []byte {
 // unpackInputs takes the received data over TCP and unpacks it into the respective input arrays.
 func (c *Controller) unpackInputs(data []byte) {
 	c.muDigital.Lock()
-	for i, digitalPin := range data[:_digitalPinCount] {
-		c.digital[i] = digitalPin != 0
+	for i := 0; i < _digitalInputCount; i++ {
+		c.digital[i] = data[i] != 0
 	}
 	c.muDigital.Unlock()
 
 	c.muAnalog.Lock()
 	for i := 0; i < _analogInputCount; i++ {
-		offset := _digitalPinCount + i*8
+		offset := _digitalInputCount + i*8
 		analogInput := data[offset : offset+8]
 		c.analog[i] = math.Float64frombits(binary.NativeEndian.Uint64(analogInput))
 	}
