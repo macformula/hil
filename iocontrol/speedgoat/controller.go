@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"math"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -29,8 +30,10 @@ type Controller struct {
 
 	opened bool
 
-	digital [_digitalPinCount]bool
-	analog  [_analogPinCount]float64
+	digital   [_digitalPinCount]bool
+	analog    [_analogPinCount]float64
+	muDigital sync.Mutex
+	muAnalog  sync.Mutex
 }
 
 // NewController returns a new Speedgoat controller
@@ -75,22 +78,32 @@ func (c *Controller) Close() error {
 
 // SetDigital sets an output digital pin for a Speedgoat digital pin.
 func (c *Controller) SetDigital(output *DigitalPin, b bool) {
+	c.muDigital.Lock()
 	c.digital[output.Index] = b
+	c.muDigital.Unlock()
 }
 
 // ReadDigital returns the level of a Speedgoat digital pin
 func (c *Controller) ReadDigital(output *DigitalPin) bool {
-	return c.digital[output.Index]
+	c.muDigital.Lock()
+	pin := c.digital[output.Index]
+	c.muDigital.Unlock()
+	return pin
 }
 
 // WriteVoltage sets the voltage of a Speedgoat analog pin
 func (c *Controller) WriteVoltage(output *AnalogPin, voltage float64) {
+	c.muAnalog.Lock()
 	c.analog[output.Index] = voltage
+	c.muAnalog.Unlock()
 }
 
 // ReadVoltage returns the voltage of a Speedgoat analog pin
 func (c *Controller) ReadVoltage(output *AnalogPin) float64 {
-	return c.analog[output.Index]
+	c.muAnalog.Lock()
+	pin := c.analog[output.Index]
+	c.muAnalog.Unlock()
+	return pin
 }
 
 // WriteCurrent sets the current of a Speedgoat analog pin
@@ -113,6 +126,7 @@ func (c *Controller) tickOutputs() {
 			_, err := c.conn.Write(c.packOutputs())
 			if err != nil {
 				c.l.Error("speedgoat controller", zap.Error(errors.Wrap(err, "connection write")))
+				panic(err)
 			}
 		}
 	}
@@ -168,13 +182,17 @@ func (c *Controller) packOutputs() []byte {
 
 // unpackInputs takes the received data over TCP and unpacks it into the respective input arrays.
 func (c *Controller) unpackInputs(data []byte) {
+	c.muDigital.Lock()
 	for i, digitalPin := range data[:_digitalPinCount] {
 		c.digital[i] = digitalPin != 0
 	}
+	c.muDigital.Unlock()
 
+	c.muAnalog.Lock()
 	for i := 0; i < _analogInputCount; i++ {
 		offset := _digitalPinCount + i*8
 		analogInput := data[offset : offset+8]
 		c.analog[i] = math.Float64frombits(binary.NativeEndian.Uint64(analogInput))
 	}
+	c.muAnalog.Unlock()
 }
