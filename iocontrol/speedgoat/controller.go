@@ -147,7 +147,7 @@ func (c *Controller) tickInputs() {
 			_, err = c.conn.Read(data)
 			if err != nil {
 				c.l.Error("connection read", zap.Error(err))
-				panic(err)
+				panic(err) // temporary until we better handle this
 			}
 
 			c.unpackInputs(data)
