@@ -13,7 +13,7 @@ func main() {
 		panic(err)
 	}
 
-	pin := NewDigitalPin(0)
+	pin := NewDigitalPin(8)
 	controller.SetDigital(pin, true)
 	pin2 := NewDigitalPin(15)
 	controller.SetDigital(pin2, true)
@@ -24,6 +24,6 @@ func main() {
 	println("setting false")
 	controller.SetDigital(pin2, false)
 	println("set false")
-	//controller.WriteVoltage(pin3, 3)
+	controller.WriteVoltage(pin3, 3)
 	time.Sleep(time.Second * 2)
 }
