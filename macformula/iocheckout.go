@@ -87,6 +87,10 @@ func (io *IoCheckout) Start() error {
 			if err != nil {
 				return errors.Wrap(err, "handle analog output select")
 			}
+		case _exit:
+			io.l.Info("received exit prompt")
+
+			return nil
 		default:
 			return errors.New("reached unknown label")
 		}
@@ -130,6 +134,8 @@ func (io *IoCheckout) handleDigitalVsAnalog() error {
 		io.currentLabel = _analogInputSelectLabel
 	case _analogOutput:
 		io.currentLabel = _analogOutputSelectLabel
+	case _exit:
+		io.currentLabel = _exit
 	default:
 		return errors.Errorf("unexpected choice for digital vs analog (%s)", digVsAnalogStr)
 	}
