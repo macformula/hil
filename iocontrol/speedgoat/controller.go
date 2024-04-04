@@ -107,12 +107,12 @@ func (c *Controller) ReadVoltage(output *AnalogPin) float64 {
 
 // WriteCurrent sets the current of a Speedgoat analog pin (unimplemented for Speedgoat).
 func (c *Controller) WriteCurrent(output *AnalogPin, current float64) error {
-	return nil
+	return errors.New("unimplemented function on Speedgoat controller")
 }
 
 // ReadCurrent returns the current of a Speedgoat analog pin (unimplemented for Speedgoat).
 func (c *Controller) ReadCurrent(output *AnalogPin) (float64, error) {
-	return 0.00, nil
+	return 0.00, errors.New("unimplemented function on Speedgoat controller")
 }
 
 // tickOutputs transmits the packed data for the digital and analog outputs to the Speedgoat at a set time interval.
