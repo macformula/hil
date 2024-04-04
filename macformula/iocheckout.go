@@ -1,7 +1,7 @@
 package macformula
 
 import (
-	"fmt"
+	"github.com/fatih/color"
 	"github.com/macformula/hil/iocontrol"
 	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
@@ -17,8 +17,8 @@ const (
 	_analogInputSelectLabel   = "Analog Input"
 	_digitalLevelSelectLabel  = "Digital Level"
 	// Select Options
-	_exit          = "EXIT"
-	_return        = "RETURN"
+	_exit          = "--- EXIT ---"
+	_return        = "--- RETURN ---"
 	_digitalOutput = "Digital Output"
 	_digitalInput  = "Digital Input"
 	_analogOutput  = "Analog Output"
@@ -229,15 +229,15 @@ func (io *IoCheckout) handleDigitalInputSelect() error {
 	}
 
 	if lvl {
-		fmt.Printf("\n%s: %s\n", physicalIn.String(), _digitalHigh)
+		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalIn.String(), _digitalHigh)
 	} else {
-		fmt.Printf("\n%s: %s\n", physicalIn.String(), _digitalLow)
+		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalIn.String(), _digitalLow)
 	}
 
 	return nil
 }
 
-func (io *IoCheckout) handleDigitalOutputSelect() error {
+func (io *IoCheckout) handleAnalogOutputSelect() error {
 	digtialInputStr, err := io.promptSelect(_digitalInputSelectLabel, append([]string{_return}, io.digitalInputStrings()...))
 	if err != nil {
 		return errors.Wrap(err, "prompt select")
@@ -265,9 +265,9 @@ func (io *IoCheckout) handleDigitalOutputSelect() error {
 	}
 
 	if lvl {
-		fmt.Printf("\n%s: %s\n", physicalIn.String(), _digitalHigh)
+		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalIn.String(), _digitalHigh)
 	} else {
-		fmt.Printf("\n%s: %s\n", physicalIn.String(), _digitalLow)
+		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalIn.String(), _digitalLow)
 	}
 
 	return nil
@@ -277,7 +277,7 @@ func (io *IoCheckout) handleAnalogInputSelect() error {
 	return errors.New("unimplemented")
 }
 
-func (io *IoCheckout) handleAnalogOutputSelect() error {
+func (io *IoCheckout) handleDigitalOutputSelect() error {
 	digtialOutputStr, err := io.promptSelect(
 		_digitalOutputSelectLabel,
 		append([]string{_return}, io.digitalOutputStrings()...),
@@ -323,9 +323,9 @@ func (io *IoCheckout) handleAnalogOutputSelect() error {
 	}
 
 	if lvl {
-		fmt.Printf("\n%s: %s\n", physicalOut.String(), _digitalHigh)
+		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalOut.String(), _digitalHigh)
 	} else {
-		fmt.Printf("\n%s: %s\n", physicalOut.String(), _digitalLow)
+		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalOut.String(), _digitalLow)
 	}
 
 	return nil
