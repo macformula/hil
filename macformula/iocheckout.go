@@ -208,18 +208,18 @@ func (io *IoCheckout) analogOutputStrings() []string {
 }
 
 func (io *IoCheckout) handleDigitalInputSelect() error {
-	digtialInputStr, err := io.promptSelect(_digitalInputSelectLabel, append([]string{_return}, io.digitalInputStrings()...))
+	digitalInputStr, err := io.promptSelect(_digitalInputSelectLabel, append([]string{_return}, io.digitalInputStrings()...))
 	if err != nil {
 		return errors.Wrap(err, "prompt select")
 	}
 
-	if digtialInputStr == _return {
+	if digitalInputStr == _return {
 		io.currentLabel = _digitalVsAnalogLabel
 
 		return nil
 	}
 
-	physicalIn, err := PhysicalIoString(digtialInputStr)
+	physicalIn, err := PhysicalIoString(digitalInputStr)
 	if err != nil {
 		return errors.Wrap(err, "physical io string")
 	}
@@ -241,50 +241,10 @@ func (io *IoCheckout) handleDigitalInputSelect() error {
 	}
 
 	return nil
-}
-
-func (io *IoCheckout) handleAnalogOutputSelect() error {
-	digtialInputStr, err := io.promptSelect(_digitalInputSelectLabel, append([]string{_return}, io.digitalInputStrings()...))
-	if err != nil {
-		return errors.Wrap(err, "prompt select")
-	}
-
-	if digtialInputStr == _return {
-		io.currentLabel = _digitalVsAnalogLabel
-
-		return nil
-	}
-
-	physicalIn, err := PhysicalIoString(digtialInputStr)
-	if err != nil {
-		return errors.Wrap(err, "physical io string")
-	}
-
-	digitalIn, ok := io.diPins[physicalIn]
-	if !ok {
-		return errors.Wrap(err, "physical io does not map to digital input")
-	}
-
-	lvl, err := io.ioControl.ReadDigital(digitalIn)
-	if err != nil {
-		return errors.Wrap(err, "read digital")
-	}
-
-	if lvl {
-		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalIn.String(), _digitalHigh)
-	} else {
-		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalIn.String(), _digitalLow)
-	}
-
-	return nil
-}
-
-func (io *IoCheckout) handleAnalogInputSelect() error {
-	return errors.New("unimplemented")
 }
 
 func (io *IoCheckout) handleDigitalOutputSelect() error {
-	digtialOutputStr, err := io.promptSelect(
+	digitalOutputStr, err := io.promptSelect(
 		_digitalOutputSelectLabel,
 		append([]string{_return}, io.digitalOutputStrings()...),
 	)
@@ -292,13 +252,13 @@ func (io *IoCheckout) handleDigitalOutputSelect() error {
 		return errors.Wrap(err, "prompt select")
 	}
 
-	if digtialOutputStr == _return {
+	if digitalOutputStr == _return {
 		io.currentLabel = _digitalVsAnalogLabel
 
 		return nil
 	}
 
-	physicalOut, err := PhysicalIoString(digtialOutputStr)
+	physicalOut, err := PhysicalIoString(digitalOutputStr)
 	if err != nil {
 		return errors.Wrap(err, "physical io string")
 	}
@@ -308,7 +268,7 @@ func (io *IoCheckout) handleDigitalOutputSelect() error {
 		return errors.Wrap(err, "physical io does not map to digital output")
 	}
 
-	digtialLevelStr, err := io.promptSelect(
+	digitalLevelStr, err := io.promptSelect(
 		_digitalLevelSelectLabel,
 		[]string{_digitalLow, _digitalHigh},
 	)
@@ -318,7 +278,7 @@ func (io *IoCheckout) handleDigitalOutputSelect() error {
 
 	var lvl bool
 
-	lvl, err = highLowToBool(digtialLevelStr)
+	lvl, err = highLowToBool(digitalLevelStr)
 	if err != nil {
 		return errors.Wrap(err, "high to low bool")
 	}
@@ -332,6 +292,74 @@ func (io *IoCheckout) handleDigitalOutputSelect() error {
 		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalOut.String(), _digitalHigh)
 	} else {
 		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalOut.String(), _digitalLow)
+	}
+
+	return nil
+}
+
+func (io *IoCheckout) handleAnalogInputSelect() error {
+	analogInputStr, err := io.promptSelect(_analogInputSelectLabel, append([]string{_return}, io.analogInputStrings()...))
+	if err != nil {
+		return errors.Wrap(err, "prompt select")
+	}
+
+	if analogInputStr == _return {
+		io.currentLabel = _digitalVsAnalogLabel
+
+		return nil
+	}
+
+	physicalIn, err := PhysicalIoString(analogInputStr)
+	if err != nil {
+		return errors.Wrap(err, "physical io string")
+	}
+
+	analogIn, ok := io.aiPins[physicalIn]
+	if !ok {
+		return errors.Wrap(err, "physical io does not map to digital input")
+	}
+
+	voltage, err := io.ioControl.ReadVoltage(analogIn)
+	if err != nil {
+		return errors.Wrap(err, "read digital")
+	}
+
+	_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %3f V\n", physicalIn.String(), voltage)
+
+	return nil
+}
+
+func (io *IoCheckout) handleAnalogOutputSelect() error {
+	digitalInputStr, err := io.promptSelect(_digitalInputSelectLabel, append([]string{_return}, io.analogInputStrings()...))
+	if err != nil {
+		return errors.Wrap(err, "prompt select")
+	}
+
+	if digitalInputStr == _return {
+		io.currentLabel = _digitalVsAnalogLabel
+
+		return nil
+	}
+
+	physicalIn, err := PhysicalIoString(digitalInputStr)
+	if err != nil {
+		return errors.Wrap(err, "physical io string")
+	}
+
+	digitalIn, ok := io.diPins[physicalIn]
+	if !ok {
+		return errors.Wrap(err, "physical io does not map to digital input")
+	}
+
+	lvl, err := io.ioControl.ReadDigital(digitalIn)
+	if err != nil {
+		return errors.Wrap(err, "read digital")
+	}
+
+	if lvl {
+		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalIn.String(), _digitalHigh)
+	} else {
+		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalIn.String(), _digitalLow)
 	}
 
 	return nil
