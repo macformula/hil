@@ -28,9 +28,9 @@ func NewIOControl(
 	l *zap.Logger,
 	opts ...IOControlOption) *IOControl {
 	io := &IOControl{
+		l:  l.Named(_loggerName),
 		sg: nil,
 		rp: nil,
-		l:  l.Named(_loggerName),
 	}
 
 	for _, o := range opts {
@@ -52,6 +52,24 @@ func WithRaspi(rp *raspi.Controller) IOControlOption {
 	return func(i *IOControl) {
 		i.rp = rp
 	}
+}
+
+func (io *IOControl) Open() error {
+	if io.rp != nil {
+		err := io.rp.Open()
+		if err != nil {
+			return errors.Wrap(err, "raspi controller open")
+		}
+	}
+
+	if io.sg != nil {
+		err := io.sg.Open()
+		if err != nil {
+			return errors.Wrap(err, "speedgoat controller open")
+		}
+	}
+
+	return nil
 }
 
 // SetDigital sets an output digital pin for a specified pin

@@ -4,6 +4,10 @@ package raspi
 type DigitalPin struct {
 }
 
+func NewDigitalPin() *DigitalPin {
+	return &DigitalPin{}
+}
+
 // String returns the pin type
 func (d *DigitalPin) String() string {
 	return "raspi_digital_pin"
