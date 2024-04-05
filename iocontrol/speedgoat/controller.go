@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"math"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -11,14 +12,15 @@ import (
 )
 
 const (
-	_digitalPinCount   = 16
-	_analogOutputCount = 4
-	_analogInputCount  = 8
-	_analogOutputIndex = 8
-	_analogPinCount    = 12
-	_loggerName        = "speedgoat_controller"
-	_tickTime          = time.Millisecond * 10
-	_readDeadline      = time.Second
+	_digitalInputCount  = 8
+	_digitalOutputCount = 8
+	_digitalOutputIndex = 8
+	_analogInputCount   = 8
+	_analogOutputCount  = 4
+	_analogOutputIndex  = 8
+	_loggerName         = "speedgoat_controller"
+	_tickTime           = time.Millisecond * 10
+	_readDeadline       = time.Second * 5
 )
 
 // Controller provides control for various Speedgoat pins
@@ -29,11 +31,13 @@ type Controller struct {
 
 	opened bool
 
-	digital [_digitalPinCount]bool
-	analog  [_analogPinCount]float64
+	digital   [_digitalInputCount + _digitalOutputCount]bool
+	analog    [_analogInputCount + _analogOutputCount]float64
+	muDigital sync.Mutex
+	muAnalog  sync.Mutex
 }
 
-// NewController returns a new Speedgoat controller
+// NewController returns a new Speedgoat controller.
 func NewController(l *zap.Logger, address string) *Controller {
 	sg := Controller{
 		addr: address,
@@ -75,39 +79,47 @@ func (c *Controller) Close() error {
 
 // SetDigital sets an output digital pin for a Speedgoat digital pin.
 func (c *Controller) SetDigital(output *DigitalPin, b bool) {
+	c.muDigital.Lock()
+	defer c.muDigital.Unlock()
 	c.digital[output.Index] = b
 }
 
-// ReadDigital returns the level of a Speedgoat digital pin
+// ReadDigital returns the level of a Speedgoat digital pin.
 func (c *Controller) ReadDigital(output *DigitalPin) bool {
+	c.muDigital.Lock()
+	defer c.muDigital.Unlock()
 	return c.digital[output.Index]
 }
 
-// WriteVoltage sets the voltage of a Speedgoat analog pin
+// WriteVoltage sets the voltage of a Speedgoat analog pin.
 func (c *Controller) WriteVoltage(output *AnalogPin, voltage float64) {
+	c.muAnalog.Lock()
+	defer c.muDigital.Unlock()
 	c.analog[output.Index] = voltage
 }
 
-// ReadVoltage returns the voltage of a Speedgoat analog pin
+// ReadVoltage returns the voltage of a Speedgoat analog pin.
 func (c *Controller) ReadVoltage(output *AnalogPin) float64 {
+	c.muAnalog.Lock()
+	defer c.muDigital.Unlock()
 	return c.analog[output.Index]
 }
 
-// WriteCurrent sets the current of a Speedgoat analog pin
+// WriteCurrent sets the current of a Speedgoat analog pin (unimplemented for Speedgoat).
 func (c *Controller) WriteCurrent(output *AnalogPin, current float64) error {
-	return nil
+	return errors.New("unimplemented function on Speedgoat controller")
 }
 
-// ReadCurrent returns the current of a Speedgoat analog pin
+// ReadCurrent returns the current of a Speedgoat analog pin (unimplemented for Speedgoat).
 func (c *Controller) ReadCurrent(output *AnalogPin) (float64, error) {
-	return 0.00, nil
+	return 0.00, errors.New("unimplemented function on Speedgoat controller")
 }
 
-// tickOutputs transmits the packed data for the digital and analog outputs to the speedgoat at a set time interval.
+// tickOutputs transmits the packed data for the digital and analog outputs to the Speedgoat at a set time interval.
 func (c *Controller) tickOutputs() {
-	// call a pack function for the digital and analog arrays here, transmit every 10 milliseconds
-
 	ticker := time.NewTicker(_tickTime)
+	defer ticker.Stop()
+
 	for c.opened {
 		for range ticker.C {
 			_, err := c.conn.Write(c.packOutputs())
@@ -116,18 +128,16 @@ func (c *Controller) tickOutputs() {
 			}
 		}
 	}
-	ticker.Stop()
 }
 
 // tickInputs reads the pin data from the connection and unpacks it into its respective pin arrays.
 func (c *Controller) tickInputs() {
-	// call unpack here on digital and analog arrays, receive every 10 milliseconds
-	// if we have not received a tcp packet in over a second, error out
-
 	ticker := time.NewTicker(_tickTime)
+	defer ticker.Stop()
+
 	for c.opened {
 		for range ticker.C {
-			data := make([]byte, _digitalPinCount+_analogInputCount*8)
+			data := make([]byte, _digitalInputCount+_analogInputCount*8)
 
 			err := c.conn.SetReadDeadline(time.Now().Add(_readDeadline))
 			if err != nil {
@@ -137,44 +147,52 @@ func (c *Controller) tickInputs() {
 			_, err = c.conn.Read(data)
 			if err != nil {
 				c.l.Error("connection read", zap.Error(err))
+				panic(err) // temporary until we better handle this
 			}
 
 			c.unpackInputs(data)
 		}
 	}
-	ticker.Stop()
 }
 
 // packOutputs packs the data in the output arrays so that it can be sent over TCP.
 func (c *Controller) packOutputs() []byte {
-	data := make([]byte, _digitalPinCount+_analogOutputCount*8)
-
 	// Digital IO will be ordered in the array first, followed by analog outputs
-	for i, digitalPin := range c.digital {
-		if digitalPin {
+	data := make([]byte, _digitalOutputCount+_analogOutputCount*8)
+
+	c.muDigital.Lock()
+	for i, digitalOut := range c.digital[_digitalOutputIndex:] {
+		if digitalOut {
 			data[i] = byte(1)
 		} else {
 			data[i] = byte(0)
 		}
 	}
+	c.muDigital.Unlock()
 
+	c.muAnalog.Lock()
 	for i, analogOutput := range c.analog[_analogOutputIndex:] {
 		// Convert the float64 to uint64 and append it as a byte array
-		binary.LittleEndian.PutUint64(data[_digitalPinCount+i*8:], math.Float64bits(analogOutput))
+		binary.LittleEndian.PutUint64(data[_digitalOutputIndex+i*8:], math.Float64bits(analogOutput))
 	}
+	c.muAnalog.Unlock()
 
 	return data
 }
 
 // unpackInputs takes the received data over TCP and unpacks it into the respective input arrays.
 func (c *Controller) unpackInputs(data []byte) {
-	for i, digitalPin := range data[:_digitalPinCount] {
-		c.digital[i] = digitalPin != 0
+	c.muDigital.Lock()
+	for i := 0; i < _digitalInputCount; i++ {
+		c.digital[i] = data[i] != 0
 	}
+	c.muDigital.Unlock()
 
+	c.muAnalog.Lock()
 	for i := 0; i < _analogInputCount; i++ {
-		offset := _digitalPinCount + i*8
+		offset := _digitalInputCount + i*8
 		analogInput := data[offset : offset+8]
 		c.analog[i] = math.Float64frombits(binary.NativeEndian.Uint64(analogInput))
 	}
+	c.muAnalog.Unlock()
 }
