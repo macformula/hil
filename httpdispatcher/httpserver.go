@@ -296,10 +296,11 @@ func (h *HttpServer) cancelClientTest(client *Client, parameter string) {
 
 func (h *HttpServer) recoverClientFromFatal(client *Client) error {
 	h.recoverFromFatal <- orchestrator.RecoverFromFatalSignal{}
-	err := client.conn.WriteMessage(websocket.TextMessage, []byte{"200"})
-	if err != nil {
-		return err
-	}
+	// err := client.conn.WriteMessage(websocket.TextMessage, []byte{http.StatusOK})
+	// if err != nil {
+	// 	return err
+	// }
+	return nil
 }
 
 func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {
