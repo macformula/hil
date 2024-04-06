@@ -10,8 +10,7 @@ You'll need to connect an Ethernet cable between your test machine and the Speed
 required OS to run the test, the test machine just needs to be able to connect via Ethernet.
 
 ## Running the Test
-Start by connecting to the Speedgoat in Simulink Real-time and run the server (.slx file for this should be available on
-GitHub eventually). It may take up to a few minutes to build and run on the Speedgoat.
+Start by connecting to the Speedgoat in Simulink Real-time and run the server located at `iocontrol/speedgoat/simulink/speedgoat_tcp_io.slx`. It may take up to a few minutes to build and run on the Speedgoat.
 
 Once running, execute the test file and monitor the displays in Simulink or the physical IO pins for the appropriate 
 response. Digital pin 9 and 16 should be set high and analog output 1 should be set to 2.5V initially (refer to the I/O 
