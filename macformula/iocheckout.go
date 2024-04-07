@@ -1,6 +1,8 @@
 package macformula
 
 import (
+	"strconv"
+
 	"github.com/fatih/color"
 	"github.com/macformula/hil/iocontrol"
 	"github.com/manifoldco/promptui"
@@ -9,13 +11,14 @@ import (
 )
 
 const (
-	// Labels: MUST BE UNIQUE!!
+	// Labels (must be unique)
 	_digitalVsAnalogLabel     = "Digital IO vs Analog IO"
 	_digitalOutputSelectLabel = "Digital Output"
 	_digitalInputSelectLabel  = "Digital Input"
 	_analogOutputSelectLabel  = "Analog Output"
 	_analogInputSelectLabel   = "Analog Input"
 	_digitalLevelSelectLabel  = "Digital Level"
+
 	// Select Options
 	_exit          = "--- EXIT ---"
 	_return        = "--- RETURN ---"
@@ -23,9 +26,18 @@ const (
 	_digitalInput  = "Digital Input"
 	_analogOutput  = "Analog Output"
 	_analogInput   = "Analog Input"
+
 	// Other
-	_digitalHigh = "High"
-	_digitalLow  = "Low"
+	_loggerName        = "iocheckout"
+	_digitalHigh       = "High"
+	_digitalLow        = "Low"
+	_voltagePrompt     = "Voltage"
+	_lowerVoltageBound = -3.3
+	_upperVoltageBound = 3.3
+)
+
+var (
+	ioValueColor = color.New(color.FgHiBlue, color.Bold)
 )
 
 type IoCheckout struct {
@@ -47,7 +59,7 @@ type IoCheckout struct {
 
 func NewIoCheckout(rev Revision, ioControl *iocontrol.IOControl, l *zap.Logger) *IoCheckout {
 	return &IoCheckout{
-		l:            l.Named("iocheckout"),
+		l:            l.Named(_loggerName),
 		ioControl:    ioControl,
 		diPins:       _revisionDigitalInputPinout[rev],
 		doPins:       _revisionDigitalOutputPinout[rev],
@@ -111,6 +123,25 @@ func (io *IoCheckout) promptSelect(label string, items []string) (string, error)
 	}
 
 	return result, nil
+}
+
+func (io *IoCheckout) promptVoltage() (float64, error) {
+	prompt := promptui.Prompt{
+		Label:    _voltagePrompt,
+		Validate: validateVoltage,
+	}
+
+	resultStr, err := prompt.Run()
+	if err != nil {
+		return 0.0, errors.Wrap(err, "run")
+	}
+
+	ret, err := strconv.ParseFloat(resultStr, 64)
+	if err != nil {
+		return 0.0, errors.New("invalid voltage input")
+	}
+
+	return ret, nil
 }
 
 func (io *IoCheckout) handleDigitalVsAnalog() error {
@@ -208,7 +239,10 @@ func (io *IoCheckout) analogOutputStrings() []string {
 }
 
 func (io *IoCheckout) handleDigitalInputSelect() error {
-	digitalInputStr, err := io.promptSelect(_digitalInputSelectLabel, append([]string{_return}, io.digitalInputStrings()...))
+	digitalInputStr, err := io.promptSelect(
+		_digitalInputSelectLabel,
+		append([]string{_return}, io.digitalInputStrings()...),
+	)
 	if err != nil {
 		return errors.Wrap(err, "prompt select")
 	}
@@ -234,11 +268,7 @@ func (io *IoCheckout) handleDigitalInputSelect() error {
 		return errors.Wrap(err, "read digital")
 	}
 
-	if lvl {
-		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalIn.String(), _digitalHigh)
-	} else {
-		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalIn.String(), _digitalLow)
-	}
+	_, _ = ioValueColor.Printf("\n%s: %s\n", physicalIn.String(), boolToHighLow(lvl))
 
 	return nil
 }
@@ -285,14 +315,10 @@ func (io *IoCheckout) handleDigitalOutputSelect() error {
 
 	err = io.ioControl.SetDigital(digitalOut, lvl)
 	if err != nil {
-		return errors.Wrap(err, "read digital")
+		return errors.Wrap(err, "set digital")
 	}
 
-	if lvl {
-		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalOut.String(), _digitalHigh)
-	} else {
-		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalOut.String(), _digitalLow)
-	}
+	_, _ = ioValueColor.Printf("\n%s: %s\n", physicalOut.String(), boolToHighLow(lvl))
 
 	return nil
 }
@@ -316,50 +342,65 @@ func (io *IoCheckout) handleAnalogInputSelect() error {
 
 	analogIn, ok := io.aiPins[physicalIn]
 	if !ok {
-		return errors.Wrap(err, "physical io does not map to digital input")
+		return errors.Wrap(err, "physical io does not map to analog input")
 	}
 
 	voltage, err := io.ioControl.ReadVoltage(analogIn)
 	if err != nil {
-		return errors.Wrap(err, "read digital")
+		return errors.Wrap(err, "read voltage")
 	}
 
-	_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %3f V\n", physicalIn.String(), voltage)
+	_, _ = ioValueColor.Printf("\n%s: %3f V\n", physicalIn.String(), voltage)
 
 	return nil
 }
 
 func (io *IoCheckout) handleAnalogOutputSelect() error {
-	digitalInputStr, err := io.promptSelect(_digitalInputSelectLabel, append([]string{_return}, io.analogInputStrings()...))
+	analogOutputStr, err := io.promptSelect(_analogInputSelectLabel, append([]string{_return}, io.analogOutputStrings()...))
 	if err != nil {
 		return errors.Wrap(err, "prompt select")
 	}
 
-	if digitalInputStr == _return {
+	if analogOutputStr == _return {
 		io.currentLabel = _digitalVsAnalogLabel
 
 		return nil
 	}
 
-	physicalIn, err := PhysicalIoString(digitalInputStr)
+	physicalOut, err := PhysicalIoString(analogOutputStr)
 	if err != nil {
 		return errors.Wrap(err, "physical io string")
 	}
 
-	digitalIn, ok := io.diPins[physicalIn]
+	analogOut, ok := io.aoPins[physicalOut]
 	if !ok {
 		return errors.Wrap(err, "physical io does not map to digital input")
 	}
 
-	lvl, err := io.ioControl.ReadDigital(digitalIn)
+	voltage, err := io.promptVoltage()
 	if err != nil {
-		return errors.Wrap(err, "read digital")
+		return errors.Wrap(err, "prompt voltage")
 	}
 
-	if lvl {
-		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalIn.String(), _digitalHigh)
-	} else {
-		_, _ = color.New(color.FgHiBlue, color.Bold).Printf("\n%s: %s\n", physicalIn.String(), _digitalLow)
+	err = io.ioControl.WriteVoltage(analogOut, voltage)
+	if err != nil {
+		return errors.Wrap(err, "write voltage")
+	}
+
+	_, _ = ioValueColor.Printf("\n%s: %3f V\n", physicalOut.String(), voltage)
+
+	return nil
+}
+
+func validateVoltage(input string) error {
+	val, err := strconv.ParseFloat(input, 64)
+	if err != nil {
+		return errors.New("invalid voltage input")
+	}
+
+	if val < _lowerVoltageBound || val > _upperVoltageBound {
+		return errors.Errorf("invalid voltage provided (%v) must be within bounds [%v, %v]",
+			val, _lowerVoltageBound, _upperVoltageBound)
 	}
 
 	return nil
@@ -373,4 +414,12 @@ func highLowToBool(lvl string) (bool, error) {
 	}
 
 	return false, errors.Errorf("unknown digital level string (%s)", lvl)
+}
+
+func boolToHighLow(b bool) string {
+	if b {
+		return _digitalHigh
+	}
+
+	return _digitalLow
 }
