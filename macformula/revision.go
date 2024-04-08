@@ -1,7 +1,8 @@
 package macformula
 
-//go:generate enumer -type=Revision revision.go
 // Revision is used to differentiate between pinouts.
+//
+//go:generate enumer -type=Revision revision.go
 type Revision int
 
 const (
