@@ -1,5 +1,6 @@
 package macformula
 
+// PhysicalIo represents an input output in its physical meaning.
 type PhysicalIo int
 
 //go:generate enumer -type=PhysicalIo physicalio.go

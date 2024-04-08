@@ -40,6 +40,7 @@ var (
 	ioValueColor = color.New(color.FgHiBlue, color.Bold)
 )
 
+// IoCheckout is a cli tool to control io set out in pinout.go.
 type IoCheckout struct {
 	l         *zap.Logger
 	ioControl *iocontrol.IOControl
@@ -57,6 +58,7 @@ type IoCheckout struct {
 	currentLabel string
 }
 
+// NewIoCheckout returns a pointer to an IoCheckout object.
 func NewIoCheckout(rev Revision, ioControl *iocontrol.IOControl, l *zap.Logger) *IoCheckout {
 	return &IoCheckout{
 		l:            l.Named(_loggerName),
@@ -69,6 +71,7 @@ func NewIoCheckout(rev Revision, ioControl *iocontrol.IOControl, l *zap.Logger) 
 	}
 }
 
+// Start starts the cli tool.
 func (io *IoCheckout) Start() error {
 	var err error
 

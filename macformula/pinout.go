@@ -7,8 +7,10 @@ import (
 )
 
 type (
+	// DigitalPinout maps physical io to digital pins.
 	DigitalPinout map[PhysicalIo]iocontrol.DigitalPin
-	AnalogPinout  map[PhysicalIo]iocontrol.AnalogPin
+	// AnalogPinout maps physical io to analog pins.
+	AnalogPinout map[PhysicalIo]iocontrol.AnalogPin
 )
 
 var _revisionDigitalInputPinout = map[Revision]DigitalPinout{
