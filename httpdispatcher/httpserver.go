@@ -3,10 +3,11 @@ package httpdispatcher
 import (
 	"context"
 	"encoding/json"
-	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/pkg/errors"
 
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/google/uuid"
@@ -22,8 +23,13 @@ type Message struct {
 }
 
 type StatusMessage struct {
-	Message string `json:"message"`
-	Code    string `json:"code"`
+	Message string
+	Code    string
+}
+
+type TestQueueItem struct {
+	UUID uuid.UUID
+	client Client
 }
 
 // message task values
@@ -42,8 +48,10 @@ type HttpServer struct {
 	recoverFromFatal chan orchestrator.RecoverFromFatalSignal
 	shutdown         chan orchestrator.ShutdownSignal
 	sequences        map[int]flow.Sequence
+	testQueue		 []TestQueueItem
 	statusFeed       event.Feed
 	resultsFeed      event.Feed
+	testQueueUpdateFeed  event.Feed
 }
 
 func NewHttpServer(l *zap.Logger) *HttpServer {
@@ -52,11 +60,13 @@ func NewHttpServer(l *zap.Logger) *HttpServer {
 		start:            make(chan orchestrator.StartSignal),
 		results:          make(chan orchestrator.ResultsSignal),
 		status:           make(chan orchestrator.StatusSignal),
-		cancelTest:       make(chan orchestrator.CancelTestSignal),
-		recoverFromFatal: make(chan orchestrator.RecoverFromFatalSignal),
-		shutdown:         make(chan orchestrator.ShutdownSignal),
-		statusFeed:       event.Feed{},
-		resultsFeed:      event.Feed{},
+		cancelTest:       		make(chan orchestrator.CancelTestSignal),
+		recoverFromFatal: 		make(chan orchestrator.RecoverFromFatalSignal),
+		shutdown:         		make(chan orchestrator.ShutdownSignal),
+		testQueue:		  		make([]TestQueueItem, 0),
+		statusFeed:       		event.Feed{},
+		resultsFeed:      		event.Feed{},
+		testQueueUpdateFeed:  event.Feed{},
 	}
 }
 
@@ -131,6 +141,7 @@ func (h *HttpServer) StartServer() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/test", h.serveTest) // start/sequences - cancel - recover
 	mux.HandleFunc("/status", h.serveStatus)
+	mux.HandleFunc("/queue", h.serveQueue)
 
 	err := http.ListenAndServe(addr, mux)
 	if err != nil {
@@ -161,7 +172,7 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 	client := NewClient(conn)
 	progressSub, resultsSub := h.SubscribeToFeeds(client.status, client.results)
 
-	go client.updateTests()
+	go h.updateTests()
 
 	defer client.conn.Close()
 	defer progressSub.Unsubscribe()
@@ -217,6 +228,16 @@ func (h *HttpServer) serveStatus(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *HttpServer) serveQueue(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	conn := h.createWS(w, r)
+	defer conn.Close()
+
+	for {
+		
+	}
+}
+
 func (h *HttpServer) startClientTest(client *Client, parameter string) {
 	var messageInt int
 	var err error
@@ -247,7 +268,7 @@ func (h *HttpServer) startClientTest(client *Client, parameter string) {
 		}
 		// Add test to client test list
 		queuePosition := (<-client.status).QueueLength
-		client.addTest(queuePosition, newTestID)
+		// client.addTest(queuePosition, newTestID)
 
 		// Send queue position and new test ID
 		testData, _ := json.Marshal(strconv.Itoa(queuePosition) + ", " + newTestID.String())
@@ -282,7 +303,7 @@ func (h *HttpServer) cancelClientTest(client *Client, parameter string) {
 		h.cancelTest <- orchestrator.CancelTestSignal{
 			TestId: client.testQueue[testIndex].UUID,
 		}
-		client.removeTest(testIndex)
+		h.removeTestFromQueue(client.testQueue[testIndex].UUID)
 		httpCode = http.StatusText(http.StatusOK)
 	} else {
 		httpCode = http.StatusText(http.StatusBadRequest)
@@ -318,6 +339,46 @@ func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {
 	return &msg, nil
 }
 
+func (h *HttpServer) addTestToQueue(testID uuid.UUID, client Client) {
+	newItem := TestQueueItem{
+		UUID: testID,
+		client: client,
+	}
+	h.testQueue = append(h.testQueue, newItem)
+	client.addTestToQueue((len(h.testQueue)-1), testID)
+}
+
+func (h *HttpServer) removeTestFromQueue(testID uuid.UUID, ) {
+	removedTestIndex := 0
+	for i := range h.testQueue {
+		if (h.testQueue[i].UUID == testID) {
+			removedTestIndex = i
+			//remove test from client queue
+			testClient := h.testQueue[i].client
+			testClient.removeTestFromQueue(removedTestIndex)
+			//remove test from server queue
+			h.testQueue = append(h.testQueue[:i], h.testQueue[i+1:]...)
+			break
+		}
+	}
+	if removedTestIndex == len(h.testQueue) {
+		return
+	}
+	// Update client queueNumber after for all tests after removeTestIndex
+	for i:=removedTestIndex; i<len(h.testQueue); i++ {
+		//update client test queue
+		h.testQueue[i].client.updateTestFromQueue(i)
+	}
+}
+
+// update client test queues when test finishes
+func (h *HttpServer) updateTestQueue(queueIndexRemoved int) {
+
+	for i := range h.testQueue {
+		h.testQueue[i].client.updateTestFromQueue(queueIndexRemoved)
+	}
+}
+
 func (h *HttpServer) closeServer() error {
 	//TODO
 	return nil
@@ -333,6 +394,7 @@ func (h *HttpServer) monitorDispatcher(ctx context.Context) {
 		case res := <-h.results:
 			h.l.Info("results signal received")
 			h.resultsFeed.Send(res)
+			h.testQueueUpdateFeed
 		case <-ctx.Done():
 			h.l.Info("context done signal received")
 
