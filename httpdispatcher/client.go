@@ -43,7 +43,7 @@ func (c *Client) addTestToQueue(queueIndex int, sequence flow.Sequence,testID uu
 
 func (c *Client) removeTestFromQueue(queueIndexRemoved int) {
 	for i:=0; i<len(c.testQueue); i++ {
-		if c.testQueue[i].queueIndex == queueIndexRemoved {
+		if c.testQueue[i].QueueIndex == queueIndexRemoved {
 			c.testQueue = append(c.testQueue[:i], c.testQueue[i+1:]...)
 		}
 	}
@@ -52,8 +52,8 @@ func (c *Client) removeTestFromQueue(queueIndexRemoved int) {
 func (c *Client) updateTestFromQueue(queueIndexRemoved int) {
 	// lower test Index by 1
 	for i := range c.testQueue {
-		if c.testQueue[i].queueIndex == queueIndexRemoved + 1 {
-			c.testQueue[i].queueIndex -= 1
+		if c.testQueue[i].QueueIndex == queueIndexRemoved + 1 {
+			c.testQueue[i].QueueIndex -= 1
 			break
 		}
 	}
