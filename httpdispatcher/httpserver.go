@@ -351,12 +351,12 @@ func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {
 func (h *HttpServer) addTestToQueue(testID uuid.UUID, testIndex int, client *Client) {
 	newItem := TestQueueItem{
 		UUID: testID,
-		sequence: h.sequences[testIndex],
+		Sequence: h.sequences[testIndex],
 		client: client,
 	}
 	h.testQueue = append(h.testQueue, newItem)
 	h.testQueueUpdateFeed.Send(true)
-	client.addTestToQueue((len(h.testQueue)-1), newItem.sequence, testID)
+	client.addTestToQueue((len(h.testQueue)-1), newItem.Sequence, testID)
 }
 
 func (h *HttpServer) removeTestFromQueue(testID uuid.UUID, ) {
