@@ -3,11 +3,13 @@ package httpdispatcher
 import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/orchestrator"
 )
 
 type ClientTestQueueItem struct {
-	queueIndex int
+	queueIndex 	int
+	sequence	flow.Sequence
 	UUID        uuid.UUID
 }
 
@@ -29,11 +31,12 @@ func NewClient(conn *websocket.Conn) *Client {
 
 
 // FIX THIS SHIT
-func (c *Client) addTestToQueue(queueIndex int, testID uuid.UUID) {
+func (c *Client) addTestToQueue(queueIndex int, sequence flow.Sequence,testID uuid.UUID) {
 	//add queuenumber and testID to testQueue
 	newItem := ClientTestQueueItem{
 		queueIndex: queueIndex,
-		UUID:        testID,
+		sequence: 	sequence,
+		UUID:       testID,
 	}
 	c.testQueue = append(c.testQueue, newItem)
 }
