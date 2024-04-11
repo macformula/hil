@@ -28,8 +28,9 @@ type StatusMessage struct {
 }
 
 type TestQueueItem struct {
-	UUID uuid.UUID
-	client *Client
+	UUID 		uuid.UUID
+	sequence 	flow.Sequence
+	client 		*Client
 }
 
 // message task values
@@ -276,7 +277,7 @@ func (h *HttpServer) startClientTest(client *Client, parameter string) {
 		}
 		// Add test to test list
 		queuePosition := (<-client.status).QueueLength		
-		h.addTestToQueue(newTestID, client)
+		h.addTestToQueue(newTestID, messageInt, client)
 
 		// Send queue position and new test ID
 		testData, _ := json.Marshal(strconv.Itoa(queuePosition) + ", " + newTestID.String())
@@ -347,14 +348,15 @@ func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {
 	return &msg, nil
 }
 
-func (h *HttpServer) addTestToQueue(testID uuid.UUID, client *Client) {
+func (h *HttpServer) addTestToQueue(testID uuid.UUID, testIndex int, client *Client) {
 	newItem := TestQueueItem{
 		UUID: testID,
+		sequence: h.sequences[testIndex],
 		client: client,
 	}
 	h.testQueue = append(h.testQueue, newItem)
 	h.testQueueUpdateFeed.Send(true)
-	client.addTestToQueue((len(h.testQueue)-1), testID)
+	client.addTestToQueue((len(h.testQueue)-1), newItem.sequence, testID)
 }
 
 func (h *HttpServer) removeTestFromQueue(testID uuid.UUID, ) {
