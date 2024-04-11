@@ -1,21 +1,19 @@
 package httpdispatcher
 
 import (
-	"encoding/json"
-
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/macformula/hil/orchestrator"
 )
 
-type TestQueueItem struct {
-	queueNumber int
+type ClientTestQueueItem struct {
+	queueIndex int
 	UUID        uuid.UUID
 }
 
 type Client struct {
 	conn      *websocket.Conn
-	testQueue []TestQueueItem
+	testQueue []ClientTestQueueItem
 	status    chan orchestrator.StatusSignal
 	results   chan orchestrator.ResultsSignal
 }
@@ -23,38 +21,54 @@ type Client struct {
 func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
 		conn: conn,
-		// testQueue: make(chan TestQueueItem, 10),
-		testQueue: make([]TestQueueItem, 0),
+		testQueue: make([]ClientTestQueueItem, 0),
 		status:    make(chan orchestrator.StatusSignal),
 		results:   make(chan orchestrator.ResultsSignal),
 	}
 }
 
-func (c *Client) addTest(queueNumber int, testID uuid.UUID) {
+
+// FIX THIS SHIT
+func (c *Client) addTestToQueue(queueIndex int, testID uuid.UUID) {
 	//add queuenumber and testID to testQueue
-	newItem := TestQueueItem{
-		queueNumber: queueNumber,
+	newItem := ClientTestQueueItem{
+		queueIndex: queueIndex,
 		UUID:        testID,
 	}
 	c.testQueue = append(c.testQueue, newItem)
 }
 
-func (c *Client) removeTest(testIndex int) {
-	c.testQueue = append(c.testQueue[:testIndex], c.testQueue[testIndex+1:]...)
-}
-
-func (c *Client) updateTests() {
-	select {
-	case <-c.results:
-		// Update queue position of client tests
-		for i := range c.testQueue {
-			if c.testQueue[i].queueNumber > 0 {
-				c.testQueue[i].queueNumber -= 1
-			} else {
-				c.removeTest(i)
-			}
+func (c *Client) removeTestFromQueue(queueIndexRemoved int) {
+	for i:=0; i<len(c.testQueue); i++ {
+		if c.testQueue[i].queueIndex == queueIndexRemoved {
+			c.testQueue = append(c.testQueue[:i], c.testQueue[i+1:]...)
 		}
-		queueData, _ := json.Marshal(c.testQueue)
-		c.conn.WriteMessage(websocket.TextMessage, queueData)
 	}
 }
+
+func (c *Client) updateTestFromQueue(queueIndexRemoved int) {
+	// lower test Index by 1
+	for i := range c.testQueue {
+		if c.testQueue[i].queueIndex == queueIndexRemoved + 1 {
+			c.testQueue[i].queueIndex -= 1
+			break
+		}
+	}
+}
+
+// FIX THIS SHIT
+// func (c *Client) updateTests() {
+// 	select {
+// 	case <-c.results:
+// 		// Update queue position of client tests
+// 		for i := range c.testQueue {
+// 			if c.testQueue[i].queueNumber > 0 {
+// 				c.testQueue[i].queueNumber -= 1
+// 			} else {
+// 				c.removeTest(i)
+// 			}
+// 		}
+// 		queueData, _ := json.Marshal(c.testQueue)
+// 		c.conn.WriteMessage(websocket.TextMessage, queueData)
+// 	}
+// }
