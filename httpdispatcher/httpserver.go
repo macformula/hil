@@ -29,7 +29,7 @@ type StatusMessage struct {
 
 type TestQueueItem struct {
 	UUID uuid.UUID
-	client Client
+	client *Client
 }
 
 // message task values
@@ -47,6 +47,7 @@ type HttpServer struct {
 	cancelTest       chan orchestrator.CancelTestSignal
 	recoverFromFatal chan orchestrator.RecoverFromFatalSignal
 	shutdown         chan orchestrator.ShutdownSignal
+	testQueueUpdated chan bool
 	sequences        map[int]flow.Sequence
 	testQueue		 []TestQueueItem
 	statusFeed       event.Feed
@@ -56,17 +57,18 @@ type HttpServer struct {
 
 func NewHttpServer(l *zap.Logger) *HttpServer {
 	return &HttpServer{
-		l:                l.Named(_httpLoggerName),
-		start:            make(chan orchestrator.StartSignal),
-		results:          make(chan orchestrator.ResultsSignal),
-		status:           make(chan orchestrator.StatusSignal),
+		l:                		l.Named(_httpLoggerName),
+		start:            		make(chan orchestrator.StartSignal),
+		results:          		make(chan orchestrator.ResultsSignal),
+		status:           		make(chan orchestrator.StatusSignal),
 		cancelTest:       		make(chan orchestrator.CancelTestSignal),
 		recoverFromFatal: 		make(chan orchestrator.RecoverFromFatalSignal),
 		shutdown:         		make(chan orchestrator.ShutdownSignal),
+		testQueueUpdated:		make(chan bool),
 		testQueue:		  		make([]TestQueueItem, 0),
 		statusFeed:       		event.Feed{},
 		resultsFeed:      		event.Feed{},
-		testQueueUpdateFeed:  event.Feed{},
+		testQueueUpdateFeed:  	event.Feed{},
 	}
 }
 
@@ -172,8 +174,6 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 	client := NewClient(conn)
 	progressSub, resultsSub := h.SubscribeToFeeds(client.status, client.results)
 
-	go h.updateTests()
-
 	defer client.conn.Close()
 	defer progressSub.Unsubscribe()
 	defer resultsSub.Unsubscribe()
@@ -231,10 +231,18 @@ func (h *HttpServer) serveStatus(w http.ResponseWriter, r *http.Request) {
 func (h *HttpServer) serveQueue(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	conn := h.createWS(w, r)
-	defer conn.Close()
+	client := NewClient(conn)
+	updateSub := h.testQueueUpdateFeed.Subscribe(h.testQueueUpdated)
+
+	defer client.conn.Close()
+	defer updateSub.Unsubscribe()
 
 	for {
-		
+		select {
+		case <- h.testQueueUpdated:
+			testQueueJSON, _ := json.Marshal(h.testQueue)
+			conn.WriteMessage(websocket.TextMessage, testQueueJSON)
+		}
 	}
 }
 
@@ -266,9 +274,9 @@ func (h *HttpServer) startClientTest(client *Client, parameter string) {
 			Seq:      sequence,
 			Metadata: nil,
 		}
-		// Add test to client test list
-		queuePosition := (<-client.status).QueueLength
-		// client.addTest(queuePosition, newTestID)
+		// Add test to test list
+		queuePosition := (<-client.status).QueueLength		
+		h.addTestToQueue(newTestID, client)
 
 		// Send queue position and new test ID
 		testData, _ := json.Marshal(strconv.Itoa(queuePosition) + ", " + newTestID.String())
@@ -339,12 +347,13 @@ func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {
 	return &msg, nil
 }
 
-func (h *HttpServer) addTestToQueue(testID uuid.UUID, client Client) {
+func (h *HttpServer) addTestToQueue(testID uuid.UUID, client *Client) {
 	newItem := TestQueueItem{
 		UUID: testID,
 		client: client,
 	}
 	h.testQueue = append(h.testQueue, newItem)
+	h.testQueueUpdateFeed.Send(true)
 	client.addTestToQueue((len(h.testQueue)-1), testID)
 }
 
@@ -361,6 +370,8 @@ func (h *HttpServer) removeTestFromQueue(testID uuid.UUID, ) {
 			break
 		}
 	}
+	h.testQueueUpdateFeed.Send(true)
+
 	if removedTestIndex == len(h.testQueue) {
 		return
 	}
@@ -372,11 +383,12 @@ func (h *HttpServer) removeTestFromQueue(testID uuid.UUID, ) {
 }
 
 // update client test queues when test finishes
-func (h *HttpServer) updateTestQueue(queueIndexRemoved int) {
-
+func (h *HttpServer) updateTestQueue() {
+	h.removeTestFromQueue(h.testQueue[0].UUID)
 	for i := range h.testQueue {
-		h.testQueue[i].client.updateTestFromQueue(queueIndexRemoved)
+		h.testQueue[i].client.updateTestFromQueue(0)
 	}
+	h.testQueueUpdateFeed.Send(true)
 }
 
 func (h *HttpServer) closeServer() error {
@@ -394,7 +406,7 @@ func (h *HttpServer) monitorDispatcher(ctx context.Context) {
 		case res := <-h.results:
 			h.l.Info("results signal received")
 			h.resultsFeed.Send(res)
-			h.testQueueUpdateFeed
+			h.updateTestQueue()
 		case <-ctx.Done():
 			h.l.Info("context done signal received")
 
