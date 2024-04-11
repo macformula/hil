@@ -34,8 +34,8 @@ func NewClient(conn *websocket.Conn) *Client {
 func (c *Client) addTestToQueue(queueIndex int, sequence flow.Sequence,testID uuid.UUID) {
 	//add queuenumber and testID to testQueue
 	newItem := ClientTestQueueItem{
-		queueIndex: queueIndex,
-		sequence: 	sequence,
+		QueueIndex: queueIndex,
+		Sequence: 	sequence,
 		UUID:       testID,
 	}
 	c.testQueue = append(c.testQueue, newItem)
