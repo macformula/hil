@@ -8,8 +8,8 @@ import (
 )
 
 type ClientTestQueueItem struct {
-	queueIndex 	int
-	sequence	flow.Sequence
+	QueueIndex 	int
+	Sequence	flow.Sequence
 	UUID        uuid.UUID
 }
 

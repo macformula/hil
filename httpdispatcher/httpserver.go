@@ -29,7 +29,7 @@ type StatusMessage struct {
 
 type TestQueueItem struct {
 	UUID 		uuid.UUID
-	sequence 	flow.Sequence
+	Sequence 	flow.Sequence
 	client 		*Client
 }
 
