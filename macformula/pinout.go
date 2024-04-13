@@ -15,7 +15,7 @@ type (
 
 var _revisionDigitalInputPinout = map[Revision]DigitalPinout{
 	Ev5: {
-		HvilOk: speedgoat.NewDigitalPin(15),
+		HvilOk: speedgoat.NewDigitalPin(0),
 	},
 	MockTest: {
 		HvilOk: raspi.NewDigitalPin(),
@@ -24,8 +24,8 @@ var _revisionDigitalInputPinout = map[Revision]DigitalPinout{
 
 var _revisionDigitalOutputPinout = map[Revision]DigitalPinout{
 	Ev5: {
-		LvEnableButton:     speedgoat.NewDigitalPin(0),
-		ReadyToDriveButton: speedgoat.NewDigitalPin(1),
+		LvEnableButton:     speedgoat.NewDigitalPin(8),
+		ReadyToDriveButton: speedgoat.NewDigitalPin(9),
 	},
 	MockTest: {
 		LvEnableButton:     raspi.NewDigitalPin(),
@@ -35,7 +35,7 @@ var _revisionDigitalOutputPinout = map[Revision]DigitalPinout{
 
 var _revisionAnalogInputPinout = map[Revision]AnalogPinout{
 	Ev5: {
-		LvController3v3RefVoltage: speedgoat.NewAnalogPin(5),
+		LvController3v3RefVoltage: speedgoat.NewAnalogPin(0),
 	},
 	MockTest: {
 		LvController3v3RefVoltage: raspi.NewAnalogPin(),
@@ -44,7 +44,7 @@ var _revisionAnalogInputPinout = map[Revision]AnalogPinout{
 
 var _revisionAnalogOutputPinout = map[Revision]AnalogPinout{
 	Ev5: {
-		AcceleratorPedalPosition1: speedgoat.NewAnalogPin(0),
+		AcceleratorPedalPosition1: speedgoat.NewAnalogPin(8),
 		AcceleratorPedalPosition2: speedgoat.NewAnalogPin(1),
 		AccumulatorCurrent:        speedgoat.NewAnalogPin(2),
 	},

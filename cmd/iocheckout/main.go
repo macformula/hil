@@ -10,7 +10,7 @@ import (
 
 const (
 	_logFileName = "iocontrol.log"
-	_revision    = macformula.MockTest
+	_revision    = macformula.Ev5
 )
 
 func main() {
