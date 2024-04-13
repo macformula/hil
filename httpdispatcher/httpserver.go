@@ -394,10 +394,14 @@ func (h *HttpServer) removeTestFromQueue(testID uuid.UUID) {
 
 // update client test queues when test finishes
 func (h *HttpServer) updateTestQueue() {
-	h.removeTestFromQueue(h.testQueue[0].UUID)
 	if len(h.testQueue) > 0 {
-		for i := range h.testQueue {
-			h.testQueue[i].client.updateTestQueue(0)
+		h.removeTestFromQueue(h.testQueue[0].UUID)
+
+		// Check again if the queue still has items before attempting to access them
+		if len(h.testQueue) > 0 {
+			for i := range h.testQueue {
+				h.testQueue[i].client.updateTestQueue(0)
+			}
 		}
 	}
 	h.testQueueUpdateFeed.Send(true)
