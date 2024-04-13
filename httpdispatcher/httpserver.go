@@ -48,7 +48,7 @@ type HttpServer struct {
 	cancelTest       chan orchestrator.CancelTestSignal
 	recoverFromFatal chan orchestrator.RecoverFromFatalSignal
 	shutdown         chan orchestrator.ShutdownSignal
-	testQueueUpdated chan bool
+	// testQueueUpdated chan bool
 	sequences        map[int]flow.Sequence
 	testQueue		 []TestQueueItem
 	statusFeed       event.Feed
@@ -65,11 +65,11 @@ func NewHttpServer(l *zap.Logger) *HttpServer {
 		cancelTest:       		make(chan orchestrator.CancelTestSignal),
 		recoverFromFatal: 		make(chan orchestrator.RecoverFromFatalSignal),
 		shutdown:         		make(chan orchestrator.ShutdownSignal),
-		testQueueUpdated:		make(chan bool),
+		// testQueueUpdated:		make(chan bool),
 		testQueue:		  		make([]TestQueueItem, 0),
 		statusFeed:       		event.Feed{},
-		resultsFeed:      		event.Feed{},
-		testQueueUpdateFeed:  	event.Feed{},// TODO make results/status feed - update in monitordispatcher
+		resultsFeed:      		event.Feed{}, // TODO make results/status feed - update in monitordispatcher
+		testQueueUpdateFeed:  	event.Feed{},
 	}
 }
 
@@ -243,14 +243,14 @@ func (h *HttpServer) serveQueue(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	conn := h.createWS(w, r)
 	client := NewClient(conn)
-	updateSub := h.testQueueUpdateFeed.Subscribe(h.testQueueUpdated)
+	updateSub := h.testQueueUpdateFeed.Subscribe(client.testQueueUpdated)
 
 	defer client.conn.Close()
 	defer updateSub.Unsubscribe()
 
 	for {
 		select {
-		case <- h.testQueueUpdated:
+		case <- client.testQueueUpdated:
 			testQueueJSON, _ := json.Marshal(h.testQueue)
 			conn.WriteMessage(websocket.TextMessage, testQueueJSON)
 		}
@@ -369,20 +369,18 @@ func (h *HttpServer) addTestToQueue(testID uuid.UUID, testIndex int, client *Cli
 	client.addTestToQueue((len(h.testQueue)-1), newItem.SequenceName, testID)
 }
 
-func (h *HttpServer) removeTestFromQueue(testID uuid.UUID, ) {
+func (h *HttpServer) removeTestFromQueue(testID uuid.UUID) {
 	removedTestIndex := 0
 	for i := range h.testQueue {
 		if (h.testQueue[i].UUID == testID) {
 			removedTestIndex = i
 			//remove test from client queue
-			testClient := h.testQueue[i].client
-			testClient.removeTestFromQueue(removedTestIndex)
+			h.testQueue[i].client.removeTestFromQueue(removedTestIndex)
 			//remove test from server queue
 			h.testQueue = append(h.testQueue[:i], h.testQueue[i+1:]...)
 			break
 		}
 	}
-	h.testQueueUpdateFeed.Send(true)
 
 	if removedTestIndex == len(h.testQueue) {
 		return
@@ -390,7 +388,7 @@ func (h *HttpServer) removeTestFromQueue(testID uuid.UUID, ) {
 	// Update client queueNumber after for all tests after removeTestIndex
 	for i:=removedTestIndex; i<len(h.testQueue); i++ {
 		//update client test queue
-		h.testQueue[i].client.updateTestFromQueue(i)
+		h.testQueue[i].client.updateTestQueue(i)
 	}
 }
 
@@ -398,7 +396,7 @@ func (h *HttpServer) removeTestFromQueue(testID uuid.UUID, ) {
 func (h *HttpServer) updateTestQueue() {
 	h.removeTestFromQueue(h.testQueue[0].UUID)
 	for i := range h.testQueue {
-		h.testQueue[i].client.updateTestFromQueue(0)
+		h.testQueue[i].client.updateTestQueue(0)
 	}
 	h.testQueueUpdateFeed.Send(true)
 }
