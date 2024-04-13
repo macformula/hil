@@ -3,14 +3,16 @@ package main
 import (
 	"github.com/macformula/hil/iocontrol"
 	"github.com/macformula/hil/iocontrol/raspi"
+	"github.com/macformula/hil/iocontrol/speedgoat"
 	"github.com/macformula/hil/macformula"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
 const (
-	_logFileName = "iocontrol.log"
-	_revision    = macformula.Ev5
+	_logFileName   = "iocontrol.log"
+	_revision      = macformula.Ev5
+	_speedgoatAddr = "192.168.10.1:8001"
 )
 
 func main() {
@@ -23,8 +25,9 @@ func main() {
 	defer logger.Sync()
 
 	rpiController := raspi.NewController()
+	sgController := speedgoat.NewController(logger, _speedgoatAddr)
 
-	ioControl := iocontrol.NewIOControl(logger, iocontrol.WithRaspi(rpiController))
+	ioControl := iocontrol.NewIOControl(logger, iocontrol.WithRaspi(rpiController), iocontrol.WithSpeedgoat(sgController))
 
 	logger.Info("opening iocontrol")
 
