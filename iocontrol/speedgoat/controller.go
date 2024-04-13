@@ -94,14 +94,14 @@ func (c *Controller) ReadDigital(output *DigitalPin) bool {
 // WriteVoltage sets the voltage of a Speedgoat analog pin.
 func (c *Controller) WriteVoltage(output *AnalogPin, voltage float64) {
 	c.muAnalog.Lock()
-	defer c.muDigital.Unlock()
+	defer c.muAnalog.Unlock()
 	c.analog[output.Index] = voltage
 }
 
 // ReadVoltage returns the voltage of a Speedgoat analog pin.
 func (c *Controller) ReadVoltage(output *AnalogPin) float64 {
 	c.muAnalog.Lock()
-	defer c.muDigital.Unlock()
+	defer c.muAnalog.Unlock()
 	return c.analog[output.Index]
 }
 
