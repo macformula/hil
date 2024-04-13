@@ -48,7 +48,7 @@ func (c *Client) removeTestFromQueue(queueIndexRemoved int) {
 	}
 }
 
-func (c *Client) updateTestFromQueue(queueIndexRemoved int) {
+func (c *Client) updateTestQueue(queueIndexRemoved int) {
 	// lower test Index by 1
 	for i := range c.testQueue {
 		if c.testQueue[i].QueueIndex == queueIndexRemoved + 1 {
