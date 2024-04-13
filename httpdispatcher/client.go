@@ -3,14 +3,13 @@ package httpdispatcher
 import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/orchestrator"
 )
 
 type ClientTestQueueItem struct {
-	QueueIndex 	int
-	Sequence	flow.Sequence
-	UUID        uuid.UUID
+	SequenceName	string
+	QueueIndex 		int
+	UUID        	uuid.UUID
 }
 
 type Client struct {
@@ -31,11 +30,11 @@ func NewClient(conn *websocket.Conn) *Client {
 
 
 // FIX THIS SHIT
-func (c *Client) addTestToQueue(queueIndex int, sequence flow.Sequence,testID uuid.UUID) {
+func (c *Client) addTestToQueue(queueIndex int, sequenceName string,testID uuid.UUID) {
 	//add queuenumber and testID to testQueue
 	newItem := ClientTestQueueItem{
+		SequenceName: 	sequenceName,
 		QueueIndex: queueIndex,
-		Sequence: 	sequence,
 		UUID:       testID,
 	}
 	c.testQueue = append(c.testQueue, newItem)
@@ -58,20 +57,3 @@ func (c *Client) updateTestFromQueue(queueIndexRemoved int) {
 		}
 	}
 }
-
-// FIX THIS SHIT
-// func (c *Client) updateTests() {
-// 	select {
-// 	case <-c.results:
-// 		// Update queue position of client tests
-// 		for i := range c.testQueue {
-// 			if c.testQueue[i].queueNumber > 0 {
-// 				c.testQueue[i].queueNumber -= 1
-// 			} else {
-// 				c.removeTest(i)
-// 			}
-// 		}
-// 		queueData, _ := json.Marshal(c.testQueue)
-// 		c.conn.WriteMessage(websocket.TextMessage, queueData)
-// 	}
-// }

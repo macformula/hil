@@ -28,9 +28,9 @@ type StatusMessage struct {
 }
 
 type TestQueueItem struct {
-	UUID 		uuid.UUID
-	Sequence 	flow.Sequence
-	client 		*Client
+	SequenceName 	string
+	UUID 			uuid.UUID
+	client 			*Client
 }
 
 // message task values
@@ -69,7 +69,7 @@ func NewHttpServer(l *zap.Logger) *HttpServer {
 		testQueue:		  		make([]TestQueueItem, 0),
 		statusFeed:       		event.Feed{},
 		resultsFeed:      		event.Feed{},
-		testQueueUpdateFeed:  	event.Feed{},
+		testQueueUpdateFeed:  	event.Feed{},// TODO make results/status feed - update in monitordispatcher
 	}
 }
 
@@ -144,6 +144,7 @@ func (h *HttpServer) StartServer() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/test", h.serveTest) // start/sequences - cancel - recover
 	mux.HandleFunc("/status", h.serveStatus)
+	mux.HandleFunc("/results", h.serveResults)
 	mux.HandleFunc("/queue", h.serveQueue)
 
 	err := http.ListenAndServe(addr, mux)
@@ -161,10 +162,6 @@ func (h *HttpServer) createWS(w http.ResponseWriter, r *http.Request) *websocket
 	return conn
 }
 
-func (h *HttpServer) SubscribeToFeeds(progressChan chan orchestrator.StatusSignal, resultsChan chan orchestrator.ResultsSignal) (progressSub event.Subscription, resultSub event.Subscription) {
-	return h.statusFeed.Subscribe(progressChan), h.resultsFeed.Subscribe(resultsChan) // TODO make results/status feed - update in monitordispatcher
-}
-
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
@@ -173,12 +170,8 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	conn := h.createWS(w, r)
 	client := NewClient(conn)
-	progressSub, resultsSub := h.SubscribeToFeeds(client.status, client.results)
 
 	defer client.conn.Close()
-	defer progressSub.Unsubscribe()
-	defer resultsSub.Unsubscribe()
-
 	for {
 		msg, err := h.readWS(conn)
 		status := StatusMessage{Code: "200", Message: ""}
@@ -214,17 +207,34 @@ func (h *HttpServer) serveStatus(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	conn := h.createWS(w, r)
 	client := NewClient(conn)
-	progressSub, resultsSub := h.SubscribeToFeeds(client.status, client.results)
+	progressSub := h.statusFeed.Subscribe(client.status)
 
 	defer client.conn.Close()
 	defer progressSub.Unsubscribe()
-	defer resultsSub.Unsubscribe()
 
 	for {
 		select {
 		case currentStatus := <-client.status:
 			currentStatusJSON, _ := json.Marshal(currentStatus)
 			conn.WriteMessage(websocket.TextMessage, currentStatusJSON)
+		}
+	}
+}
+
+func (h *HttpServer) serveResults(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	conn := h.createWS(w, r)
+	client := NewClient(conn)
+	resultSub := h.resultsFeed.Subscribe(client.results)
+
+	defer client.conn.Close()
+	defer resultSub.Unsubscribe()
+
+	for {
+		select {
+		case result := <-client.results:
+			resultJSON, _ := json.Marshal(result)
+			conn.WriteMessage(websocket.TextMessage, resultJSON)
 		}
 	}
 }
@@ -350,13 +360,13 @@ func (h *HttpServer) readWS(conn *websocket.Conn) (*Message, error) {
 
 func (h *HttpServer) addTestToQueue(testID uuid.UUID, testIndex int, client *Client) {
 	newItem := TestQueueItem{
+		SequenceName: h.sequences[testIndex].Name,
 		UUID: testID,
-		Sequence: h.sequences[testIndex],
 		client: client,
 	}
 	h.testQueue = append(h.testQueue, newItem)
 	h.testQueueUpdateFeed.Send(true)
-	client.addTestToQueue((len(h.testQueue)-1), newItem.Sequence, testID)
+	client.addTestToQueue((len(h.testQueue)-1), newItem.SequenceName, testID)
 }
 
 func (h *HttpServer) removeTestFromQueue(testID uuid.UUID, ) {
@@ -409,6 +419,7 @@ func (h *HttpServer) monitorDispatcher(ctx context.Context) {
 			h.l.Info("results signal received")
 			h.resultsFeed.Send(res)
 			h.updateTestQueue()
+
 		case <-ctx.Done():
 			h.l.Info("context done signal received")
 
