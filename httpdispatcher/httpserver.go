@@ -365,8 +365,8 @@ func (h *HttpServer) addTestToQueue(testID uuid.UUID, testIndex int, client *Cli
 		client: client,
 	}
 	h.testQueue = append(h.testQueue, newItem)
-	h.testQueueUpdateFeed.Send(true)
 	client.addTestToQueue((len(h.testQueue)-1), newItem.SequenceName, testID)
+	h.testQueueUpdateFeed.Send(true)
 }
 
 func (h *HttpServer) removeTestFromQueue(testID uuid.UUID) {
@@ -395,8 +395,10 @@ func (h *HttpServer) removeTestFromQueue(testID uuid.UUID) {
 // update client test queues when test finishes
 func (h *HttpServer) updateTestQueue() {
 	h.removeTestFromQueue(h.testQueue[0].UUID)
-	for i := range h.testQueue {
-		h.testQueue[i].client.updateTestQueue(0)
+	if len(h.testQueue) > 0 {
+		for i := range h.testQueue {
+			h.testQueue[i].client.updateTestQueue(0)
+		}
 	}
 	h.testQueueUpdateFeed.Send(true)
 }
