@@ -366,9 +366,12 @@ func (h *HttpServer) addTestToQueue(testID uuid.UUID, testIndex int, client *Cli
 	}
 	h.testQueue = append(h.testQueue, newItem)
 	client.addTestToQueue((len(h.testQueue)-1), newItem.SequenceName, testID)
+
 	h.testQueueUpdateFeed.Send(true)
 }
 
+
+// remove test using uuid, updates testIndex for remaining tests
 func (h *HttpServer) removeTestFromQueue(testID uuid.UUID) {
 	removedTestIndex := 0
 	for i := range h.testQueue {
@@ -381,8 +384,11 @@ func (h *HttpServer) removeTestFromQueue(testID uuid.UUID) {
 			break
 		}
 	}
-
+	
+	// No client test queues to update
 	if removedTestIndex == len(h.testQueue) {
+		return
+	}else if len(h.testQueue) == 0 {
 		return
 	}
 	// Update client queueNumber after for all tests after removeTestIndex
@@ -396,12 +402,6 @@ func (h *HttpServer) removeTestFromQueue(testID uuid.UUID) {
 func (h *HttpServer) updateTestQueue() {
 	h.removeTestFromQueue(h.testQueue[0].UUID)
 
-	// Check again if the queue still has items before attempting to access them
-	if len(h.testQueue) > 0 {
-		for i := range h.testQueue {
-			h.testQueue[i].client.updateTestQueue(0)
-		}
-	}
 	h.testQueueUpdateFeed.Send(true)
 }
 
