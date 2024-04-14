@@ -385,8 +385,10 @@ func (h *HttpServer) removeTestFromQueue(testID uuid.UUID) {
 	
 	// No client test queues to update
 	if removedTestIndex == len(h.testQueue) {
+		h.testQueueUpdateFeed.Send(true)
 		return
 	}else if len(h.testQueue) == 0 {
+		h.testQueueUpdateFeed.Send(true)
 		return
 	}
 	// Update client queueNumber after for all tests after removeTestIndex
