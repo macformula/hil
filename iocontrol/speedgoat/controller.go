@@ -4,9 +4,11 @@ import (
 	"encoding/binary"
 	"math"
 	"net"
+	"os/exec"
 	"sync"
 	"time"
 
+	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
@@ -21,12 +23,15 @@ const (
 	_loggerName         = "speedgoat_controller"
 	_tickTime           = time.Millisecond * 10
 	_readDeadline       = time.Second * 5
+	_startScript        = "iocontrol/speedgoat/scripts/startModel.sh"
+	_stopScript         = "iocontrol/speedgoat/scripts/stopModel.sh"
 )
 
 // Controller provides control for various Speedgoat pins
 type Controller struct {
 	addr string
 	conn net.Conn
+	err  *utils.ResettableError
 	l    *zap.Logger
 
 	opened bool
@@ -35,15 +40,38 @@ type Controller struct {
 	analog    [_analogInputCount + _analogOutputCount]float64
 	muDigital sync.Mutex
 	muAnalog  sync.Mutex
+
+	autoloadModel bool
+	sgSSH         string
+	sgPassword    string
+	modelName     string
+}
+
+type SpeedgoatOption func(*Controller)
+
+// WithModelAutoload will automatically load the given model into Simulink realtime remotely from the Pi. sgPassword is
+// Speedgoat password, sgSSH is the "user@ip" format for SSH, modelName is the name for the simulink model.
+func WithModelAutoload(sgPassword, sgSSH, modelName string) SpeedgoatOption {
+	return func(c *Controller) {
+		c.autoloadModel = true
+		c.sgSSH = sgSSH
+		c.sgPassword = sgPassword
+		c.modelName = modelName
+	}
 }
 
 // NewController returns a new Speedgoat controller.
-func NewController(l *zap.Logger, address string) *Controller {
-	sg := Controller{
+func NewController(l *zap.Logger, address string, opts ...SpeedgoatOption) *Controller {
+	sg := &Controller{
 		addr: address,
 		l:    l.Named(_loggerName),
 	}
-	return &sg
+
+	for _, o := range opts {
+		o(sg)
+	}
+
+	return sg
 }
 
 // Open configures the controller.
@@ -61,6 +89,13 @@ func (c *Controller) Open() error {
 	go c.tickOutputs()
 	go c.tickInputs()
 
+	if c.autoloadModel {
+		err := c.runSpeedgoatScript(_startScript, c.sgPassword, c.sgSSH, c.modelName)
+		if err != nil {
+			return errors.Wrap(err, "run speedgoat script")
+		}
+	}
+
 	return nil
 }
 
@@ -74,6 +109,14 @@ func (c *Controller) Close() error {
 	if err != nil {
 		return errors.Wrap(err, "close speedgoat connection")
 	}
+
+	if c.autoloadModel {
+		err = c.runSpeedgoatScript(_stopScript, c.sgPassword, c.sgSSH)
+		if err != nil {
+			return errors.Wrap(err, "run speedgoat script")
+		}
+	}
+
 	return nil
 }
 
@@ -195,4 +238,16 @@ func (c *Controller) unpackInputs(data []byte) {
 		c.analog[i] = math.Float64frombits(binary.NativeEndian.Uint64(analogInput))
 	}
 	c.muAnalog.Unlock()
+}
+
+// runSpeedgoatScript runs the given script for the Speedgoat. Meant for scripts that SSH into the Speedgoat and run.
+func (c *Controller) runSpeedgoatScript(script string, args ...string) error {
+	cmdArgs := append([]string{script}, args...)
+	cmd := exec.Command("/bin/sh", cmdArgs...)
+
+	err := cmd.Run()
+	if err != nil {
+		return errors.Wrap(err, "cmd run")
+	}
+	return nil
 }
