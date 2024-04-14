@@ -194,7 +194,6 @@ func (h *HttpServer) serveTest(w http.ResponseWriter, r *http.Request) {
 			status.Message = "Invalid Message Received"
 		}
 
-		//err = conn.WriteMessage(status)
 		statusJSON, _ := json.Marshal(status)
 		conn.WriteMessage(websocket.TextMessage, statusJSON)
 		if err != nil {
@@ -261,7 +260,7 @@ func (h *HttpServer) startClientTest(client *Client, parameter string) {
 	var messageInt int
 	var err error
 
-	// If no parameter is provided, send the list of sequences to the client.
+	// No parameter is provided, send the list of sequences to the client.
 	if parameter == "" {
 		sequencesJSON, _ := json.Marshal(h.sequences)
 		if err := client.conn.WriteMessage(websocket.TextMessage, sequencesJSON); err != nil {
@@ -285,12 +284,11 @@ func (h *HttpServer) startClientTest(client *Client, parameter string) {
 			Seq:      sequence,
 			Metadata: nil,
 		}
-		// Add test to test list
-		queuePosition := (<-client.status).QueueLength		
+		// Add test to test list	
 		h.addTestToQueue(newTestID, messageInt, client)
 
 		// Send queue position and new test ID
-		testData, _ := json.Marshal(strconv.Itoa(queuePosition) + ", " + newTestID.String())
+		testData, _ := json.Marshal(strconv.Itoa(len(h.testQueue)) + ", " + newTestID.String())
 		client.conn.WriteMessage(websocket.TextMessage, testData)
 	} else {
 		badRequest, _ := json.Marshal(http.StatusBadRequest)
@@ -396,11 +394,6 @@ func (h *HttpServer) removeTestFromQueue(testID uuid.UUID) {
 		//update client test queue
 		h.testQueue[i].client.updateTestQueue(i)
 	}
-}
-
-// update client test queues when test finishes
-func (h *HttpServer) updateTestQueue() {
-	h.removeTestFromQueue(h.testQueue[0].UUID)
 
 	h.testQueueUpdateFeed.Send(true)
 }
@@ -420,7 +413,7 @@ func (h *HttpServer) monitorDispatcher(ctx context.Context) {
 		case res := <-h.results:
 			h.l.Info("results signal received")
 			h.resultsFeed.Send(res)
-			h.updateTestQueue()
+			h.removeTestFromQueue(h.testQueue[0].UUID)
 
 		case <-ctx.Done():
 			h.l.Info("context done signal received")
