@@ -6,7 +6,7 @@ type Controller struct {
 
 // NewController returns a new Raspberry Pi controller
 func NewController() *Controller {
-	return nil
+	return &Controller{}
 }
 
 // Open configures the controller
