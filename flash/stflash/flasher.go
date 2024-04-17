@@ -1,8 +1,10 @@
 package stflash
 
 import (
+	"context"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/macformula/hil/flash"
 	"github.com/pkg/errors"
@@ -17,7 +19,8 @@ const (
 	_writeArg  = "write"
 	_writeAddr = "0x8000000"
 
-	_loggerName = "flasher"
+	_loggerName     = "flasher"
+	_defaultTimeout = 2 * time.Second
 )
 
 // enforce interface implementation
@@ -40,6 +43,10 @@ func NewFlasher(l zap.Logger) *Flasher {
 // Connect establishes a connection with an STM32
 func (f *Flasher) Connect() error {
 	f.l.Info("checking for active target")
+
+	// Create a context with a timeout of 2 seconds
+	_, cancel := context.WithTimeout(context.Background(), _defaultTimeout)
+	defer cancel()
 
 	open := exec.Command(_infoCmd, _serialArg)
 
@@ -78,10 +85,12 @@ func (f *Flasher) Flash(binaryPath string) error {
 	return nil
 }
 
+// String returns the flasher type
 func (f *Flasher) String() string {
 	return "st-flash"
 }
 
+// Disconnect closes the connection with the target
 func (f *Flasher) Disconnect() error {
 	f.currentBoardId = ""
 	f.boardActive = false
