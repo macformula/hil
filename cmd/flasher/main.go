@@ -22,9 +22,9 @@ func main() {
 		panic(errors.Wrap(err, "open flasher"))
 	}
 
-	err = flasher.Flash("/opt/macfe/bin/PRINTF_TEST.bin")
-	if err != nil {
-		panic(errors.Wrap(err, "flash stm32"))
-	}
+	//err = flasher.Flash("/opt/macfe/bin/PRINTF_TEST.bin")
+	//if err != nil {
+	//	panic(errors.Wrap(err, "flash stm32"))
+	//}
 
 }
