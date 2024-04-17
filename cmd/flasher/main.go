@@ -6,13 +6,9 @@ import (
 	"go.uber.org/zap"
 )
 
-const (
-	_loggerName = "main.log"
-)
-
 func main() {
 	cfg := zap.NewDevelopmentConfig()
-	cfg.OutputPaths = []string{_loggerName}
+	cfg.OutputPaths = []string{"stdout"}
 	logger, err := cfg.Build()
 	if err != nil {
 		panic(err)
@@ -21,8 +17,14 @@ func main() {
 
 	flasher := stflash.NewFlasher(*logger)
 
-	err = flasher.Open()
+	err = flasher.Connect()
 	if err != nil {
 		panic(errors.Wrap(err, "open flasher"))
 	}
+
+	err = flasher.Flash("/opt/macfe/bin/PRINTF_TEST.bin")
+	if err != nil {
+		panic(errors.Wrap(err, "flash stm32"))
+	}
+
 }

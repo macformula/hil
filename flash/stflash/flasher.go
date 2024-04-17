@@ -1,10 +1,12 @@
 package stflash
 
 import (
+	"os/exec"
+	"strings"
+
 	"github.com/macformula/hil/flash"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"os/exec"
 )
 
 const (
@@ -12,15 +14,18 @@ const (
 	_flashCmd = "st-flash"
 
 	_serialArg = "--serial"
+	_writeArg  = "write"
+	_writeAddr = "0x8000000"
 
 	_loggerName = "flasher"
 )
 
 // enforce interface implementation
-var _ flash.FlasherIface = NewFlasher()
+var _ flash.FlasherIface = NewFlasher(zap.Logger{})
 
 type Flasher struct {
 	currentBoardId string
+	boardActive    bool
 
 	l *zap.Logger
 }
@@ -32,7 +37,8 @@ func NewFlasher(l zap.Logger) *Flasher {
 	}
 }
 
-func (f *Flasher) Open() error {
+// Connect establishes a connection with an STM32
+func (f *Flasher) Connect() error {
 	f.l.Info("checking for active target")
 
 	open := exec.Command(_infoCmd, _serialArg)
@@ -42,23 +48,43 @@ func (f *Flasher) Open() error {
 		return errors.Wrap(err, "connect to stm32")
 	}
 
-	f.currentBoardId = string(output)
+	f.currentBoardId = strings.TrimSpace(string(output))
+	f.boardActive = true
 
 	f.l.Info("target found", zap.String("board id", f.currentBoardId))
 
 	return nil
 }
 
-func (f *Flasher) Flash(binary string) error {
-	//TODO implement me
-	panic("implement me")
+// Flash uses the stlink driver to flash the target with a provided binary
+func (f *Flasher) Flash(binaryPath string) error {
+	if f.boardActive {
+		f.l.Info("attempting to flash")
+
+		flash := exec.Command(_flashCmd, _writeArg, binaryPath, _writeAddr)
+
+		output, err := flash.CombinedOutput()
+		if err != nil {
+			return errors.Wrap(err, "flash stm32")
+		}
+
+		f.l.Info("flash successful")
+
+		f.l.Info(string(output))
+
+	} else {
+		return errors.New("target is not connected")
+	}
+	return nil
 }
 
 func (f *Flasher) String() string {
 	return "st-flash"
 }
 
-func (f *Flasher) Close() error {
-	//TODO implement me
-	panic("implement me")
+func (f *Flasher) Disconnect() error {
+	f.currentBoardId = ""
+	f.boardActive = false
+
+	return nil
 }
