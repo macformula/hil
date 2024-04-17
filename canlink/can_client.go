@@ -31,8 +31,8 @@ type CANClient struct {
 }
 
 // NewCANClient creates a new CANClient with socketcan connection.
-func NewCANClient(messages MessagesDescriptor, conn net.Conn) CANClient {
-	return CANClient{
+func NewCANClient(messages MessagesDescriptor, conn net.Conn) *CANClient {
+	return &CANClient{
 		md:       messages,
 		rx:       socketcan.NewReceiver(conn),
 		tx:       socketcan.NewTransmitter(conn),
@@ -40,6 +40,11 @@ func NewCANClient(messages MessagesDescriptor, conn net.Conn) CANClient {
 		reading:  false,
 		tracking: false,
 	}
+}
+
+// UnmarshalFrame unmarshalls a CAN frame
+func (c *CANClient) UnmarshalFrame(f can.Frame) (generated.Message, error) {
+	return c.md.UnmarshalFrame(f)
 }
 
 // Open starts the background receiver.

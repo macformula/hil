@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
+	"time"
+
+	"github.com/macformula/hil/can_gen/VEH_CAN"
 	"github.com/macformula/hil/canlink"
-	"github.com/macformula/hil/cmd/canclienttest/output/CANBMScan"
 	"github.com/pkg/errors"
 	"go.einride.tech/can"
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
-	"time"
 )
 
 const (
@@ -29,28 +30,28 @@ func main() {
 		panic(err)
 	}
 
-	client := canlink.NewCANClient(CANBMScan.Messages(), conn)
+	client := canlink.NewCANClient(VEH_CAN.Messages(), conn)
 	tx := socketcan.NewTransmitter(conn)
 
 	client.Open()
 
 	// First Test
-	go send(tx, CANBMScan.NewContactor_Feedback().Frame(), 1, time.Second)
-	msg, err := client.Read(context.Background(), CANBMScan.NewContactor_Feedback(), CANBMScan.NewPack_SOC())
+	go send(tx, VEH_CAN.NewContactor_Feedback().Frame(), 1, time.Second)
+	msg, err := client.Read(context.Background(), VEH_CAN.NewContactor_Feedback(), VEH_CAN.NewPack_SOC())
 	if err != nil {
 		logger.Error("client read", zap.Error(err))
 	}
 
-	if msg.Frame().ID != CANBMScan.NewContactor_Feedback().Frame().ID {
+	if msg.Frame().ID != VEH_CAN.NewContactor_Feedback().Frame().ID {
 		logger.Error("client read", zap.Error(errors.New("incorrect CAN frame was read")))
 	}
 
 	// Second Test
-	go send(tx, CANBMScan.NewContactor_States().Frame(), 1, time.Second)
+	go send(tx, VEH_CAN.NewContactor_States().Frame(), 1, time.Second)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	defer cancel()
 
-	msg, err = client.Read(ctx, CANBMScan.NewPack_Current_Limits())
+	msg, err = client.Read(ctx, VEH_CAN.NewPack_Current_Limits())
 	if err != nil {
 		logger.Error("client read", zap.Error(err))
 	}
@@ -65,8 +66,8 @@ func main() {
 		logger.Error("start tracking", zap.Error(err))
 	}
 
-	go send(tx, CANBMScan.NewContactor_States().Frame(), _frame1Count, time.Millisecond*10)
-	go send(tx, CANBMScan.NewPack_SOC().Frame(), _frame2Count, time.Millisecond*10)
+	go send(tx, VEH_CAN.NewContactor_States().Frame(), _frame1Count, time.Millisecond*10)
+	go send(tx, VEH_CAN.NewPack_SOC().Frame(), _frame2Count, time.Millisecond*10)
 	time.Sleep(time.Second)
 
 	data, err := client.StopTracking()
@@ -75,7 +76,7 @@ func main() {
 	}
 
 	// Verify correct number of frames were sent
-	if data[CANBMScan.NewContactor_States().Frame().ID] != _frame1Count || data[CANBMScan.NewPack_SOC().Frame().ID] != _frame2Count {
+	if data[VEH_CAN.NewContactor_States().Frame().ID] != _frame1Count || data[VEH_CAN.NewPack_SOC().Frame().ID] != _frame2Count {
 		logger.Error("tracking data", zap.Error(errors.New("incorrect number of frames were sent")))
 	}
 

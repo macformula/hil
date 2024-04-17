@@ -2,9 +2,8 @@ package canlink
 
 import (
 	"context"
-	"os"
-	"strconv"
-	"strings"
+	//"fmt"
+	"net"
 	"time"
 
 	"github.com/macformula/hil/utils"
@@ -16,7 +15,6 @@ import (
 const (
 	_defaultTimeout    = 30 * time.Minute
 	_frameBufferLength = 10
-	_defaultFileType   = ".asc"
 	_loggerName        = "can_tracer"
 
 	// format for 24-hour clock with minutes, seconds, and 4 digits
@@ -38,7 +36,7 @@ type Tracer struct {
 	l          *zap.Logger
 	stop       chan struct{}
 	frameCh    chan TimestampedFrame
-	cachedData []string
+	cachedData []TimestampedFrame
 	err        *utils.ResettableError
 	isRunning  bool
 	receiver   *socketcan.Receiver
@@ -47,7 +45,8 @@ type Tracer struct {
 	canInterface string
 	timeout      time.Duration
 	busName      string
-	fileType     string
+	types        []TraceFile
+	conn         net.Conn
 }
 
 // NewTracer returns a new Tracer
@@ -55,16 +54,19 @@ func NewTracer(
 	canInterface string,
 	directory string,
 	l *zap.Logger,
+	conn net.Conn,
 	opts ...TracerOption) *Tracer {
+
 	tracer := &Tracer{
 		l:            l.Named(_loggerName),
-		cachedData:   []string{},
+		cachedData:   []TimestampedFrame{},
 		err:          utils.NewResettaleError(),
 		timeout:      _defaultTimeout,
-		fileType:     _defaultFileType,
 		canInterface: canInterface,
 		directory:    directory,
 		busName:      canInterface,
+		types:        []TraceFile{},
+		conn:         conn,
 	}
 
 	for _, o := range opts {
@@ -88,16 +90,20 @@ func WithBusName(name string) TracerOption {
 	}
 }
 
+// WithFiles sets different filetypes the tracer can dump CAN data to
+func WithFiles(f ...TraceFile) TracerOption {
+	return func(t *Tracer) {
+		for _, filetype := range f {
+			t.types = append(t.types, filetype)
+		}
+	}
+}
+
 // Open opens a receiver and spawns a fetchData routine
 func (t *Tracer) Open(ctx context.Context) error {
 	t.l.Info("creating socketcan connection")
 
-	conn, err := socketcan.DialContext(ctx, "can", t.canInterface)
-	if err != nil {
-		return errors.Wrap(err, "dial into socket")
-	}
-
-	t.receiver = socketcan.NewReceiver(conn)
+	t.receiver = socketcan.NewReceiver(t.conn)
 
 	t.l.Info("canlink receiver created")
 
@@ -136,16 +142,12 @@ func (t *Tracer) StopTrace() error {
 
 		close(t.stop)
 
-		t.l.Info("getting file name")
-		file, err := t.getFile()
-		if err != nil {
-			return errors.Wrap(err, "get pointer to file")
-		}
+		for _, files := range t.types {
+			err := files.dumpToFile(t.cachedData)
 
-		t.l.Info("dumping to file")
-		err = t.dumpToFile(file)
-		if err != nil {
-			return errors.Wrap(err, "dump cached contents to file")
+			if err != nil {
+				t.l.Error(err.Error())
+			}
 		}
 
 		t.cachedData = nil
@@ -220,91 +222,7 @@ func (t *Tracer) receiveData(ctx context.Context) {
 			t.StopTrace()
 			return
 		case receivedFrame := <-t.frameCh:
-			t.cachedData = append(t.cachedData, t.parseString(receivedFrame))
+			t.cachedData = append(t.cachedData, receivedFrame)
 		}
 	}
-}
-
-// parseString concatenates the frame components in a standardized format
-func (t *Tracer) parseString(data TimestampedFrame) string {
-	var builder strings.Builder
-
-	_, err := builder.WriteString(time.Now().Format(_messageTimeFormat))
-	if err != nil {
-		t.err.Set(errors.Wrap(err, "parse frame time"))
-	}
-
-	_, err = builder.WriteString(" " + strconv.FormatUint(uint64(data.Frame.ID), 10))
-	if err != nil {
-		t.err.Set(errors.Wrap(err, "parse frame id"))
-	}
-
-	_, err = builder.WriteString(" Rx")
-	if err != nil {
-		t.err.Set(errors.Wrap(err, "write receiveData"))
-	}
-
-	_, err = builder.WriteString(" " + strconv.FormatUint(uint64(data.Frame.Length), 10))
-	if err != nil {
-		t.err.Set(errors.Wrap(err, "parse frame length"))
-	}
-
-	for i := uint8(0); i < data.Frame.Length; i++ {
-		builder.WriteString(" " + strconv.FormatUint(uint64(data.Frame.Data[i]), 16))
-		if err != nil {
-			t.err.Set(errors.Wrap(err, "parse frame cached data"))
-		}
-	}
-
-	return builder.String()
-}
-
-// dumpToFile writes all the frames to a passed in file
-func (t *Tracer) dumpToFile(file *os.File) error {
-	for _, value := range t.cachedData {
-		_, err := file.WriteString(value + "\n")
-		if err != nil {
-			return errors.Wrap(err, "write string to file")
-		}
-	}
-
-	return nil
-}
-
-// getFile makes the file name based on parameters provided
-func (t *Tracer) getFile() (*os.File, error) {
-	var file *os.File
-	var builder strings.Builder
-
-	_, err := builder.WriteString(t.directory + "/")
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add directory to filepath")
-	}
-
-	_, err = builder.WriteString(t.busName + "_")
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add bus name to file name")
-	}
-
-	_, err = builder.WriteString(time.Now().Format(_filenameDateFormat) + "_")
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add date to file name")
-	}
-
-	_, err = builder.WriteString(time.Now().Format(_filenameTimeFormat))
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add time to file name")
-	}
-
-	_, err = builder.WriteString(t.fileType)
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "add file type to file name")
-	}
-
-	file, err = os.Create(builder.String())
-	if err != nil {
-		return &os.File{}, errors.Wrap(err, "create file")
-	}
-
-	return file, nil
 }

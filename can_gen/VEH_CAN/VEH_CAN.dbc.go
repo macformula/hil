@@ -1,7 +1,7 @@
-// Package CANBMScan provides primitives for encoding and decoding CAN_BMS CAN messages.
+// Package VEHCANcan provides primitives for encoding and decoding VEH_CAN CAN messages.
 //
-// Source: CAN_BMS.dbc
-package CANBMScan
+// Source: VEH_CAN.dbc
+package VEH_CAN
 
 import (
 	"context"
@@ -646,66 +646,494 @@ func (m *Contactor_Feedback) UnmarshalFrame(f can.Frame) error {
 	return nil
 }
 
-// Nodes returns the CAN_BMS node descriptors.
+// BMSBroadcastReader provides read access to a BMSBroadcast message.
+type BMSBroadcastReader interface {
+	// ThermModuleNum returns the value of the ThermModuleNum signal.
+	ThermModuleNum() uint8
+	// LowThermValue returns the value of the LowThermValue signal.
+	LowThermValue() int8
+	// HighThermValue returns the value of the HighThermValue signal.
+	HighThermValue() int8
+	// AvgThermValue returns the value of the AvgThermValue signal.
+	AvgThermValue() int8
+	// NumThermEn returns the value of the NumThermEn signal.
+	NumThermEn() uint8
+	// HighThermID returns the value of the HighThermID signal.
+	HighThermID() uint8
+	// LowThermID returns the value of the LowThermID signal.
+	LowThermID() uint8
+	// Checksum returns the value of the Checksum signal.
+	Checksum() int8
+}
+
+// BMSBroadcastWriter provides write access to a BMSBroadcast message.
+type BMSBroadcastWriter interface {
+	// CopyFrom copies all values from BMSBroadcastReader.
+	CopyFrom(BMSBroadcastReader) *BMSBroadcast
+	// SetThermModuleNum sets the value of the ThermModuleNum signal.
+	SetThermModuleNum(uint8) *BMSBroadcast
+	// SetLowThermValue sets the value of the LowThermValue signal.
+	SetLowThermValue(int8) *BMSBroadcast
+	// SetHighThermValue sets the value of the HighThermValue signal.
+	SetHighThermValue(int8) *BMSBroadcast
+	// SetAvgThermValue sets the value of the AvgThermValue signal.
+	SetAvgThermValue(int8) *BMSBroadcast
+	// SetNumThermEn sets the value of the NumThermEn signal.
+	SetNumThermEn(uint8) *BMSBroadcast
+	// SetHighThermID sets the value of the HighThermID signal.
+	SetHighThermID(uint8) *BMSBroadcast
+	// SetLowThermID sets the value of the LowThermID signal.
+	SetLowThermID(uint8) *BMSBroadcast
+	// SetChecksum sets the value of the Checksum signal.
+	SetChecksum(int8) *BMSBroadcast
+}
+
+type BMSBroadcast struct {
+	xxx_ThermModuleNum uint8
+	xxx_LowThermValue  int8
+	xxx_HighThermValue int8
+	xxx_AvgThermValue  int8
+	xxx_NumThermEn     uint8
+	xxx_HighThermID    uint8
+	xxx_LowThermID     uint8
+	xxx_Checksum       int8
+}
+
+func NewBMSBroadcast() *BMSBroadcast {
+	m := &BMSBroadcast{}
+	m.Reset()
+	return m
+}
+
+func (m *BMSBroadcast) Reset() {
+	m.xxx_ThermModuleNum = 0
+	m.xxx_LowThermValue = 0
+	m.xxx_HighThermValue = 0
+	m.xxx_AvgThermValue = 0
+	m.xxx_NumThermEn = 0
+	m.xxx_HighThermID = 0
+	m.xxx_LowThermID = 0
+	m.xxx_Checksum = 0
+}
+
+func (m *BMSBroadcast) CopyFrom(o BMSBroadcastReader) *BMSBroadcast {
+	m.xxx_ThermModuleNum = o.ThermModuleNum()
+	m.xxx_LowThermValue = o.LowThermValue()
+	m.xxx_HighThermValue = o.HighThermValue()
+	m.xxx_AvgThermValue = o.AvgThermValue()
+	m.xxx_NumThermEn = o.NumThermEn()
+	m.xxx_HighThermID = o.HighThermID()
+	m.xxx_LowThermID = o.LowThermID()
+	m.xxx_Checksum = o.Checksum()
+	return m
+}
+
+// Descriptor returns the BMSBroadcast descriptor.
+func (m *BMSBroadcast) Descriptor() *descriptor.Message {
+	return Messages().BMSBroadcast.Message
+}
+
+// String returns a compact string representation of the message.
+func (m *BMSBroadcast) String() string {
+	return cantext.MessageString(m)
+}
+
+func (m *BMSBroadcast) ThermModuleNum() uint8 {
+	return m.xxx_ThermModuleNum
+}
+
+func (m *BMSBroadcast) SetThermModuleNum(v uint8) *BMSBroadcast {
+	m.xxx_ThermModuleNum = uint8(Messages().BMSBroadcast.ThermModuleNum.SaturatedCastUnsigned(uint64(v)))
+	return m
+}
+
+func (m *BMSBroadcast) LowThermValue() int8 {
+	return m.xxx_LowThermValue
+}
+
+func (m *BMSBroadcast) SetLowThermValue(v int8) *BMSBroadcast {
+	m.xxx_LowThermValue = int8(Messages().BMSBroadcast.LowThermValue.SaturatedCastSigned(int64(v)))
+	return m
+}
+
+func (m *BMSBroadcast) HighThermValue() int8 {
+	return m.xxx_HighThermValue
+}
+
+func (m *BMSBroadcast) SetHighThermValue(v int8) *BMSBroadcast {
+	m.xxx_HighThermValue = int8(Messages().BMSBroadcast.HighThermValue.SaturatedCastSigned(int64(v)))
+	return m
+}
+
+func (m *BMSBroadcast) AvgThermValue() int8 {
+	return m.xxx_AvgThermValue
+}
+
+func (m *BMSBroadcast) SetAvgThermValue(v int8) *BMSBroadcast {
+	m.xxx_AvgThermValue = int8(Messages().BMSBroadcast.AvgThermValue.SaturatedCastSigned(int64(v)))
+	return m
+}
+
+func (m *BMSBroadcast) NumThermEn() uint8 {
+	return m.xxx_NumThermEn
+}
+
+func (m *BMSBroadcast) SetNumThermEn(v uint8) *BMSBroadcast {
+	m.xxx_NumThermEn = uint8(Messages().BMSBroadcast.NumThermEn.SaturatedCastUnsigned(uint64(v)))
+	return m
+}
+
+func (m *BMSBroadcast) HighThermID() uint8 {
+	return m.xxx_HighThermID
+}
+
+func (m *BMSBroadcast) SetHighThermID(v uint8) *BMSBroadcast {
+	m.xxx_HighThermID = uint8(Messages().BMSBroadcast.HighThermID.SaturatedCastUnsigned(uint64(v)))
+	return m
+}
+
+func (m *BMSBroadcast) LowThermID() uint8 {
+	return m.xxx_LowThermID
+}
+
+func (m *BMSBroadcast) SetLowThermID(v uint8) *BMSBroadcast {
+	m.xxx_LowThermID = uint8(Messages().BMSBroadcast.LowThermID.SaturatedCastUnsigned(uint64(v)))
+	return m
+}
+
+func (m *BMSBroadcast) Checksum() int8 {
+	return m.xxx_Checksum
+}
+
+func (m *BMSBroadcast) SetChecksum(v int8) *BMSBroadcast {
+	m.xxx_Checksum = int8(Messages().BMSBroadcast.Checksum.SaturatedCastSigned(int64(v)))
+	return m
+}
+
+// Frame returns a CAN frame representing the message.
+func (m *BMSBroadcast) Frame() can.Frame {
+	md := Messages().BMSBroadcast
+	f := can.Frame{ID: md.ID, IsExtended: md.IsExtended, Length: md.Length}
+	md.ThermModuleNum.MarshalUnsigned(&f.Data, uint64(m.xxx_ThermModuleNum))
+	md.LowThermValue.MarshalSigned(&f.Data, int64(m.xxx_LowThermValue))
+	md.HighThermValue.MarshalSigned(&f.Data, int64(m.xxx_HighThermValue))
+	md.AvgThermValue.MarshalSigned(&f.Data, int64(m.xxx_AvgThermValue))
+	md.NumThermEn.MarshalUnsigned(&f.Data, uint64(m.xxx_NumThermEn))
+	md.HighThermID.MarshalUnsigned(&f.Data, uint64(m.xxx_HighThermID))
+	md.LowThermID.MarshalUnsigned(&f.Data, uint64(m.xxx_LowThermID))
+	md.Checksum.MarshalSigned(&f.Data, int64(m.xxx_Checksum))
+	return f
+}
+
+// MarshalFrame encodes the message as a CAN frame.
+func (m *BMSBroadcast) MarshalFrame() (can.Frame, error) {
+	return m.Frame(), nil
+}
+
+// UnmarshalFrame decodes the message from a CAN frame.
+func (m *BMSBroadcast) UnmarshalFrame(f can.Frame) error {
+	md := Messages().BMSBroadcast
+	switch {
+	case f.ID != md.ID:
+		return fmt.Errorf(
+			"unmarshal BMSBroadcast: expects ID 406451072 (got %s with ID %d)", f.String(), f.ID,
+		)
+	case f.Length != md.Length:
+		return fmt.Errorf(
+			"unmarshal BMSBroadcast: expects length 8 (got %s with length %d)", f.String(), f.Length,
+		)
+	case f.IsRemote:
+		return fmt.Errorf(
+			"unmarshal BMSBroadcast: expects non-remote frame (got remote frame %s)", f.String(),
+		)
+	case f.IsExtended != md.IsExtended:
+		return fmt.Errorf(
+			"unmarshal BMSBroadcast: expects extended ID (got %s with standard ID)", f.String(),
+		)
+	}
+	m.xxx_ThermModuleNum = uint8(md.ThermModuleNum.UnmarshalUnsigned(f.Data))
+	m.xxx_LowThermValue = int8(md.LowThermValue.UnmarshalSigned(f.Data))
+	m.xxx_HighThermValue = int8(md.HighThermValue.UnmarshalSigned(f.Data))
+	m.xxx_AvgThermValue = int8(md.AvgThermValue.UnmarshalSigned(f.Data))
+	m.xxx_NumThermEn = uint8(md.NumThermEn.UnmarshalUnsigned(f.Data))
+	m.xxx_HighThermID = uint8(md.HighThermID.UnmarshalUnsigned(f.Data))
+	m.xxx_LowThermID = uint8(md.LowThermID.UnmarshalUnsigned(f.Data))
+	m.xxx_Checksum = int8(md.Checksum.UnmarshalSigned(f.Data))
+	return nil
+}
+
+// ThermistorBroadcastReader provides read access to a ThermistorBroadcast message.
+type ThermistorBroadcastReader interface {
+	// RelThermID returns the value of the RelThermID signal.
+	RelThermID() uint16
+	// ThermValue returns the value of the ThermValue signal.
+	ThermValue() int8
+	// NumEnTherm returns the value of the NumEnTherm signal.
+	NumEnTherm() int8
+	// LowThermValue returns the value of the LowThermValue signal.
+	LowThermValue() int8
+	// HighThermValue returns the value of the HighThermValue signal.
+	HighThermValue() int8
+	// HighThermID returns the value of the HighThermID signal.
+	HighThermID() uint8
+	// LowThermID returns the value of the LowThermID signal.
+	LowThermID() uint8
+}
+
+// ThermistorBroadcastWriter provides write access to a ThermistorBroadcast message.
+type ThermistorBroadcastWriter interface {
+	// CopyFrom copies all values from ThermistorBroadcastReader.
+	CopyFrom(ThermistorBroadcastReader) *ThermistorBroadcast
+	// SetRelThermID sets the value of the RelThermID signal.
+	SetRelThermID(uint16) *ThermistorBroadcast
+	// SetThermValue sets the value of the ThermValue signal.
+	SetThermValue(int8) *ThermistorBroadcast
+	// SetNumEnTherm sets the value of the NumEnTherm signal.
+	SetNumEnTherm(int8) *ThermistorBroadcast
+	// SetLowThermValue sets the value of the LowThermValue signal.
+	SetLowThermValue(int8) *ThermistorBroadcast
+	// SetHighThermValue sets the value of the HighThermValue signal.
+	SetHighThermValue(int8) *ThermistorBroadcast
+	// SetHighThermID sets the value of the HighThermID signal.
+	SetHighThermID(uint8) *ThermistorBroadcast
+	// SetLowThermID sets the value of the LowThermID signal.
+	SetLowThermID(uint8) *ThermistorBroadcast
+}
+
+type ThermistorBroadcast struct {
+	xxx_RelThermID     uint16
+	xxx_ThermValue     int8
+	xxx_NumEnTherm     int8
+	xxx_LowThermValue  int8
+	xxx_HighThermValue int8
+	xxx_HighThermID    uint8
+	xxx_LowThermID     uint8
+}
+
+func NewThermistorBroadcast() *ThermistorBroadcast {
+	m := &ThermistorBroadcast{}
+	m.Reset()
+	return m
+}
+
+func (m *ThermistorBroadcast) Reset() {
+	m.xxx_RelThermID = 0
+	m.xxx_ThermValue = 0
+	m.xxx_NumEnTherm = 0
+	m.xxx_LowThermValue = 0
+	m.xxx_HighThermValue = 0
+	m.xxx_HighThermID = 0
+	m.xxx_LowThermID = 0
+}
+
+func (m *ThermistorBroadcast) CopyFrom(o ThermistorBroadcastReader) *ThermistorBroadcast {
+	m.xxx_RelThermID = o.RelThermID()
+	m.xxx_ThermValue = o.ThermValue()
+	m.xxx_NumEnTherm = o.NumEnTherm()
+	m.xxx_LowThermValue = o.LowThermValue()
+	m.xxx_HighThermValue = o.HighThermValue()
+	m.xxx_HighThermID = o.HighThermID()
+	m.xxx_LowThermID = o.LowThermID()
+	return m
+}
+
+// Descriptor returns the ThermistorBroadcast descriptor.
+func (m *ThermistorBroadcast) Descriptor() *descriptor.Message {
+	return Messages().ThermistorBroadcast.Message
+}
+
+// String returns a compact string representation of the message.
+func (m *ThermistorBroadcast) String() string {
+	return cantext.MessageString(m)
+}
+
+func (m *ThermistorBroadcast) RelThermID() uint16 {
+	return m.xxx_RelThermID
+}
+
+func (m *ThermistorBroadcast) SetRelThermID(v uint16) *ThermistorBroadcast {
+	m.xxx_RelThermID = uint16(Messages().ThermistorBroadcast.RelThermID.SaturatedCastUnsigned(uint64(v)))
+	return m
+}
+
+func (m *ThermistorBroadcast) ThermValue() int8 {
+	return m.xxx_ThermValue
+}
+
+func (m *ThermistorBroadcast) SetThermValue(v int8) *ThermistorBroadcast {
+	m.xxx_ThermValue = int8(Messages().ThermistorBroadcast.ThermValue.SaturatedCastSigned(int64(v)))
+	return m
+}
+
+func (m *ThermistorBroadcast) NumEnTherm() int8 {
+	return m.xxx_NumEnTherm
+}
+
+func (m *ThermistorBroadcast) SetNumEnTherm(v int8) *ThermistorBroadcast {
+	m.xxx_NumEnTherm = int8(Messages().ThermistorBroadcast.NumEnTherm.SaturatedCastSigned(int64(v)))
+	return m
+}
+
+func (m *ThermistorBroadcast) LowThermValue() int8 {
+	return m.xxx_LowThermValue
+}
+
+func (m *ThermistorBroadcast) SetLowThermValue(v int8) *ThermistorBroadcast {
+	m.xxx_LowThermValue = int8(Messages().ThermistorBroadcast.LowThermValue.SaturatedCastSigned(int64(v)))
+	return m
+}
+
+func (m *ThermistorBroadcast) HighThermValue() int8 {
+	return m.xxx_HighThermValue
+}
+
+func (m *ThermistorBroadcast) SetHighThermValue(v int8) *ThermistorBroadcast {
+	m.xxx_HighThermValue = int8(Messages().ThermistorBroadcast.HighThermValue.SaturatedCastSigned(int64(v)))
+	return m
+}
+
+func (m *ThermistorBroadcast) HighThermID() uint8 {
+	return m.xxx_HighThermID
+}
+
+func (m *ThermistorBroadcast) SetHighThermID(v uint8) *ThermistorBroadcast {
+	m.xxx_HighThermID = uint8(Messages().ThermistorBroadcast.HighThermID.SaturatedCastUnsigned(uint64(v)))
+	return m
+}
+
+func (m *ThermistorBroadcast) LowThermID() uint8 {
+	return m.xxx_LowThermID
+}
+
+func (m *ThermistorBroadcast) SetLowThermID(v uint8) *ThermistorBroadcast {
+	m.xxx_LowThermID = uint8(Messages().ThermistorBroadcast.LowThermID.SaturatedCastUnsigned(uint64(v)))
+	return m
+}
+
+// Frame returns a CAN frame representing the message.
+func (m *ThermistorBroadcast) Frame() can.Frame {
+	md := Messages().ThermistorBroadcast
+	f := can.Frame{ID: md.ID, IsExtended: md.IsExtended, Length: md.Length}
+	md.RelThermID.MarshalUnsigned(&f.Data, uint64(m.xxx_RelThermID))
+	md.ThermValue.MarshalSigned(&f.Data, int64(m.xxx_ThermValue))
+	md.NumEnTherm.MarshalSigned(&f.Data, int64(m.xxx_NumEnTherm))
+	md.LowThermValue.MarshalSigned(&f.Data, int64(m.xxx_LowThermValue))
+	md.HighThermValue.MarshalSigned(&f.Data, int64(m.xxx_HighThermValue))
+	md.HighThermID.MarshalUnsigned(&f.Data, uint64(m.xxx_HighThermID))
+	md.LowThermID.MarshalUnsigned(&f.Data, uint64(m.xxx_LowThermID))
+	return f
+}
+
+// MarshalFrame encodes the message as a CAN frame.
+func (m *ThermistorBroadcast) MarshalFrame() (can.Frame, error) {
+	return m.Frame(), nil
+}
+
+// UnmarshalFrame decodes the message from a CAN frame.
+func (m *ThermistorBroadcast) UnmarshalFrame(f can.Frame) error {
+	md := Messages().ThermistorBroadcast
+	switch {
+	case f.ID != md.ID:
+		return fmt.Errorf(
+			"unmarshal ThermistorBroadcast: expects ID 419361278 (got %s with ID %d)", f.String(), f.ID,
+		)
+	case f.Length != md.Length:
+		return fmt.Errorf(
+			"unmarshal ThermistorBroadcast: expects length 8 (got %s with length %d)", f.String(), f.Length,
+		)
+	case f.IsRemote:
+		return fmt.Errorf(
+			"unmarshal ThermistorBroadcast: expects non-remote frame (got remote frame %s)", f.String(),
+		)
+	case f.IsExtended != md.IsExtended:
+		return fmt.Errorf(
+			"unmarshal ThermistorBroadcast: expects extended ID (got %s with standard ID)", f.String(),
+		)
+	}
+	m.xxx_RelThermID = uint16(md.RelThermID.UnmarshalUnsigned(f.Data))
+	m.xxx_ThermValue = int8(md.ThermValue.UnmarshalSigned(f.Data))
+	m.xxx_NumEnTherm = int8(md.NumEnTherm.UnmarshalSigned(f.Data))
+	m.xxx_LowThermValue = int8(md.LowThermValue.UnmarshalSigned(f.Data))
+	m.xxx_HighThermValue = int8(md.HighThermValue.UnmarshalSigned(f.Data))
+	m.xxx_HighThermID = uint8(md.HighThermID.UnmarshalUnsigned(f.Data))
+	m.xxx_LowThermID = uint8(md.LowThermID.UnmarshalUnsigned(f.Data))
+	return nil
+}
+
+// Nodes returns the VEH_CAN node descriptors.
 func Nodes() *NodesDescriptor {
 	return nd
 }
 
-// NodesDescriptor contains all CAN_BMS node descriptors.
+// NodesDescriptor contains all VEH_CAN node descriptors.
 type NodesDescriptor struct {
 	BMS *descriptor.Node
 	FC  *descriptor.Node
 }
 
-// Messages returns the CAN_BMS message descriptors.
+// Messages returns the VEH_CAN message descriptors.
 func Messages() *MessagesDescriptor {
 	return md
 }
 
-// MessagesDescriptor contains all CAN_BMS message descriptors.
+// MessagesDescriptor contains all VEH_CAN message descriptors.
 type MessagesDescriptor struct {
 	Contactor_States    *Contactor_StatesDescriptor
 	Pack_Current_Limits *Pack_Current_LimitsDescriptor
 	Pack_State          *Pack_StateDescriptor
 	Pack_SOC            *Pack_SOCDescriptor
 	Contactor_Feedback  *Contactor_FeedbackDescriptor
+	BMSBroadcast        *BMSBroadcastDescriptor
+	ThermistorBroadcast *ThermistorBroadcastDescriptor
 }
 
-// UnmarshalFrame unmarshals the provided CAN_BMS CAN frame.
+// UnmarshalFrame unmarshals the provided VEH_CAN CAN frame.
 func (md *MessagesDescriptor) UnmarshalFrame(f can.Frame) (generated.Message, error) {
 	switch f.ID {
 	case md.Contactor_States.ID:
 		var msg Contactor_States
 		if err := msg.UnmarshalFrame(f); err != nil {
-			return nil, fmt.Errorf("unmarshal CAN_BMS frame: %w", err)
+			return nil, fmt.Errorf("unmarshal VEH_CAN frame: %w", err)
 		}
 		return &msg, nil
 	case md.Pack_Current_Limits.ID:
 		var msg Pack_Current_Limits
 		if err := msg.UnmarshalFrame(f); err != nil {
-			return nil, fmt.Errorf("unmarshal CAN_BMS frame: %w", err)
+			return nil, fmt.Errorf("unmarshal VEH_CAN frame: %w", err)
 		}
 		return &msg, nil
 	case md.Pack_State.ID:
 		var msg Pack_State
 		if err := msg.UnmarshalFrame(f); err != nil {
-			return nil, fmt.Errorf("unmarshal CAN_BMS frame: %w", err)
+			return nil, fmt.Errorf("unmarshal VEH_CAN frame: %w", err)
 		}
 		return &msg, nil
 	case md.Pack_SOC.ID:
 		var msg Pack_SOC
 		if err := msg.UnmarshalFrame(f); err != nil {
-			return nil, fmt.Errorf("unmarshal CAN_BMS frame: %w", err)
+			return nil, fmt.Errorf("unmarshal VEH_CAN frame: %w", err)
 		}
 		return &msg, nil
 	case md.Contactor_Feedback.ID:
 		var msg Contactor_Feedback
 		if err := msg.UnmarshalFrame(f); err != nil {
-			return nil, fmt.Errorf("unmarshal CAN_BMS frame: %w", err)
+			return nil, fmt.Errorf("unmarshal VEH_CAN frame: %w", err)
+		}
+		return &msg, nil
+	case md.BMSBroadcast.ID:
+		var msg BMSBroadcast
+		if err := msg.UnmarshalFrame(f); err != nil {
+			return nil, fmt.Errorf("unmarshal VEH_CAN frame: %w", err)
+		}
+		return &msg, nil
+	case md.ThermistorBroadcast.ID:
+		var msg ThermistorBroadcast
+		if err := msg.UnmarshalFrame(f); err != nil {
+			return nil, fmt.Errorf("unmarshal VEH_CAN frame: %w", err)
 		}
 		return &msg, nil
 	default:
-		return nil, fmt.Errorf("unmarshal CAN_BMS frame: ID not in database: %d", f.ID)
+		return nil, fmt.Errorf("unmarshal VEH_CAN frame: ID not in database: %d", f.ID)
 	}
 }
 
@@ -743,7 +1171,30 @@ type Contactor_FeedbackDescriptor struct {
 	Pack_Positive_Feedback  *descriptor.Signal
 }
 
-// Database returns the CAN_BMS database descriptor.
+type BMSBroadcastDescriptor struct {
+	*descriptor.Message
+	ThermModuleNum *descriptor.Signal
+	LowThermValue  *descriptor.Signal
+	HighThermValue *descriptor.Signal
+	AvgThermValue  *descriptor.Signal
+	NumThermEn     *descriptor.Signal
+	HighThermID    *descriptor.Signal
+	LowThermID     *descriptor.Signal
+	Checksum       *descriptor.Signal
+}
+
+type ThermistorBroadcastDescriptor struct {
+	*descriptor.Message
+	RelThermID     *descriptor.Signal
+	ThermValue     *descriptor.Signal
+	NumEnTherm     *descriptor.Signal
+	LowThermValue  *descriptor.Signal
+	HighThermValue *descriptor.Signal
+	HighThermID    *descriptor.Signal
+	LowThermID     *descriptor.Signal
+}
+
+// Database returns the VEH_CAN database descriptor.
 func (md *MessagesDescriptor) Database() *descriptor.Database {
 	return d
 }
@@ -783,10 +1234,31 @@ var md = &MessagesDescriptor{
 		Pack_Negative_Feedback:  d.Messages[4].Signals[1],
 		Pack_Positive_Feedback:  d.Messages[4].Signals[2],
 	},
+	BMSBroadcast: &BMSBroadcastDescriptor{
+		Message:        d.Messages[5],
+		ThermModuleNum: d.Messages[5].Signals[0],
+		LowThermValue:  d.Messages[5].Signals[1],
+		HighThermValue: d.Messages[5].Signals[2],
+		AvgThermValue:  d.Messages[5].Signals[3],
+		NumThermEn:     d.Messages[5].Signals[4],
+		HighThermID:    d.Messages[5].Signals[5],
+		LowThermID:     d.Messages[5].Signals[6],
+		Checksum:       d.Messages[5].Signals[7],
+	},
+	ThermistorBroadcast: &ThermistorBroadcastDescriptor{
+		Message:        d.Messages[6],
+		RelThermID:     d.Messages[6].Signals[0],
+		ThermValue:     d.Messages[6].Signals[1],
+		NumEnTherm:     d.Messages[6].Signals[2],
+		LowThermValue:  d.Messages[6].Signals[3],
+		HighThermValue: d.Messages[6].Signals[4],
+		HighThermID:    d.Messages[6].Signals[5],
+		LowThermID:     d.Messages[6].Signals[6],
+	},
 }
 
 var d = (*descriptor.Database)(&descriptor.Database{
-	SourceFile: (string)("CAN_BMS.dbc"),
+	SourceFile: (string)("VEH_CAN.dbc"),
 	Version:    (string)(""),
 	Messages: ([]*descriptor.Message)([]*descriptor.Message{
 		(*descriptor.Message)(&descriptor.Message{
@@ -1145,6 +1617,347 @@ var d = (*descriptor.Database)(&descriptor.Database{
 				}),
 			}),
 			SenderNode: (string)("BMS"),
+			CycleTime:  (time.Duration)(0),
+			DelayTime:  (time.Duration)(0),
+		}),
+		(*descriptor.Message)(&descriptor.Message{
+			Name:        (string)("BMSBroadcast"),
+			ID:          (uint32)(406451072),
+			IsExtended:  (bool)(true),
+			Length:      (uint8)(8),
+			SendType:    (descriptor.SendType)(0),
+			Description: (string)("Thermistor Module - BMS Broadcast"),
+			Signals: ([]*descriptor.Signal)([]*descriptor.Signal{
+				(*descriptor.Signal)(&descriptor.Signal{
+					Name:              (string)("ThermModuleNum"),
+					Start:             (uint8)(0),
+					Length:            (uint8)(8),
+					IsBigEndian:       (bool)(false),
+					IsSigned:          (bool)(false),
+					IsMultiplexer:     (bool)(false),
+					IsMultiplexed:     (bool)(false),
+					MultiplexerValue:  (uint)(0),
+					Offset:            (float64)(0),
+					Scale:             (float64)(1),
+					Min:               (float64)(0),
+					Max:               (float64)(0),
+					Unit:              (string)(""),
+					Description:       (string)("Thermistor Module Number"),
+					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
+					ReceiverNodes: ([]string)([]string{
+						(string)("BMS"),
+					}),
+					DefaultValue: (int)(0),
+				}),
+				(*descriptor.Signal)(&descriptor.Signal{
+					Name:              (string)("LowThermValue"),
+					Start:             (uint8)(8),
+					Length:            (uint8)(8),
+					IsBigEndian:       (bool)(false),
+					IsSigned:          (bool)(true),
+					IsMultiplexer:     (bool)(false),
+					IsMultiplexed:     (bool)(false),
+					MultiplexerValue:  (uint)(0),
+					Offset:            (float64)(0),
+					Scale:             (float64)(1),
+					Min:               (float64)(0),
+					Max:               (float64)(0),
+					Unit:              (string)(" C"),
+					Description:       (string)(""),
+					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
+					ReceiverNodes: ([]string)([]string{
+						(string)("BMS"),
+					}),
+					DefaultValue: (int)(0),
+				}),
+				(*descriptor.Signal)(&descriptor.Signal{
+					Name:              (string)("HighThermValue"),
+					Start:             (uint8)(16),
+					Length:            (uint8)(8),
+					IsBigEndian:       (bool)(false),
+					IsSigned:          (bool)(true),
+					IsMultiplexer:     (bool)(false),
+					IsMultiplexed:     (bool)(false),
+					MultiplexerValue:  (uint)(0),
+					Offset:            (float64)(0),
+					Scale:             (float64)(1),
+					Min:               (float64)(0),
+					Max:               (float64)(0),
+					Unit:              (string)(" C"),
+					Description:       (string)(""),
+					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
+					ReceiverNodes: ([]string)([]string{
+						(string)("BMS"),
+					}),
+					DefaultValue: (int)(0),
+				}),
+				(*descriptor.Signal)(&descriptor.Signal{
+					Name:              (string)("AvgThermValue"),
+					Start:             (uint8)(24),
+					Length:            (uint8)(8),
+					IsBigEndian:       (bool)(false),
+					IsSigned:          (bool)(true),
+					IsMultiplexer:     (bool)(false),
+					IsMultiplexed:     (bool)(false),
+					MultiplexerValue:  (uint)(0),
+					Offset:            (float64)(0),
+					Scale:             (float64)(1),
+					Min:               (float64)(0),
+					Max:               (float64)(0),
+					Unit:              (string)(" C"),
+					Description:       (string)(""),
+					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
+					ReceiverNodes: ([]string)([]string{
+						(string)("BMS"),
+					}),
+					DefaultValue: (int)(0),
+				}),
+				(*descriptor.Signal)(&descriptor.Signal{
+					Name:              (string)("NumThermEn"),
+					Start:             (uint8)(32),
+					Length:            (uint8)(8),
+					IsBigEndian:       (bool)(false),
+					IsSigned:          (bool)(false),
+					IsMultiplexer:     (bool)(false),
+					IsMultiplexed:     (bool)(false),
+					MultiplexerValue:  (uint)(0),
+					Offset:            (float64)(0),
+					Scale:             (float64)(1),
+					Min:               (float64)(0),
+					Max:               (float64)(0),
+					Unit:              (string)(""),
+					Description:       (string)(""),
+					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
+					ReceiverNodes: ([]string)([]string{
+						(string)("BMS"),
+					}),
+					DefaultValue: (int)(0),
+				}),
+				(*descriptor.Signal)(&descriptor.Signal{
+					Name:              (string)("HighThermID"),
+					Start:             (uint8)(40),
+					Length:            (uint8)(8),
+					IsBigEndian:       (bool)(false),
+					IsSigned:          (bool)(false),
+					IsMultiplexer:     (bool)(false),
+					IsMultiplexed:     (bool)(false),
+					MultiplexerValue:  (uint)(0),
+					Offset:            (float64)(0),
+					Scale:             (float64)(1),
+					Min:               (float64)(0),
+					Max:               (float64)(0),
+					Unit:              (string)(""),
+					Description:       (string)(""),
+					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
+					ReceiverNodes: ([]string)([]string{
+						(string)("BMS"),
+					}),
+					DefaultValue: (int)(0),
+				}),
+				(*descriptor.Signal)(&descriptor.Signal{
+					Name:              (string)("LowThermID"),
+					Start:             (uint8)(48),
+					Length:            (uint8)(8),
+					IsBigEndian:       (bool)(false),
+					IsSigned:          (bool)(false),
+					IsMultiplexer:     (bool)(false),
+					IsMultiplexed:     (bool)(false),
+					MultiplexerValue:  (uint)(0),
+					Offset:            (float64)(0),
+					Scale:             (float64)(1),
+					Min:               (float64)(0),
+					Max:               (float64)(0),
+					Unit:              (string)(""),
+					Description:       (string)(""),
+					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
+					ReceiverNodes: ([]string)([]string{
+						(string)("BMS"),
+					}),
+					DefaultValue: (int)(0),
+				}),
+				(*descriptor.Signal)(&descriptor.Signal{
+					Name:              (string)("Checksum"),
+					Start:             (uint8)(56),
+					Length:            (uint8)(8),
+					IsBigEndian:       (bool)(false),
+					IsSigned:          (bool)(true),
+					IsMultiplexer:     (bool)(false),
+					IsMultiplexed:     (bool)(false),
+					MultiplexerValue:  (uint)(0),
+					Offset:            (float64)(0),
+					Scale:             (float64)(1),
+					Min:               (float64)(0),
+					Max:               (float64)(0),
+					Unit:              (string)(""),
+					Description:       (string)(""),
+					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
+					ReceiverNodes: ([]string)([]string{
+						(string)("BMS"),
+					}),
+					DefaultValue: (int)(0),
+				}),
+			}),
+			SenderNode: (string)("TMS"),
+			CycleTime:  (time.Duration)(0),
+			DelayTime:  (time.Duration)(0),
+		}),
+		(*descriptor.Message)(&descriptor.Message{
+			Name:        (string)("ThermistorBroadcast"),
+			ID:          (uint32)(419361278),
+			IsExtended:  (bool)(true),
+			Length:      (uint8)(8),
+			SendType:    (descriptor.SendType)(0),
+			Description: (string)("Thermistor General Broadcast"),
+			Signals: ([]*descriptor.Signal)([]*descriptor.Signal{
+				(*descriptor.Signal)(&descriptor.Signal{
+					Name:              (string)("RelThermID"),
+					Start:             (uint8)(0),
+					Length:            (uint8)(16),
+					IsBigEndian:       (bool)(false),
+					IsSigned:          (bool)(false),
+					IsMultiplexer:     (bool)(false),
+					IsMultiplexed:     (bool)(false),
+					MultiplexerValue:  (uint)(0),
+					Offset:            (float64)(0),
+					Scale:             (float64)(1),
+					Min:               (float64)(0),
+					Max:               (float64)(0),
+					Unit:              (string)(""),
+					Description:       (string)("Thermistor ID relative to all configured Thermistor Modules"),
+					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
+					ReceiverNodes: ([]string)([]string{
+						(string)("BMS"),
+					}),
+					DefaultValue: (int)(0),
+				}),
+				(*descriptor.Signal)(&descriptor.Signal{
+					Name:              (string)("ThermValue"),
+					Start:             (uint8)(16),
+					Length:            (uint8)(8),
+					IsBigEndian:       (bool)(false),
+					IsSigned:          (bool)(true),
+					IsMultiplexer:     (bool)(false),
+					IsMultiplexed:     (bool)(false),
+					MultiplexerValue:  (uint)(0),
+					Offset:            (float64)(0),
+					Scale:             (float64)(1),
+					Min:               (float64)(0),
+					Max:               (float64)(0),
+					Unit:              (string)(" C"),
+					Description:       (string)(""),
+					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
+					ReceiverNodes: ([]string)([]string{
+						(string)("BMS"),
+					}),
+					DefaultValue: (int)(0),
+				}),
+				(*descriptor.Signal)(&descriptor.Signal{
+					Name:              (string)("NumEnTherm"),
+					Start:             (uint8)(24),
+					Length:            (uint8)(8),
+					IsBigEndian:       (bool)(false),
+					IsSigned:          (bool)(true),
+					IsMultiplexer:     (bool)(false),
+					IsMultiplexed:     (bool)(false),
+					MultiplexerValue:  (uint)(0),
+					Offset:            (float64)(0),
+					Scale:             (float64)(1),
+					Min:               (float64)(0),
+					Max:               (float64)(0),
+					Unit:              (string)(""),
+					Description:       (string)(""),
+					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
+					ReceiverNodes: ([]string)([]string{
+						(string)("BMS"),
+					}),
+					DefaultValue: (int)(0),
+				}),
+				(*descriptor.Signal)(&descriptor.Signal{
+					Name:              (string)("LowThermValue"),
+					Start:             (uint8)(32),
+					Length:            (uint8)(8),
+					IsBigEndian:       (bool)(false),
+					IsSigned:          (bool)(true),
+					IsMultiplexer:     (bool)(false),
+					IsMultiplexed:     (bool)(false),
+					MultiplexerValue:  (uint)(0),
+					Offset:            (float64)(0),
+					Scale:             (float64)(1),
+					Min:               (float64)(0),
+					Max:               (float64)(0),
+					Unit:              (string)(" C"),
+					Description:       (string)(""),
+					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
+					ReceiverNodes: ([]string)([]string{
+						(string)("BMS"),
+					}),
+					DefaultValue: (int)(0),
+				}),
+				(*descriptor.Signal)(&descriptor.Signal{
+					Name:              (string)("HighThermValue"),
+					Start:             (uint8)(40),
+					Length:            (uint8)(8),
+					IsBigEndian:       (bool)(false),
+					IsSigned:          (bool)(true),
+					IsMultiplexer:     (bool)(false),
+					IsMultiplexed:     (bool)(false),
+					MultiplexerValue:  (uint)(0),
+					Offset:            (float64)(0),
+					Scale:             (float64)(1),
+					Min:               (float64)(0),
+					Max:               (float64)(0),
+					Unit:              (string)(" C"),
+					Description:       (string)(""),
+					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
+					ReceiverNodes: ([]string)([]string{
+						(string)("BMS"),
+					}),
+					DefaultValue: (int)(0),
+				}),
+				(*descriptor.Signal)(&descriptor.Signal{
+					Name:              (string)("HighThermID"),
+					Start:             (uint8)(48),
+					Length:            (uint8)(8),
+					IsBigEndian:       (bool)(false),
+					IsSigned:          (bool)(false),
+					IsMultiplexer:     (bool)(false),
+					IsMultiplexed:     (bool)(false),
+					MultiplexerValue:  (uint)(0),
+					Offset:            (float64)(0),
+					Scale:             (float64)(1),
+					Min:               (float64)(0),
+					Max:               (float64)(0),
+					Unit:              (string)(""),
+					Description:       (string)(""),
+					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
+					ReceiverNodes: ([]string)([]string{
+						(string)("BMS"),
+					}),
+					DefaultValue: (int)(0),
+				}),
+				(*descriptor.Signal)(&descriptor.Signal{
+					Name:              (string)("LowThermID"),
+					Start:             (uint8)(56),
+					Length:            (uint8)(8),
+					IsBigEndian:       (bool)(false),
+					IsSigned:          (bool)(false),
+					IsMultiplexer:     (bool)(false),
+					IsMultiplexed:     (bool)(false),
+					MultiplexerValue:  (uint)(0),
+					Offset:            (float64)(0),
+					Scale:             (float64)(1),
+					Min:               (float64)(0),
+					Max:               (float64)(0),
+					Unit:              (string)(""),
+					Description:       (string)(""),
+					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
+					ReceiverNodes: ([]string)([]string{
+						(string)("BMS"),
+					}),
+					DefaultValue: (int)(0),
+				}),
+			}),
+			SenderNode: (string)("TMS"),
 			CycleTime:  (time.Duration)(0),
 			DelayTime:  (time.Duration)(0),
 		}),
