@@ -18,6 +18,9 @@ class RepoHandler:
         repo.config_writer().set_value("user", "name", self.git_username).release()
         repo.config_writer().set_value("user", "email", self.git_email).release()
 
+        # Ensure we are on the branch that needs to be updated
+        repo.heads[self.pages_branch].checkout()
+
         # Add all changes to the index
         repo.git.add("*")
 
@@ -26,9 +29,6 @@ class RepoHandler:
 
         # Fetch updates from the remote repository
         repo.remotes.origin.fetch()
-
-        # Ensure we are on the branch that needs to be updated
-        repo.heads[self.pages_branch].checkout()
 
         # Rebase changes
         repo.git.rebase("origin/" + self.pages_branch)

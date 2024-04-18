@@ -1,4 +1,4 @@
-package test
+package hil
 
 import (
 	"context"
@@ -18,8 +18,7 @@ func NewSleepState(sleepTime time.Duration) *SleepState {
 
 func (s *SleepState) GetResults() map[flow.Tag]any {
 	return map[flow.Tag]any{
-		config.FirmwareTags.FrontControllerFlashed: true,
-		config.FirmwareTags.TmsFlashed:             true,
+		config.TestTags.TestTag1: "no value",
 	}
 }
 

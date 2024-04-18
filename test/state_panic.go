@@ -2,7 +2,7 @@ package test
 
 import (
 	"context"
-	"github.com/macformula/hil"
+	"github.com/macformula/hil/config"
 	"github.com/macformula/hil/flow"
 	"time"
 )
@@ -24,7 +24,7 @@ func (p PanicState) Run(ctx context.Context) error {
 
 func (p PanicState) GetResults() map[flow.Tag]any {
 	return map[flow.Tag]any{
-		hil.FwTags.FrontControllerFlashed: true,
+		config.FirmwareTags.FrontControllerFlashed: true,
 	}
 }
 

@@ -190,3 +190,7 @@ cython_debug/
 #.idea/
 
 # -----------------------------
+
+# trace files
+*.asc
+*.mcap

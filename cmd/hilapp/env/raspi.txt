@@ -1,0 +1,13 @@
+REMOTE_TARGET=1
+REMOTE_USER=admin
+REMOTE_HOST=100.97.227.63
+BIN_PATH_REMOTE=/opt/macfe/bin/hilapp
+GOOS=linux
+GOARCH=arm
+GOARM=7
+RESULTS_SERVER_PATH_LOCAL=../../results/server
+RESULTS_SERVER_PATH_REMOTE=/opt/macfe/scripts/results
+CONFIG_YAML_PATH_LOCAL=../../config/hil-config/config.yaml
+CONFIG_YAML_PATH_REMOTE=/opt/macfe/etc/config.yaml
+TAGS_YAML_PATH_LOCAL=../../config/hil-config/tags.yaml
+TAGS_YAML_PATH_REMOTE=/opt/macfe/etc/tags.yaml

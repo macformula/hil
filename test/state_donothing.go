@@ -3,7 +3,7 @@ package test
 import (
 	"context"
 	"errors"
-	"github.com/macformula/hil"
+	"github.com/macformula/hil/config"
 	"github.com/macformula/hil/flow"
 	"time"
 )
@@ -19,8 +19,8 @@ type DoNothingState struct {
 
 func (d *DoNothingState) GetResults() map[flow.Tag]any {
 	return map[flow.Tag]any{
-		hil.FwTags.FrontControllerFlashed: true,
-		hil.FwTags.TmsFlashed:             true,
+		config.FirmwareTags.FrontControllerFlashed: true,
+		config.FirmwareTags.TmsFlashed:             true,
 	}
 }
 

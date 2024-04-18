@@ -101,10 +101,10 @@ func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) 
 
 	reply, err := r.client.SubmitTag(ctx, request)
 	if err != nil {
-		return reply.IsPassing, errors.Wrap(err, "submit tag")
+		return false, errors.Wrap(err, "submit tag")
 	}
 
-	if !reply.Success {
+	if reply != nil && !reply.Success {
 		return false, errors.New(reply.Error)
 	}
 

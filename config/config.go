@@ -1,17 +1,22 @@
 package config
 
 import (
-	"os"
-
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
+	"os"
 )
 
 // Config holds configuration variables for the HIL setup
 type Config struct {
-	TracerDirectory string `yaml:"tracerDirectory"`
-	CanInterface    string `yaml:"canInterface"`
-	BusName         string `yaml:"busName"`
+	VehCanInterface             string `yaml:"vehCanInterface"`
+	PtCanInterface              string `yaml:"ptCanInterface"`
+	TraceDir                    string `yaml:"traceDir"`
+	LogsDir                     string `yaml:"logsDir"`
+	ResultProcessorAutoStart    bool   `yaml:"resultProcessorAutoStart"`
+	ResultProcessorAddr         string `yaml:"resultProcessorAddr"`
+	ResultProcessorPath         string `yaml:"resultProcessorPath"`
+	ResultProcessorPushToGithub bool   `yaml:"resultProcessorPushToGithub"`
+	CanTracerTimeoutMinutes     int    `yaml:"canTracerTimeoutMinutes"`
 }
 
 // NewConfig returns a new Config type
