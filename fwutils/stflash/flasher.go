@@ -31,12 +31,14 @@ const (
 	_uhubHubArg     = "-l"
 	_uhubDefaultHub = "1-1"
 
-	_loggerName     = "flasher"
-	_defaultTimeout = time.Second
+	_loggerName        = "flasher"
+	_powerCycleOffTime = 1 * time.Second
+	_powerCycleOnTime  = 1 * time.Second
+	_defaultTimeout    = 5 * time.Second
 )
 
 // enforce interface implementation
-var _ fwutils.FlasherIface = NewFlasher(zap.Logger{}, map[fwutils.Ecu]string{})
+var _ fwutils.FlasherIface = NewFlasher(&zap.Logger{}, map[fwutils.Ecu]string{})
 
 // Flasher implements the FlasherIface for stlink flashing
 type Flasher struct {
@@ -48,7 +50,7 @@ type Flasher struct {
 }
 
 // NewFlasher returns a st-flash flasher
-func NewFlasher(l zap.Logger, ecuSerialMap map[fwutils.Ecu]string) *Flasher {
+func NewFlasher(l *zap.Logger, ecuSerialMap map[fwutils.Ecu]string) *Flasher {
 	return &Flasher{
 		l:            l.Named(_loggerName),
 		ecuSerialMap: ecuSerialMap,
@@ -154,11 +156,15 @@ func (f *Flasher) PowerCycleStm(ecu fwutils.Ecu) error {
 		return errors.Wrap(err, "power off target")
 	}
 
+	time.Sleep(_powerCycleOffTime)
+
 	onCmd := exec.Command(_uhubCmd, _uhubPwrArg, _uhubOn, _uhubPortNumArg, stmPort, _uhubHubArg, _uhubDefaultHub)
 	_, err = onCmd.CombinedOutput()
 	if err != nil {
 		return errors.Wrap(err, "power off target")
 	}
+
+	time.Sleep(_powerCycleOnTime)
 
 	f.l.Info("target has been restarted")
 
