@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/macformula/hil/fwutils"
 	"github.com/macformula/hil/fwutils/stflash"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -15,18 +16,26 @@ func main() {
 	}
 	defer logger.Sync()
 
-	flasher := stflash.NewFlasher(*logger)
+	ecuMap := map[fwutils.Ecu]string{
+		fwutils.FrontController: "303636454646353035323737353034383637313432313134",
+		fwutils.LvController:    "066EFF505277504867142114",
+	}
 
-	err = flasher.Connect("303636454646353035323737353034383637313432313134")
+	flasher := stflash.NewFlasher(*logger, ecuMap)
+
+	err = flasher.PowerCycleStm(fwutils.LvController)
+	if err != nil {
+		panic(errors.Wrap(err, "power cycle"))
+	}
+
+	err = flasher.Connect(fwutils.FrontController)
 	if err != nil {
 		panic(errors.Wrap(err, "open flasher"))
 	}
 
-	//builder := fwutils.NewBuilder()
-
-	//err = flasher.Flash("/opt/macfe/bin/PRINTF_TEST.bin")
-	//if err != nil {
-	//	panic(errors.Wrap(err, "flash stm32"))
-	//}
+	err = flasher.Flash("/opt/macfe/bin/PRINTF_TEST.bin")
+	if err != nil {
+		panic(errors.Wrap(err, "flash stm32"))
+	}
 
 }

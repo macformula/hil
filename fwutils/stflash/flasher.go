@@ -2,60 +2,97 @@ package stflash
 
 import (
 	"context"
+	"fmt"
 	"github.com/macformula/hil/fwutils"
 	"os/exec"
+	"strings"
 	"time"
 
+	"github.com/cenkalti/backoff"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
 const (
-	_resetCmd = "reset"
-	_flashCmd = "st-flash"
+	// stlink commands
+	_stFlashCmd  = "st-flash"
+	_stResetArg  = "reset"
+	_stSerialArg = "--serial"
+	_stWriteArg  = "write"
+	_stWriteAddr = "0x8000000"
 
-	_serialArg = "--serial"
-	_writeArg  = "write"
-	_writeAddr = "0x8000000"
+	// uhubctl commands
+	_uhubCmd        = "uhubctl"
+	_uhubPwrArg     = "-a"
+	_uhubOff        = "off"
+	_uhubOn         = "on"
+	_uhubPortNumArg = "-p"
+	_uhubHubArg     = "-l"
+	_uhubDefaultHub = "1-1"
 
 	_loggerName     = "flasher"
-	_defaultTimeout = 2 * time.Second
+	_defaultTimeout = time.Second
 )
 
 // enforce interface implementation
-var _ fwutils.FlasherIface = NewFlasher(zap.Logger{})
+var _ fwutils.FlasherIface = NewFlasher(zap.Logger{}, map[fwutils.Ecu]string{})
 
+// Flasher implements the FlasherIface for stlink flashing
 type Flasher struct {
 	currentBoardId string
 	boardActive    bool
+	ecuSerialMap   map[fwutils.Ecu]string
 
 	l *zap.Logger
 }
 
 // NewFlasher returns a st-flash flasher
-func NewFlasher(l zap.Logger) *Flasher {
+func NewFlasher(l zap.Logger, ecuSerialMap map[fwutils.Ecu]string) *Flasher {
 	return &Flasher{
-		l: l.Named(_loggerName),
+		l:            l.Named(_loggerName),
+		ecuSerialMap: ecuSerialMap,
 	}
 }
 
 // Connect establishes a connection with an STM32
-func (f *Flasher) Connect(boardId string) error {
+func (f *Flasher) Connect(ecu fwutils.Ecu) error {
 	f.l.Info("checking for active target")
 
-	// Create a context with a timeout of 2 seconds
-	ctx, cancel := context.WithTimeout(context.Background(), _defaultTimeout)
-	defer cancel()
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxElapsedTime = _defaultTimeout
 
-	openCmd := exec.CommandContext(ctx, _resetCmd, _serialArg, boardId)
+	firstAttempt := true
 
-	_, err := openCmd.CombinedOutput() // search for that serial number... different states for each ecu
+	// wrap the Connect logic in a retry loop
+	err := backoff.Retry(func() error {
+
+		if !firstAttempt {
+			if err := f.PowerCycleStm(ecu); err != nil {
+				return err
+			}
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), _defaultTimeout)
+		defer cancel()
+
+		// Attempt to reset the target board
+		openCmd := exec.CommandContext(ctx, _stFlashCmd, _stSerialArg, f.ecuSerialMap[ecu], _stResetArg)
+		_, err := openCmd.CombinedOutput()
+		if err != nil {
+			errMsg := fmt.Sprintf("connect to stm32 with STLink ID %s", f.ecuSerialMap[ecu])
+			return errors.Wrap(err, errMsg)
+		}
+
+		// If successful, set the board as active
+		f.boardActive = true
+		f.currentBoardId = f.ecuSerialMap[ecu]
+
+		return nil
+	}, bo)
+
 	if err != nil {
-		return errors.Wrap(err, "connect to stm32")
-	} // uhubctl //also check for no failed to enter SWO
-
-	//f.currentBoardId = strings.TrimSpace(string(output)
-	f.boardActive = true
+		return errors.Wrap(err, "failed to connect after retries")
+	}
 
 	f.l.Info("target found", zap.String("board id", f.currentBoardId))
 
@@ -63,11 +100,11 @@ func (f *Flasher) Connect(boardId string) error {
 }
 
 // Flash uses the stlink driver to flash the target with a provided binary
-func (f *Flasher) Flash(binaryPath string) error {
+func (f *Flasher) Flash(binName string) error {
 	if f.boardActive {
 		f.l.Info("attempting to flash")
 
-		flashCmd := exec.Command(_flashCmd, _writeArg, binaryPath, _writeAddr)
+		flashCmd := exec.Command(_stFlashCmd, _stWriteArg, binName, _stWriteAddr)
 
 		_, err := flashCmd.CombinedOutput()
 		if err != nil {
@@ -93,4 +130,59 @@ func (f *Flasher) Disconnect() error {
 	f.boardActive = false
 
 	return nil
+}
+
+// PowerCycleStm requires uhubctl installed and usb permissions set to not require sudo
+// https://github.com/mvp/uhubctl
+func (f *Flasher) PowerCycleStm(ecu fwutils.Ecu) error {
+	f.l.Info("finding usb port number for target")
+
+	stmPort, err := f.extractPortNumber(ecu)
+	if err != nil {
+		return errors.Wrap(err, "get usb port number for target")
+	}
+
+	f.l.Info("port found, power cycling target")
+
+	offCmd := exec.Command(_uhubCmd, _uhubPwrArg, _uhubOff, _uhubPortNumArg, stmPort, _uhubHubArg, _uhubDefaultHub)
+	_, err = offCmd.CombinedOutput()
+	if err != nil {
+		return errors.Wrap(err, "power off target")
+	}
+
+	onCmd := exec.Command(_uhubCmd, _uhubPwrArg, _uhubOn, _uhubPortNumArg, stmPort, _uhubHubArg, _uhubDefaultHub)
+	_, err = onCmd.CombinedOutput()
+	if err != nil {
+		return errors.Wrap(err, "power off target")
+	}
+
+	f.l.Info("target has been restarted")
+
+	return nil
+}
+
+func (f *Flasher) extractPortNumber(ecu fwutils.Ecu) (string, error) {
+	cmd := exec.Command("uhubctl")
+
+	output, err := cmd.Output()
+	if err != nil {
+		return "", errors.Wrap(err, "error executing uhubctl command")
+	}
+
+	outputStr := string(output)
+
+	lines := strings.Split(outputStr, "\n")
+
+	// Iterate through each line
+	for _, line := range lines {
+		// Check if the line contains the serial number
+		if strings.Contains(line, f.ecuSerialMap[ecu]) {
+			// Extract the port number from the line
+			parts := strings.Fields(line)
+			portNumber := strings.TrimPrefix(parts[1], "Port")
+			return portNumber, nil
+		}
+	}
+
+	return "", errors.New("usb port number for target not found")
 }
