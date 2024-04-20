@@ -16,7 +16,8 @@ import (
 const (
 	// stlink commands
 	_stFlashCmd  = "st-flash"
-	_stResetArg  = "reset"
+	_stResetCmd  = "reset"
+	_stResetArg  = "--reset"
 	_stSerialArg = "--serial"
 	_stWriteArg  = "write"
 	_stWriteAddr = "0x8000000"
@@ -56,7 +57,7 @@ func NewFlasher(l zap.Logger, ecuSerialMap map[fwutils.Ecu]string) *Flasher {
 
 // Connect establishes a connection with an STM32
 func (f *Flasher) Connect(ecu fwutils.Ecu) error {
-	f.l.Info("checking for active target")
+	f.l.Info("checking for active target", zap.String("target", ecu.String()))
 
 	bo := backoff.NewExponentialBackOff()
 	bo.MaxElapsedTime = _defaultTimeout
@@ -75,15 +76,15 @@ func (f *Flasher) Connect(ecu fwutils.Ecu) error {
 		ctx, cancel := context.WithTimeout(context.Background(), _defaultTimeout)
 		defer cancel()
 
-		// Attempt to reset the target board
-		openCmd := exec.CommandContext(ctx, _stFlashCmd, _stSerialArg, f.ecuSerialMap[ecu], _stResetArg)
+		// Attempt to reset the target
+		openCmd := exec.CommandContext(ctx, _stFlashCmd, _stSerialArg, f.ecuSerialMap[ecu], _stResetCmd)
 		_, err := openCmd.CombinedOutput()
 		if err != nil {
 			errMsg := fmt.Sprintf("connect to stm32 with STLink ID %s", f.ecuSerialMap[ecu])
 			return errors.Wrap(err, errMsg)
 		}
 
-		// If successful, set the board as active
+		// If successful, set the target as active
 		f.boardActive = true
 		f.currentBoardId = f.ecuSerialMap[ecu]
 
@@ -94,7 +95,7 @@ func (f *Flasher) Connect(ecu fwutils.Ecu) error {
 		return errors.Wrap(err, "failed to connect after retries")
 	}
 
-	f.l.Info("target found", zap.String("board id", f.currentBoardId))
+	f.l.Info("target found", zap.String("target", ecu.String()), zap.String("target serial", f.currentBoardId))
 
 	return nil
 }
@@ -104,7 +105,7 @@ func (f *Flasher) Flash(binName string) error {
 	if f.boardActive {
 		f.l.Info("attempting to flash")
 
-		flashCmd := exec.Command(_stFlashCmd, _stWriteArg, binName, _stWriteAddr)
+		flashCmd := exec.Command(_stFlashCmd, _stSerialArg, f.currentBoardId, _stResetArg, _stWriteArg, binName, _stWriteAddr)
 
 		_, err := flashCmd.CombinedOutput()
 		if err != nil {
@@ -126,6 +127,8 @@ func (f *Flasher) String() string {
 
 // Disconnect closes the connection with the target
 func (f *Flasher) Disconnect() error {
+	f.l.Info("disconnecting from target", zap.String("target id", f.currentBoardId))
+
 	f.currentBoardId = ""
 	f.boardActive = false
 
