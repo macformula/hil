@@ -2,7 +2,7 @@ package fwutils
 
 type FlasherIface interface {
 	String() string
-	Flash(string) error
-	Connect() error
+	Flash(binName string) error
+	Connect(ecu Ecu) error
 	Disconnect() error
 }

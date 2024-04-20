@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/macformula/hil/fwutils"
 	"os/exec"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -12,7 +11,7 @@ import (
 )
 
 const (
-	_infoCmd  = "st-info"
+	_resetCmd = "reset"
 	_flashCmd = "st-flash"
 
 	_serialArg = "--serial"
@@ -41,21 +40,21 @@ func NewFlasher(l zap.Logger) *Flasher {
 }
 
 // Connect establishes a connection with an STM32
-func (f *Flasher) Connect() error {
+func (f *Flasher) Connect(boardId string) error {
 	f.l.Info("checking for active target")
 
 	// Create a context with a timeout of 2 seconds
-	_, cancel := context.WithTimeout(context.Background(), _defaultTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), _defaultTimeout)
 	defer cancel()
 
-	openCmd := exec.Command(_infoCmd, _serialArg)
+	openCmd := exec.CommandContext(ctx, _resetCmd, _serialArg, boardId)
 
-	output, err := openCmd.CombinedOutput()
+	_, err := openCmd.CombinedOutput() // search for that serial number... different states for each ecu
 	if err != nil {
 		return errors.Wrap(err, "connect to stm32")
-	}
+	} // uhubctl //also check for no failed to enter SWO
 
-	f.currentBoardId = strings.TrimSpace(string(output))
+	//f.currentBoardId = strings.TrimSpace(string(output)
 	f.boardActive = true
 
 	f.l.Info("target found", zap.String("board id", f.currentBoardId))
