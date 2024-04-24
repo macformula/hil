@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
+	"github.com/macformula/hil/cangen/vehcan"
+	"go.einride.tech/can/pkg/generated"
 	"time"
 
-	"github.com/macformula/hil/can_gen/VEH_CAN"
 	"github.com/macformula/hil/canlink"
 	"github.com/pkg/errors"
 	"go.einride.tech/can"
@@ -15,53 +16,83 @@ import (
 const (
 	_frame1Count = 6
 	_frame2Count = 4
+	_canIface    = "can0"
+	_txRoutinePeriod = 100*time.Millisecond
+	_test2Timeout = 2*time.Second
 )
 
 func main() {
 	cfg := zap.NewDevelopmentConfig()
 	logger, err := cfg.Build()
 	if err != nil {
-		panic(err)
+		panic(errors.Wrap(err, "build logger config"))
 	}
 	defer logger.Sync()
 
-	conn, err := socketcan.DialContext(context.Background(), "can", "can0")
+	conn, err := socketcan.DialContext(context.Background(), "can", _canIface)
 	if err != nil {
-		panic(err)
+		logger.Error("failed to dial context",
+			zap.String("can_interface", _canIface),
+			zap.Error(err),
+		)
+
+		return
 	}
 
-	client := canlink.NewCANClient(VEH_CAN.Messages(), conn)
-	tx := socketcan.NewTransmitter(conn)
+	canClient := canlink.NewCanClient(vehcan.Messages(), conn, logger)
 
-	client.Open()
+	err = canClient.Open()
+	if err != nil {
+		logger.Error("failed to open can client", zap.Error(err))
 
-	// First Test
-	go send(tx, VEH_CAN.NewContactor_Feedback().Frame(), 1, time.Second)
-	msg, err := client.Read(context.Background(), VEH_CAN.NewContactor_Feedback(), VEH_CAN.NewPack_SOC())
+		return
+	}
+
+	// First test: send a can message, read it back. Give 2 messages of interest to the read function.
+	msgSent1 := vehcan.BMSBroadcast{}
+	expectedMsgRead1 := msgSent1
+	msgNotSent1 := vehcan.Contactor_Feedback{}
+
+	ctx := context.Background()
+	ctxTest1, cancelTest1 := context.WithCancel(ctx)
+
+	go startSendRoutine(ctxTest1, canClient, &msgSent1, _txRoutinePeriod, logger)
+
+	actualMsgRead1, err := canClient.Read(context.Background(), &msgNotSent1, &msgSent1)
 	if err != nil {
 		logger.Error("client read", zap.Error(err))
 	}
 
-	if msg.Frame().ID != VEH_CAN.NewContactor_Feedback().Frame().ID {
-		logger.Error("client read", zap.Error(errors.New("incorrect CAN frame was read")))
+	cancelTest1()
+
+	if expectedMsgRead1.Frame().ID != actualMsgRead1.Frame().ID {
+		logger.Error("failed client read test",
+			zap.String("expected_msg_read", expectedMsgRead1.String()),
+			zap.String("actual_msg_read", actualMsgRead1.String()),
+			zap.Error(errors.New("incorrect can frame read")))
 	}
 
-	// Second Test
-	go send(tx, VEH_CAN.NewContactor_States().Frame(), 1, time.Second)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	// Second Test: send wrong message, expect nil when reading from canclient.
+	msgSent2 := vehcan.Contactor_States{}
+	tryToReadMsg2 := vehcan.Contactor_Feedback{}
+
+	ctxTest2, cancel := context.WithTimeout(context.Background(), _test2Timeout)
 	defer cancel()
 
-	msg, err = client.Read(ctx, VEH_CAN.NewPack_Current_Limits())
+	go startSendRoutine(ctxTest2, canClient, &msgSent2, _txRoutinePeriod, logger)
+
+
+	msgRead, err := canClient.Read(ctx, &tryToReadMsg2)
 	if err != nil {
 		logger.Error("client read", zap.Error(err))
 	}
 
-	if msg != nil {
-		logger.Error("client read", zap.Error(errors.New("message should not have been read")))
+	if msgRead != nil {
+		logger.Error("read message when none sent")
 	}
 
 	// Third Test
-	err = client.StartTracking()
+	err = canClient.StartTracking()
 	if err != nil {
 		logger.Error("start tracking", zap.Error(err))
 	}
@@ -70,7 +101,7 @@ func main() {
 	go send(tx, VEH_CAN.NewPack_SOC().Frame(), _frame2Count, time.Millisecond*10)
 	time.Sleep(time.Second)
 
-	data, err := client.StopTracking()
+	data, err := canClient.StopTracking()
 	if err != nil {
 		logger.Error("stop tracking", zap.Error(err))
 	}
@@ -80,13 +111,13 @@ func main() {
 		logger.Error("tracking data", zap.Error(errors.New("incorrect number of frames were sent")))
 	}
 
-	err = client.Close()
+	err = canClient.Close()
 	if err != nil {
 		logger.Error("client close", zap.Error(err))
 	}
 }
 
-func send(tx *socketcan.Transmitter, frame can.Frame, n int, delay time.Duration) {
+func send(tx *, frame can.Frame, n int, delay time.Duration) {
 	for i := 0; i < n; i++ {
 		time.Sleep(delay)
 		if err := tx.TransmitFrame(context.Background(), frame); err != nil {
@@ -94,3 +125,26 @@ func send(tx *socketcan.Transmitter, frame can.Frame, n int, delay time.Duration
 		}
 	}
 }
+
+func startSendRoutine(
+	ctx context.Context,
+	cc *canlink.CanClient,
+	msg generated.Message,
+	period time.Duration,
+	l *zap.Logger) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(period):
+			err := cc.Send(ctx, msg)
+			if err != nil {
+				l.Error("failed to send msg",
+					zap.String("message_name", msg.String()),
+					zap.Error(err),
+				)
+			}
+		}
+	}
+}
+
