@@ -1,6 +1,7 @@
 package canlink
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -78,7 +79,7 @@ func (a *Ascii) formatFrame(timestampedFrame *TimestampedFrame) string {
 	}
 
 	for i := uint8(0); i < timestampedFrame.Frame.Length; i++ {
-		builder.WriteString(" " + strconv.FormatUint(uint64(timestampedFrame.Frame.Data[i]), _hex))
+		builder.WriteString(" " + fmt.Sprintf("%02X", timestampedFrame.Frame.Data[i]))
 		if err != nil {
 			a.l.Error(err.Error())
 		}
