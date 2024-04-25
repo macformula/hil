@@ -59,7 +59,7 @@ func NewFlasher(l *zap.Logger, ecuSerialMap map[fwutils.Ecu]string) *Flasher {
 
 // Connect establishes a connection with an STM32
 func (f *Flasher) Connect(ecu fwutils.Ecu) error {
-	f.l.Info("checking for active target", zap.String("target", ecu.String()))
+	f.l.Info("attempting to connect", zap.String("target", ecu.String()))
 
 	bo := backoff.NewExponentialBackOff()
 	bo.MaxElapsedTime = _defaultTimeout
@@ -68,7 +68,6 @@ func (f *Flasher) Connect(ecu fwutils.Ecu) error {
 
 	// wrap the Connect logic in a retry loop
 	err := backoff.Retry(func() error {
-
 		if !firstAttempt {
 			if err := f.PowerCycleStm(ecu); err != nil {
 				return err
@@ -80,6 +79,9 @@ func (f *Flasher) Connect(ecu fwutils.Ecu) error {
 
 		// Attempt to reset the target
 		openCmd := exec.CommandContext(ctx, _stFlashCmd, _stSerialArg, f.ecuSerialMap[ecu], _stResetCmd)
+
+		f.l.Info("checking for active target", zap.String("command: ", openCmd.String()))
+
 		_, err := openCmd.CombinedOutput()
 		if err != nil {
 			firstAttempt = false
