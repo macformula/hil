@@ -3,12 +3,12 @@ package stflash
 import (
 	"context"
 	"fmt"
-	"github.com/macformula/hil/fwutils"
 	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/cenkalti/backoff"
+	"github.com/macformula/hil/fwutils"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
@@ -80,6 +80,7 @@ func (f *Flasher) Connect(ecu fwutils.Ecu) error {
 		openCmd := exec.CommandContext(ctx, _stFlashCmd, _stSerialArg, f.ecuSerialMap[ecu], _stResetCmd)
 		_, err := openCmd.CombinedOutput()
 		if err != nil {
+			firstAttempt = false
 			errMsg := fmt.Sprintf("connect to stm32 with STLink ID %s", f.ecuSerialMap[ecu])
 			return errors.Wrap(err, errMsg)
 		}
@@ -102,21 +103,21 @@ func (f *Flasher) Connect(ecu fwutils.Ecu) error {
 
 // Flash uses the stlink driver to flash the target with a provided binary
 func (f *Flasher) Flash(binName string) error {
-	if f.boardActive {
-		f.l.Info("attempting to flash")
-
-		flashCmd := exec.Command(_stFlashCmd, _stSerialArg, f.currentBoardId, _stResetArg, _stWriteArg, binName, _stWriteAddr)
-
-		_, err := flashCmd.CombinedOutput()
-		if err != nil {
-			return errors.Wrap(err, "flash stm32")
-		}
-
-		f.l.Info("flash successful")
-
-	} else {
+	if !f.boardActive {
 		return errors.New("target is not connected")
 	}
+
+	f.l.Info("attempting to flash")
+
+	flashCmd := exec.Command(_stFlashCmd, _stSerialArg, f.currentBoardId, _stResetArg, _stWriteArg, binName, _stWriteAddr)
+
+	_, err := flashCmd.CombinedOutput()
+	if err != nil {
+		return errors.Wrap(err, "flash stm32")
+	}
+
+	f.l.Info("flash successful")
+
 	return nil
 }
 
