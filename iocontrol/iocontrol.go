@@ -1,6 +1,7 @@
 package iocontrol
 
 import (
+	"github.com/macformula/hil/iocontrol/sil"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
@@ -17,8 +18,9 @@ type IOControlOption func(*IOControl)
 
 // IOControl contains I/O controllers
 type IOControl struct {
-	sg *speedgoat.Controller
-	rp *raspi.Controller
+	sg  *speedgoat.Controller
+	rp  *raspi.Controller
+	sil *sil.Controller
 
 	l *zap.Logger
 }
@@ -47,10 +49,17 @@ func WithSpeedgoat(sg *speedgoat.Controller) IOControlOption {
 	}
 }
 
-// WithRaspi WithRapsi initializes the iocontroller with a raspi device
+// WithRaspi initializes the iocontroller with a raspi device
 func WithRaspi(rp *raspi.Controller) IOControlOption {
 	return func(i *IOControl) {
 		i.rp = rp
+	}
+}
+
+// WithSil initializes the iocontroller with a sil device
+func WithSil(sil *sil.Controller) IOControlOption {
+	return func(i *IOControl) {
+		i.sil = sil
 	}
 }
 
@@ -66,6 +75,13 @@ func (io *IOControl) Open() error {
 		err := io.sg.Open()
 		if err != nil {
 			return errors.Wrap(err, "speedgoat controller open")
+		}
+	}
+
+	if io.sil != nil {
+		err := io.sil.Open()
+		if err != nil {
+			return errors.Wrap(err, "sil controller open")
 		}
 	}
 
@@ -89,6 +105,12 @@ func (io *IOControl) SetDigital(output DigitalPin, b bool) error {
 			}
 		} else {
 			return errors.New("raspi target is nil")
+		}
+	case *sil.DigitalPin:
+		if io.sil != nil {
+			io.sil.SetDigital(pin, b)
+		} else {
+			return errors.New("sil target is nil")
 		}
 	}
 	return nil
@@ -114,6 +136,12 @@ func (io *IOControl) ReadDigital(input DigitalPin) (bool, error) {
 		} else {
 			return lvl, errors.New("raspi target is nil")
 		}
+	case *sil.DigitalPin:
+		if io.sil != nil {
+			lvl = io.sil.ReadDigital(pin)
+		} else {
+			return lvl, errors.New("sil target is nil")
+		}
 	}
 	return lvl, nil
 }
@@ -135,6 +163,12 @@ func (io *IOControl) WriteVoltage(output AnalogPin, voltage float64) error {
 			}
 		} else {
 			return errors.New("raspi target is nil")
+		}
+	case *sil.AnalogPin:
+		if io.sil != nil {
+			io.sil.WriteVoltage(pin, voltage)
+		} else {
+			return errors.New("sil target is nil")
 		}
 	}
 	return nil
@@ -160,6 +194,12 @@ func (io *IOControl) ReadVoltage(input AnalogPin) (float64, error) {
 		} else {
 			return voltage, errors.New("raspi target is nil")
 		}
+	case *sil.AnalogPin:
+		if io.sil != nil {
+			voltage = io.sil.ReadVoltage(pin)
+		} else {
+			return voltage, errors.New("sil target is nil")
+		}
 	}
 	return voltage, nil
 }
@@ -184,6 +224,15 @@ func (io *IOControl) WriteCurrent(output AnalogPin, current float64) error {
 			}
 		} else {
 			errors.New("raspi target is nil")
+		}
+	case *sil.AnalogPin:
+		if io.sil != nil {
+			err := io.sil.WriteCurrent(pin, current)
+			if err != nil {
+				return errors.Wrap(err, "write current")
+			}
+		} else {
+			return errors.New("sil target is nil")
 		}
 	}
 	return nil
@@ -211,6 +260,15 @@ func (io *IOControl) ReadCurrent(input AnalogPin) (float64, error) {
 			}
 		} else {
 			return current, errors.New("raspi target is nil")
+		}
+	case *sil.AnalogPin:
+		if io.sil != nil {
+			current, err := io.sil.ReadCurrent(pin)
+			if err != nil {
+				return current, errors.Wrap(err, "read current")
+			}
+		} else {
+			return current, errors.New("sil target is nil")
 		}
 	}
 	return current, nil
