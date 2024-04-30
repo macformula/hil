@@ -38,7 +38,7 @@ func main() {
 	}
 	defer logger.Sync()
 
-	conn, err := socketcan.DialContext(ctx, "vcan", _canIface)
+	conn, err := socketcan.DialContext(ctx, "can", _canIface)
 	if err != nil {
 		logger.Error("failed to dial context",
 			zap.String("can_interface", _canIface),
