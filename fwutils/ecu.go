@@ -8,4 +8,5 @@ const (
 	FrontController
 	LvController
 	TmsController
+	DashController
 )

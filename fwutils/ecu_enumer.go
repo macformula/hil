@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _EcuName = "UnknownEcuFrontControllerLvControllerTmsController"
+const _EcuName = "UnknownEcuFrontControllerLvControllerTmsControllerDashController"
 
-var _EcuIndex = [...]uint8{0, 10, 25, 37, 50}
+var _EcuIndex = [...]uint8{0, 10, 25, 37, 50, 64}
 
-const _EcuLowerName = "unknownecufrontcontrollerlvcontrollertmscontroller"
+const _EcuLowerName = "unknownecufrontcontrollerlvcontrollertmscontrollerdashcontroller"
 
 func (i Ecu) String() string {
 	if i < 0 || i >= Ecu(len(_EcuIndex)-1) {
@@ -28,9 +28,10 @@ func _EcuNoOp() {
 	_ = x[FrontController-(1)]
 	_ = x[LvController-(2)]
 	_ = x[TmsController-(3)]
+	_ = x[DashController-(4)]
 }
 
-var _EcuValues = []Ecu{UnknownEcu, FrontController, LvController, TmsController}
+var _EcuValues = []Ecu{UnknownEcu, FrontController, LvController, TmsController, DashController}
 
 var _EcuNameToValueMap = map[string]Ecu{
 	_EcuName[0:10]:       UnknownEcu,
@@ -41,6 +42,8 @@ var _EcuNameToValueMap = map[string]Ecu{
 	_EcuLowerName[25:37]: LvController,
 	_EcuName[37:50]:      TmsController,
 	_EcuLowerName[37:50]: TmsController,
+	_EcuName[50:64]:      DashController,
+	_EcuLowerName[50:64]: DashController,
 }
 
 var _EcuNames = []string{
@@ -48,6 +51,7 @@ var _EcuNames = []string{
 	_EcuName[10:25],
 	_EcuName[25:37],
 	_EcuName[37:50],
+	_EcuName[50:64],
 }
 
 // EcuString retrieves an enum value from the enum constants string name.

@@ -20,10 +20,11 @@ var (
 var _ecuToStlinkSerialNumber = map[fwutils.Ecu]string{
 	fwutils.FrontController: "000F00205632500A20313236",
 	fwutils.LvController:    "0006002A5632500920313236",
+	fwutils.DashController:  "0671FF363931594E43062231",
 }
 
 func main() {
-	flag.StringVar(&ecuToFlashStr, "ecu", "", "ECU to flash (FrontController, LvController)")
+	flag.StringVar(&ecuToFlashStr, "ecu", "", fmt.Sprintf("ECU to flash %v", fwutils.EcuStrings()))
 	flag.StringVar(&binaryPath, "binary", "", "Path to the binary file to flash")
 	flag.Parse()
 
