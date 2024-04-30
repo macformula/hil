@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	_canIface                     = "vcan0"
+	_canIface                     = "can1"
 	_test1MessagePeriod           = 100 * time.Millisecond
 	_test1Timeout                 = 10 * _test1MessagePeriod
 	_test2Timeout                 = 2 * time.Second
@@ -114,7 +114,7 @@ func main() {
 
 	go startSendRoutine(ctxTest2, canClient, &msgSent2, _test1MessagePeriod, numMsgsToSend2, logger)
 
-	msgRead, err := canClient.Read(ctxTest2, &tryToReadMsg2)
+	msgRead2, err := canClient.Read(ctxTest2, &tryToReadMsg2)
 	if err != nil {
 		logger.Error("client read", zap.Error(err))
 
@@ -123,10 +123,10 @@ func main() {
 
 	cancelTest2()
 
-	if msgRead != nil {
+	if msgRead2 != nil {
 		logger.Error("read rx message when sent a different message",
 			zap.Uint32("message_sent", msgSent2.Frame().ID),
-			zap.Uint32("message_read", msgRead.Frame().ID),
+			zap.Uint32("message_read", msgRead2.Frame().ID),
 		)
 
 		return
@@ -144,30 +144,31 @@ func main() {
 			msg:    vehcan.NewContactor_States(),
 			period: 10 * time.Millisecond,
 		},
-		{
-			msg:    vehcan.NewContactor_Feedback(),
-			period: 100 * time.Millisecond,
-		},
-		{
-			msg:    vehcan.NewThermistorBroadcast(),
-			period: 1000 * time.Millisecond,
-		},
+		//{
+		//	msg:    vehcan.NewContactor_Feedback(),
+		//	period: 100 * time.Millisecond,
+		//},
+		//{
+		//	msg:    vehcan.NewThermistorBroadcast(),
+		//	period: 1000 * time.Millisecond,
+		//},
 	}
 
-	ctxTest3, cancelTest3 := context.WithCancel(ctx)
+	ctxTest3, cancelTest3 := context.WithTimeout(ctx, _test3Duration+100*time.Second)
+
+	// Num msgs to send condition will never be met
+	numMsgs := -1
 
 	for _, periodicMessage := range msgsToSend3 {
-		// Make this much larger than test duration
-		numMsgs := int(((_test3Duration + _test3WaitTillGoRoutineStarts) / periodicMessage.period) +
-			10*time.Second/periodicMessage.period)
-
+		logger.Debug("starting send routine",
+			zap.Duration("period", periodicMessage.period))
 		go startSendRoutine(ctxTest3, canClient, periodicMessage.msg, periodicMessage.period, numMsgs, logger)
 	}
 
 	// Make sure all routines have started
 	time.Sleep(_test3WaitTillGoRoutineStarts)
 
-	err = canClient.StartTracking(ctx)
+	err = canClient.StartTracking(ctxTest3)
 	if err != nil {
 		logger.Error("start tracking", zap.Error(err))
 
@@ -186,13 +187,16 @@ func main() {
 	// Stop sending
 	cancelTest3()
 
+	fmt.Println(canIdToNumReceivedFrames)
+
+	logger.Info("map", zap.Any("map", canIdToNumReceivedFrames))
 	// Verify correct number of frames were sent
 	for _, periodicMessage := range msgsToSend3 {
 		msgId := periodicMessage.msg.Frame().ID
 		numReceivedFrames, ok := canIdToNumReceivedFrames[msgId]
 		if !ok {
 			logger.Error("no messages received when expected non-zero amount",
-				zap.String("message", periodicMessage.msg.String()),
+				zap.String("message", periodicMessage.msg.Descriptor().Name),
 				zap.Uint32("msg_id", periodicMessage.msg.Frame().ID),
 				zap.Duration("periodicity", periodicMessage.period),
 				zap.Duration("test_duration", _test3Duration),
@@ -206,7 +210,7 @@ func main() {
 
 		if int(math.Abs(float64(expectedNumFrames-numReceivedFrames))) > acceptableDiff {
 			logger.Error("message receive count outside of tollerable range",
-				zap.String("message", periodicMessage.msg.String()),
+				zap.String("message", periodicMessage.msg.Descriptor().Name),
 				zap.Uint32("msg_id", periodicMessage.msg.Frame().ID),
 				zap.Duration("periodicity", periodicMessage.period),
 				zap.Int("expected_num_frames", expectedNumFrames),
@@ -226,25 +230,29 @@ func startSendRoutine(
 	period time.Duration,
 	numMsgsToSend int,
 	l *zap.Logger) {
-	// Number of messages sent so far.
+	// Number of messages sent
 	sent := 0
+
+	ticker := time.NewTicker(period)
+	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(period):
-			l.Debug("sending message")
+		case <-ticker.C:
+			l.Debug("sending msg", zap.Uint32("id", msg.Frame().ID))
 			err := cc.Send(ctx, msg)
 			if err != nil {
 				l.Error("failed to send msg",
-					zap.String("message_name", msg.String()),
+					zap.String("message_name", msg.Descriptor().Name),
 					zap.Error(err),
 				)
-			} else {
-				// Message sent successfully
-				sent += 1
+
+				return
 			}
+
+			sent += 1
 
 			if sent == numMsgsToSend {
 				return

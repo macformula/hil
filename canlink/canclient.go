@@ -77,7 +77,6 @@ func (c *CanClient) Close() error {
 // case, preventing it from being cancelled via context.
 func (c *CanClient) receive() {
 	for c.rx.Receive() && c.reading {
-		c.l.Debug("waiting on rx frame channel")
 		c.rxChan <- c.rx.Frame()
 	}
 }
@@ -86,8 +85,6 @@ func (c *CanClient) receive() {
 // will return the first message received from those types. If no types are given, it will return the
 // first message available.
 func (c *CanClient) Read(ctx context.Context, msgsToRead ...generated.Message) (generated.Message, error) {
-	c.reading = true
-
 	defer func() {
 		c.reading = false
 	}()
@@ -97,7 +94,6 @@ func (c *CanClient) Read(ctx context.Context, msgsToRead ...generated.Message) (
 		case <-ctx.Done():
 			return nil, nil
 		case frame := <-c.rxChan:
-			c.l.Debug("read a message")
 			msg, err := c.md.UnmarshalFrame(frame)
 			if err != nil && !isIdNotInDatabaseError(err) {
 				return nil, errors.Wrap(err, "unmarshal frame")
@@ -107,8 +103,11 @@ func (c *CanClient) Read(ctx context.Context, msgsToRead ...generated.Message) (
 				continue
 			}
 
+			c.l.Debug("read a message")
+
 			// No message types were specified, return first frame of any type
 			if len(msgsToRead) == 0 {
+				c.l.Debug("read a message")
 				return msg, nil
 			}
 
@@ -156,13 +155,21 @@ func (c *CanClient) StartTracking(ctx context.Context) error {
 		for {
 			select {
 			case <-c.stopSignal:
+				c.l.Debug("received stop")
 				return
 			default:
 				msg, err := c.Read(ctx)
 				if err != nil { // TODO: maybe log these errors?
+					c.l.Error("failed to read message",
+						zap.Error(err),
+					)
 					continue
 				}
-				c.tracker[msg.Frame().ID] += 1
+
+				if msg != nil {
+					c.l.Debug("adding frame", zap.Uint32("id", msg.Frame().ID))
+					c.tracker[msg.Frame().ID] += 1
+				}
 			}
 		}
 	}(c)
