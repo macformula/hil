@@ -32,7 +32,7 @@ type CanClient struct {
 	reading bool
 
 	// tracker keeps track of how many CAN messages have been received (per message type)
-	tracker    map[uint32]uint32
+	tracker    map[uint32]int
 	tracking   bool
 	stopSignal chan struct{}
 }
@@ -77,6 +77,7 @@ func (c *CanClient) Close() error {
 // case, preventing it from being cancelled via context.
 func (c *CanClient) receive() {
 	for c.rx.Receive() && c.reading {
+		c.l.Debug("waiting on rx frame channel")
 		c.rxChan <- c.rx.Frame()
 	}
 }
@@ -85,17 +86,23 @@ func (c *CanClient) receive() {
 // will return the first message received from those types. If no types are given, it will return the
 // first message available.
 func (c *CanClient) Read(ctx context.Context, msgsToRead ...generated.Message) (generated.Message, error) {
-	defer func() { c.reading = false }()
+	c.reading = true
+
+	defer func() {
+		c.reading = false
+	}()
 
 	for {
 		select {
 		case <-ctx.Done():
 			return nil, nil
 		case frame := <-c.rxChan:
+			c.l.Debug("read a message")
 			msg, err := c.md.UnmarshalFrame(frame)
 			if err != nil && !isIdNotInDatabaseError(err) {
 				return nil, errors.Wrap(err, "unmarshal frame")
 			} else if isIdNotInDatabaseError(err) {
+				c.l.Debug("found a message we do not recognize")
 				// Here we have simply read a can frame that we do not know how to unmarshal, continue to next frame.
 				continue
 			}
@@ -136,12 +143,12 @@ func (c *CanClient) Send(ctx context.Context, msg generated.Message) error {
 
 // StartTracking initiates the tracking goroutine. This is so we can check how many CAN frames of a certain type have
 // come through the CAN bus in a given time.
-func (c *CanClient) StartTracking() error {
+func (c *CanClient) StartTracking(ctx context.Context) error {
 	if c.tracking {
 		return errors.New("tracker is already running")
 	}
 
-	c.tracker = make(map[uint32]uint32)
+	c.tracker = make(map[uint32]int)
 	c.stopSignal = make(chan struct{})
 	c.tracking = true
 
@@ -151,7 +158,7 @@ func (c *CanClient) StartTracking() error {
 			case <-c.stopSignal:
 				return
 			default:
-				msg, err := c.Read(context.Background())
+				msg, err := c.Read(ctx)
 				if err != nil { // TODO: maybe log these errors?
 					continue
 				}
@@ -164,7 +171,7 @@ func (c *CanClient) StartTracking() error {
 }
 
 // StopTracking stops the tracker goroutine and returns the obtained frame counts.
-func (c *CanClient) StopTracking() (map[uint32]uint32, error) {
+func (c *CanClient) StopTracking() (map[uint32]int, error) {
 	if !c.tracking {
 		return nil, errors.New("tracker was never started")
 	}
