@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"time"
 
 	"github.com/macformula/hil/iocontrol/speedgoat"
@@ -19,7 +20,7 @@ func main() {
 
 	controller := speedgoat.NewController(logger, _speedgoatAddr)
 
-	err = controller.Open()
+	err = controller.Open(context.Background())
 	if err != nil {
 		logger.Error("controller open", zap.Error(err))
 		return
@@ -38,8 +39,15 @@ func main() {
 
 	// Verify that these change on the Speedgoat via Simulink or LED
 	// If they don't change (or take a while), verify that the Simulink TCP server has a sufficiently small sample time
-	controller.SetDigital(pin2, false)
-	controller.WriteVoltage(pin3, 3)
+	err = controller.SetDigital(pin2, false)
+	if err != nil {
+		panic(err)
+	}
+
+	err = controller.WriteVoltage(pin3, 3)
+	if err != nil {
+		panic(err)
+	}
 
 	time.Sleep(time.Second * 2)
 

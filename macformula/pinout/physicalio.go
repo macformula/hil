@@ -19,6 +19,10 @@ const (
 	AcceleratorPedalPosition2
 	// AccumulatorCurrent determines the current that is passing through the battery pack (accumulator).
 	AccumulatorCurrent
-	// LvController3v3RefVoltage is connected to the 3.3V touch point on the lv controller
+	// LvController3v3RefVoltage is connected to the 3.3V touch point on the lv controller.
 	LvController3v3RefVoltage
+	// IndicatorLed is used in the firmware DemoProject.
+	IndicatorLed
+	// IndicatorButton is used in the firmware DemoProject.
+	IndicatorButton
 )

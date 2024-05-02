@@ -2,55 +2,78 @@ package sil
 
 import (
 	"context"
-	"net"
-
-	proto "github.com/macformula/hil/iocontrol/sil/generated"
+	"fmt"
+	pb "github.com/macformula/hil/iocontrol/sil/proto"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"net"
+	"sync"
 )
 
 const (
 	_loggerName           = "sil_controller"
 	_unknownSignalTypeErr = "unknown signal type"
+	_unknownSignalDirErr  = "unknown signal direction"
+	_pwmUnsupportedErr    = "pwm pins are currently unsupported"
 )
 
+//go:generate protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/signals.proto
 type Controller struct {
-	proto.UnimplementedSignalsServer
+	pb.UnimplementedSignalsServer
 
 	l      *zap.Logger
-	addr   string
+	port   int
 	server *grpc.Server
 
-	digitalSignals map[string]map[string]bool
-	analogSignals  map[string]map[string]float64
-	signals        map[string]map[string]*proto.SignalInfo
+	digitalInputPins  map[string]map[string]bool
+	digitalOutputPins map[string]map[string]bool
+	analogInputPins   map[string]map[string]float64
+	analogOutputPins  map[string]map[string]float64
+	signalInfo        map[string]map[string]*pb.SignalInfo
+	digitalInputMtx   *sync.Mutex
+	digitalOutputMtx  *sync.Mutex
+	analogInputMtx    *sync.Mutex
+	analogOutputMtx   *sync.Mutex
 }
 
 // NewController returns a new SIL controller.
-func NewController(l *zap.Logger, addr string) *Controller {
+func NewController(port int, l *zap.Logger) *Controller {
 	return &Controller{
-		l:              l.Named(_loggerName),
-		addr:           addr,
-		server:         grpc.NewServer(),
-		digitalSignals: make(map[string]map[string]bool),
-		analogSignals:  make(map[string]map[string]float64),
-		signals:        make(map[string]map[string]*proto.SignalInfo),
+		l:                 l.Named(_loggerName),
+		port:              port,
+		digitalInputPins:  make(map[string]map[string]bool),
+		digitalOutputPins: make(map[string]map[string]bool),
+		analogInputPins:   make(map[string]map[string]float64),
+		analogOutputPins:  make(map[string]map[string]float64),
+		signalInfo:        make(map[string]map[string]*pb.SignalInfo),
+		digitalInputMtx:   &sync.Mutex{},
+		digitalOutputMtx:  &sync.Mutex{},
+		analogInputMtx:    &sync.Mutex{},
+		analogOutputMtx:   &sync.Mutex{},
 	}
 }
 
 // Open configures the gRPC server to communicate with firmware.
-func (c *Controller) Open() error {
+func (c *Controller) Open(ctx context.Context) error {
 	c.l.Info("opening sil controller")
-	proto.RegisterSignalsServer(c.server, c)
 
-	listener, err := net.Listen("tcp", c.addr)
+	addr := fmt.Sprintf("[::]:%v", c.port)
+
+	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		return errors.Wrap(err, "listen")
 	}
 
+	c.server = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
+
+	pb.RegisterSignalsServer(c.server, c)
+
 	go func() {
-		if err := c.server.Serve(listener); err != nil {
+		c.l.Info("starting server", zap.String("listening_at", addr))
+		err = c.server.Serve(listener)
+		if err != nil {
 			c.l.Error("grpc serve", zap.Error(err))
 		}
 	}()
@@ -59,161 +82,353 @@ func (c *Controller) Open() error {
 }
 
 // Close stops the gRPC server.
-func (c *Controller) Close() {
+func (c *Controller) Close() error {
 	c.l.Info("closing sil controller")
 	c.server.GracefulStop()
+
+	return nil
 }
 
-// registerSignalIfNotExists ensures that any signals that are used by the SIL controller are registered.
-// It also prevents any accesses to nil maps.
-func (c *Controller) registerSignalIfNotExists(info *proto.SignalInfo) {
-	if c.signals[info.EcuName] == nil {
-		c.signals[info.EcuName] = make(map[string]*proto.SignalInfo)
-	}
-	c.signals[info.EcuName][info.SignalName] = info
+func (c *Controller) registerDigitalOutput(ecuName, sigName string) {
+	mapSet(c.digitalOutputPins, ecuName, sigName, false)
+	mapSet(c.signalInfo, ecuName, sigName, &pb.SignalInfo{
+		EcuName:         ecuName,
+		SignalName:      sigName,
+		SignalType:      pb.SignalType_SIGNAL_TYPE_DIGITAL,
+		SignalDirection: pb.SignalDirection_SIGNAL_DIRECTION_INPUT, // Purposely reversed
+	})
+}
 
-	switch info.SignalType {
-	case proto.SignalType_SIGNAL_TYPE_DIGITAL:
-		if c.digitalSignals[info.EcuName] == nil {
-			c.digitalSignals[info.EcuName] = make(map[string]bool)
-		}
-	case proto.SignalType_SIGNAL_TYPE_ADC:
-		if c.analogSignals[info.EcuName] == nil {
-			c.analogSignals[info.EcuName] = make(map[string]float64)
-		}
-	}
+func (c *Controller) registerDigitalInput(ecuName, sigName string) {
+	mapSet(c.digitalInputPins, ecuName, sigName, false)
+	mapSet(c.signalInfo, ecuName, sigName, &pb.SignalInfo{
+		EcuName:         ecuName,
+		SignalName:      sigName,
+		SignalType:      pb.SignalType_SIGNAL_TYPE_DIGITAL,
+		SignalDirection: pb.SignalDirection_SIGNAL_DIRECTION_OUTPUT, // Purposely reversed
+	})
+}
+
+func (c *Controller) registerAnalogOutput(ecuName, sigName string) {
+	mapSet(c.analogOutputPins, ecuName, sigName, 0.0)
+	mapSet(c.signalInfo, ecuName, sigName, &pb.SignalInfo{
+		EcuName:         ecuName,
+		SignalName:      sigName,
+		SignalType:      pb.SignalType_SIGNAL_TYPE_ANALOG,
+		SignalDirection: pb.SignalDirection_SIGNAL_DIRECTION_INPUT, // Purposely reversed
+	})
+}
+
+func (c *Controller) registerAnalogInput(ecuName, sigName string) {
+	mapSet(c.analogInputPins, ecuName, sigName, 0.0)
+	mapSet(c.signalInfo, ecuName, sigName, &pb.SignalInfo{
+		EcuName:         ecuName,
+		SignalName:      sigName,
+		SignalType:      pb.SignalType_SIGNAL_TYPE_ANALOG,
+		SignalDirection: pb.SignalDirection_SIGNAL_DIRECTION_OUTPUT, // Purposely reversed
+	})
 }
 
 // SetDigital sets an output digital pin for a SIL digital pin.
-func (c *Controller) SetDigital(pin *DigitalPin, b bool) {
-	c.registerSignalIfNotExists(pin.Info)
-	c.digitalSignals[pin.Info.EcuName][pin.Info.SignalName] = b
+func (c *Controller) SetDigital(pin *DigitalPin, level bool) error {
+	c.digitalOutputMtx.Lock()
+	defer c.digitalOutputMtx.Unlock()
+
+	_, ok := mapLookup(c.digitalOutputPins, pin.info.EcuName, pin.info.SignalName)
+	if !ok {
+		c.registerDigitalOutput(pin.info.EcuName, pin.info.SignalName)
+	}
+
+	c.digitalOutputPins[pin.info.EcuName][pin.info.SignalName] = level
+
+	return nil
 }
 
 // ReadDigital returns the level of a SIL digital pin.
-func (c *Controller) ReadDigital(pin *DigitalPin) bool {
-	c.registerSignalIfNotExists(pin.Info)
-	return c.digitalSignals[pin.Info.EcuName][pin.Info.SignalName]
+func (c *Controller) ReadDigital(pin *DigitalPin) (bool, error) {
+	c.digitalInputMtx.Lock()
+	defer c.digitalInputMtx.Unlock()
+
+	level, ok := mapLookup(c.digitalInputPins, pin.info.EcuName, pin.info.SignalName)
+	if !ok {
+		return false, errors.Errorf("no entry for ecu name (%s) signal name (%s)",
+			pin.info.EcuName, pin.info.SignalName)
+	}
+
+	return level, nil
 }
 
 // WriteVoltage sets the voltage of a SIL analog pin.
-func (c *Controller) WriteVoltage(pin *AnalogPin, voltage float64) {
-	c.registerSignalIfNotExists(pin.Info)
-	c.analogSignals[pin.Info.SignalName][pin.Info.SignalName] = voltage
+func (c *Controller) WriteVoltage(pin *AnalogPin, voltage float64) error {
+	c.analogOutputMtx.Lock()
+	defer c.analogOutputMtx.Unlock()
+
+	_, ok := mapLookup(c.analogOutputPins, pin.info.EcuName, pin.info.SignalName)
+	if !ok {
+		c.registerAnalogOutput(pin.info.EcuName, pin.info.SignalName)
+	}
+
+	c.analogOutputPins[pin.info.EcuName][pin.info.SignalName] = voltage
+
+	return nil
 }
 
 // ReadVoltage returns the voltage of a SIL analog pin.
-func (c *Controller) ReadVoltage(pin *AnalogPin) float64 {
-	c.registerSignalIfNotExists(pin.Info)
-	return c.analogSignals[pin.Info.EcuName][pin.Info.SignalName]
+func (c *Controller) ReadVoltage(pin *AnalogPin) (float64, error) {
+	c.analogInputMtx.Lock()
+	defer c.analogInputMtx.Unlock()
+
+	voltage, ok := mapLookup(c.analogInputPins, pin.info.EcuName, pin.info.SignalName)
+	if !ok {
+		return 0.0, errors.Errorf("no entry for ecu name (%s) signal name (%s)",
+			pin.info.EcuName, pin.info.SignalName)
+	}
+
+	return voltage, nil
 }
 
 // WriteCurrent sets the current of a SIL analog pin (unimplemented for SIL).
-func (c *Controller) WriteCurrent(output *AnalogPin, current float64) error {
+func (c *Controller) WriteCurrent(_ *AnalogPin, _ float64) error {
 	return errors.New("unimplemented function on sil controller")
 }
 
 // ReadCurrent returns the current of a SIL analog pin (unimplemented for SIL).
-func (c *Controller) ReadCurrent(output *AnalogPin) (float64, error) {
+func (c *Controller) ReadCurrent(_ *AnalogPin) (float64, error) {
 	return 0.00, errors.New("unimplemented function on sil controller")
 }
 
-// EnumerateRegisteredSignals is a gRPC server call that returns all registered signals.
-func (c *Controller) EnumerateRegisteredSignals(_ context.Context, _ *proto.EnumerateRegisteredSignalsRequest) (*proto.EnumerateRegisteredSignalsResponse, error) {
-	var registeredSignals []*proto.SignalInfo
-	for _, signals := range c.signals {
-		for _, info := range signals {
-			registeredSignals = append(registeredSignals, info)
+// EnumerateRegisteredSignals is a gRPC server call that returns all registered signalInfo.
+func (c *Controller) EnumerateRegisteredSignals(
+	_ context.Context, _ *pb.EnumerateRegisteredSignalsRequest) (*pb.EnumerateRegisteredSignalsResponse, error) {
+	var signals []*pb.SignalInfo
+
+	for _, ecuSignals := range c.signalInfo {
+		for _, info := range ecuSignals {
+			signals = append(signals, info)
 		}
 	}
 
-	return &proto.EnumerateRegisteredSignalsResponse{
+	return &pb.EnumerateRegisteredSignalsResponse{
 		Status:  true,
 		Error:   "",
-		Signals: registeredSignals,
+		Signals: signals,
 	}, nil
 }
 
 // WriteSignal is a gRPC server call that sets a signal value depending on the signal type.
-func (c *Controller) WriteSignal(_ context.Context, in *proto.WriteSignalRequest) (*proto.WriteSignalResponse, error) {
-	info := c.signals[in.EcuName][in.SignalName]
+func (c *Controller) WriteSignal(_ context.Context, in *pb.WriteSignalRequest) (*pb.WriteSignalResponse, error) {
+	switch in.Value.(type) {
+	// NOTE: if we get a client request to write a signal, it should go to an input map. The opposite is also true.
+	case *pb.WriteSignalRequest_ValueAnalog:
+		_, ok := mapLookup(c.analogInputPins, in.EcuName, in.SignalName)
+		if !ok {
+			return &pb.WriteSignalResponse{
+				Status: false,
+				Error: fmt.Sprintf("no writeable analog signal with ecu name (%s) and signal name (%s)",
+					in.EcuName, in.SignalName),
+			}, nil
+		}
 
-	switch info.SignalType {
-	case proto.SignalType_SIGNAL_TYPE_DIGITAL:
-		c.SetDigital(&DigitalPin{info}, in.GetValueDigital().GetLevel())
-	case proto.SignalType_SIGNAL_TYPE_ADC:
-		c.WriteVoltage(&AnalogPin{info}, in.GetValueAdc().GetVoltage())
+		c.analogInputMtx.Lock()
+		defer c.analogInputMtx.Unlock()
+
+		c.analogInputPins[in.EcuName][in.SignalName] = in.GetValueAnalog().GetVoltage()
+	case *pb.WriteSignalRequest_ValueDigital:
+		_, ok := mapLookup(c.digitalInputPins, in.EcuName, in.SignalName)
+		if !ok {
+			return &pb.WriteSignalResponse{
+				Status: false,
+				Error: fmt.Sprintf("no writeable digital signal with ecu name (%s) and signal name (%s)",
+					in.EcuName, in.SignalName),
+			}, nil
+		}
+
+		c.digitalInputMtx.Lock()
+		defer c.digitalInputMtx.Unlock()
+
+		c.digitalInputPins[in.EcuName][in.SignalName] = in.GetValueDigital().GetLevel()
+	case *pb.WriteSignalRequest_ValuePwm:
+		return &pb.WriteSignalResponse{
+			Status: false,
+			Error:  _pwmUnsupportedErr,
+		}, nil
 	default:
-		return &proto.WriteSignalResponse{
+		return &pb.WriteSignalResponse{
 			Status: false,
 			Error:  _unknownSignalTypeErr,
-		}, errors.New(_unknownSignalTypeErr)
+		}, nil
 	}
 
-	return &proto.WriteSignalResponse{
+	return &pb.WriteSignalResponse{
 		Status: true,
 		Error:  "",
 	}, nil
 }
 
 // ReadSignal is a gRPC server call that reads a signal value depending on the signal type.
-func (c *Controller) ReadSignal(_ context.Context, in *proto.ReadSignalRequest) (*proto.ReadSignalResponse, error) {
-	info := c.signals[in.EcuName][in.SignalName]
+func (c *Controller) ReadSignal(_ context.Context, in *pb.ReadSignalRequest) (*pb.ReadSignalResponse, error) {
+	switch in.SignalType {
+	case pb.SignalType_SIGNAL_TYPE_DIGITAL:
+		// Allow reading outputs or inputs. An output signal from the client perspective is an input on the server
+		// perspective and vise-versa.
+		switch in.SignalDirection {
+		case pb.SignalDirection_SIGNAL_DIRECTION_INPUT:
+			level, ok := mapLookup(c.digitalOutputPins, in.EcuName, in.SignalName)
+			if !ok {
+				return &pb.ReadSignalResponse{
+					Status: false,
+					Error: fmt.Sprintf("no digital intput signal with ecu name (%s) and signal name (%s)",
+						in.EcuName, in.SignalName),
+					Value: &pb.ReadSignalResponse_ValueDigital{ValueDigital: &pb.DigitalSignal{Level: false}},
+				}, nil
+			}
 
-	switch info.SignalType {
-	case proto.SignalType_SIGNAL_TYPE_DIGITAL:
-		return &proto.ReadSignalResponse{
-			Status: true,
-			Error:  "",
-			Value: &proto.ReadSignalResponse_ValueDigital{
-				ValueDigital: &proto.DigitalSignal{Level: c.ReadDigital(&DigitalPin{info})},
-			},
-		}, nil
-	case proto.SignalType_SIGNAL_TYPE_ADC:
-		return &proto.ReadSignalResponse{
-			Status: true,
-			Error:  "",
-			Value: &proto.ReadSignalResponse_ValueAdc{
-				ValueAdc: &proto.AdcSignal{Voltage: c.ReadVoltage(&AnalogPin{info})},
-			},
-		}, nil
+			return &pb.ReadSignalResponse{
+				Status: true,
+				Error:  "",
+				Value:  &pb.ReadSignalResponse_ValueDigital{ValueDigital: &pb.DigitalSignal{Level: level}},
+			}, nil
+		case pb.SignalDirection_SIGNAL_DIRECTION_OUTPUT:
+			level, ok := mapLookup(c.digitalInputPins, in.EcuName, in.SignalName)
+			if !ok {
+				return &pb.ReadSignalResponse{
+					Status: false,
+					Error: fmt.Sprintf("no digital output signal with ecu name (%s) and signal name (%s)",
+						in.EcuName, in.SignalName),
+					Value: &pb.ReadSignalResponse_ValueDigital{ValueDigital: &pb.DigitalSignal{Level: false}},
+				}, nil
+			}
+
+			return &pb.ReadSignalResponse{
+				Status: true,
+				Error:  "",
+				Value:  &pb.ReadSignalResponse_ValueDigital{ValueDigital: &pb.DigitalSignal{Level: level}},
+			}, nil
+		default:
+			return &pb.ReadSignalResponse{
+				Status: false,
+				Error:  _unknownSignalDirErr,
+				Value:  &pb.ReadSignalResponse_ValueDigital{ValueDigital: &pb.DigitalSignal{Level: false}},
+			}, nil
+		}
+	case pb.SignalType_SIGNAL_TYPE_ANALOG:
+		// Allow reading outputs or inputs. An output signal from the client perspective is an input on the server
+		// perspective and vise-versa.
+		switch in.SignalDirection {
+		case pb.SignalDirection_SIGNAL_DIRECTION_INPUT:
+			voltage, ok := mapLookup(c.analogOutputPins, in.EcuName, in.SignalName)
+			if !ok {
+				return &pb.ReadSignalResponse{
+					Status: false,
+					Error: fmt.Sprintf("no analog intput signal with ecu name (%s) and signal name (%s)",
+						in.EcuName, in.SignalName),
+					Value: &pb.ReadSignalResponse_ValueAnalog{ValueAnalog: &pb.AnalogSignal{Voltage: 0.0}},
+				}, nil
+			}
+
+			return &pb.ReadSignalResponse{
+				Status: true,
+				Error:  "",
+				Value:  &pb.ReadSignalResponse_ValueAnalog{ValueAnalog: &pb.AnalogSignal{Voltage: voltage}},
+			}, nil
+		case pb.SignalDirection_SIGNAL_DIRECTION_OUTPUT:
+			voltage, ok := mapLookup(c.analogInputPins, in.EcuName, in.SignalName)
+			if !ok {
+				return &pb.ReadSignalResponse{
+					Status: false,
+					Error: fmt.Sprintf("no analog output signal with ecu name (%s) and signal name (%s)",
+						in.EcuName, in.SignalName),
+					Value: &pb.ReadSignalResponse_ValueAnalog{ValueAnalog: &pb.AnalogSignal{Voltage: 0.0}},
+				}, nil
+			}
+
+			return &pb.ReadSignalResponse{
+				Status: true,
+				Error:  "",
+				Value:  &pb.ReadSignalResponse_ValueAnalog{ValueAnalog: &pb.AnalogSignal{Voltage: voltage}},
+			}, nil
+		default:
+			return &pb.ReadSignalResponse{
+				Status: false,
+				Error:  _unknownSignalDirErr,
+				Value:  &pb.ReadSignalResponse_ValueAnalog{ValueAnalog: &pb.AnalogSignal{Voltage: 0.0}},
+			}, nil
+		}
 	default:
-		return &proto.ReadSignalResponse{
+		return &pb.ReadSignalResponse{
 			Status: false,
 			Error:  _unknownSignalTypeErr,
-		}, errors.New(_unknownSignalTypeErr)
+			Value:  &pb.ReadSignalResponse_ValueDigital{ValueDigital: &pb.DigitalSignal{Level: false}},
+		}, nil
 	}
 }
 
-// RegisterSignal is a gRPC server call that creates an entry in signals for a new signal sent by firmware.
-// This allows us to register signals from either the HIL or the firmware.
-func (c *Controller) RegisterSignal(_ context.Context, in *proto.RegisterSignalRequest) (*proto.RegisterSignalResponse, error) {
-	info := &proto.SignalInfo{
-		EcuName:      in.EcuName,
-		SignalName:   in.SignalName,
-		SignalType:   proto.SignalType_SIGNAL_TYPE_UNKNOWN,
-		SignalAccess: in.SignalAccess,
-	}
-
-	if in.GetInitialValueDigital() != nil {
-		info.SignalType = proto.SignalType_SIGNAL_TYPE_DIGITAL
-		c.SetDigital(&DigitalPin{info}, in.GetInitialValueDigital().GetLevel())
-	} else if in.GetInitialValueAdc() != nil {
-		info.SignalType = proto.SignalType_SIGNAL_TYPE_ADC
-		c.WriteVoltage(&AnalogPin{info}, in.GetInitialValueAdc().GetVoltage())
-	} else if in.GetInitialValuePwm() != nil {
-		info.SignalType = proto.SignalType_SIGNAL_TYPE_PWM
-	} else {
-		return &proto.RegisterSignalResponse{
+func (c *Controller) RegisterSignal(_ context.Context, in *pb.RegisterSignalRequest) (*pb.RegisterSignalResponse, error) {
+	switch in.SignalType {
+	case pb.SignalType_SIGNAL_TYPE_DIGITAL:
+		// An output signal from the client perspective is an input on the server perspective and vise-versa.
+		switch in.SignalDirection {
+		case pb.SignalDirection_SIGNAL_DIRECTION_INPUT:
+			c.registerDigitalOutput(in.EcuName, in.SignalName)
+		case pb.SignalDirection_SIGNAL_DIRECTION_OUTPUT:
+			c.registerDigitalInput(in.EcuName, in.SignalName)
+		default:
+			return &pb.RegisterSignalResponse{
+				Status: false,
+				Error:  _unknownSignalDirErr,
+			}, nil
+		}
+	case pb.SignalType_SIGNAL_TYPE_ANALOG:
+		// An output signal from the client perspective is an input on the server perspective and vise-versa.
+		switch in.SignalDirection {
+		case pb.SignalDirection_SIGNAL_DIRECTION_INPUT:
+			c.registerAnalogOutput(in.EcuName, in.SignalName)
+		case pb.SignalDirection_SIGNAL_DIRECTION_OUTPUT:
+			c.registerAnalogInput(in.EcuName, in.SignalName)
+		default:
+			return &pb.RegisterSignalResponse{
+				Status: false,
+				Error:  _unknownSignalDirErr,
+			}, nil
+		}
+	case pb.SignalType_SIGNAL_TYPE_PWM:
+		return &pb.RegisterSignalResponse{
+			Status: false,
+			Error:  _pwmUnsupportedErr,
+		}, nil
+	default:
+		return &pb.RegisterSignalResponse{
 			Status: false,
 			Error:  _unknownSignalTypeErr,
-		}, errors.New(_unknownSignalTypeErr)
+		}, nil
 	}
 
-	c.registerSignalIfNotExists(info)
-
-	return &proto.RegisterSignalResponse{
+	return &pb.RegisterSignalResponse{
 		Status: true,
 		Error:  "",
 	}, nil
+}
+
+func mapSet[T any](m map[string]map[string]T, first, second string, value T) {
+	if m[first] == nil {
+		m[first] = make(map[string]T)
+	}
+
+	m[first][second] = value
+}
+
+func mapLookup[T any](m map[string]map[string]T, first, second string) (T, bool) {
+	var ret T
+
+	m1, ok := m[first]
+	if !ok {
+		return ret, false
+	}
+
+	ret, ok = m1[second]
+	if !ok {
+		return ret, false
+	}
+
+	return ret, true
 }

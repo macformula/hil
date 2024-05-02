@@ -2,12 +2,12 @@ package speedgoat
 
 // AnalogPin defines an analog pin for the Speedgoat
 type AnalogPin struct {
-	Index uint8
+	index uint8
 }
 
 func NewAnalogPin(idx uint8) *AnalogPin {
 	pin := AnalogPin{
-		Index: idx,
+		index: idx,
 	}
 
 	return &pin

@@ -1,19 +1,30 @@
 package sil
 
-import proto "github.com/macformula/hil/iocontrol/sil/generated"
+import pb "github.com/macformula/hil/iocontrol/sil/proto"
 
 // AnalogPin defines an analog pin for SIL
 type AnalogPin struct {
-	Info *proto.SignalInfo
+	info pb.SignalInfo
 }
 
-func NewAnalogPin(ecu, signal string, access proto.SignalAccess, signalType proto.SignalType) *AnalogPin {
+func NewAnalogInputPin(ecu, signal string) *AnalogPin {
 	return &AnalogPin{
-		Info: &proto.SignalInfo{
-			EcuName:      ecu,
-			SignalName:   signal,
-			SignalAccess: access,
-			SignalType:   signalType,
+		info: pb.SignalInfo{
+			EcuName:         ecu,
+			SignalName:      signal,
+			SignalType:      pb.SignalType_SIGNAL_TYPE_ANALOG,
+			SignalDirection: pb.SignalDirection_SIGNAL_DIRECTION_INPUT,
+		},
+	}
+}
+
+func NewAnalogOutputPin(ecu, signal string) *AnalogPin {
+	return &AnalogPin{
+		info: pb.SignalInfo{
+			EcuName:         ecu,
+			SignalName:      signal,
+			SignalType:      pb.SignalType_SIGNAL_TYPE_ANALOG,
+			SignalDirection: pb.SignalDirection_SIGNAL_DIRECTION_OUTPUT,
 		},
 	}
 }

@@ -1,5 +1,7 @@
 package raspi
 
+import "context"
+
 // Controller provides control for various Raspberry Pi pins
 type Controller struct {
 }
@@ -10,7 +12,7 @@ func NewController() *Controller {
 }
 
 // Open configures the controller
-func (c *Controller) Open() error {
+func (c *Controller) Open(_ context.Context) error {
 	return nil
 }
 
@@ -42,4 +44,8 @@ func (c *Controller) WriteCurrent(output *AnalogPin, current float64) error {
 // ReadCurrent returns the current of a Raspberry Pi analog pin
 func (c *Controller) ReadCurrent(output *AnalogPin) (float64, error) {
 	return 0.00, nil
+}
+
+func (c *Controller) Close() error {
+	return nil
 }

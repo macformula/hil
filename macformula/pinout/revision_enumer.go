@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _RevisionName = "Ev5MockTest"
+const _RevisionName = "Ev5MockTestSil"
 
-var _RevisionIndex = [...]uint8{0, 3, 11}
+var _RevisionIndex = [...]uint8{0, 3, 11, 14}
 
-const _RevisionLowerName = "ev5mocktest"
+const _RevisionLowerName = "ev5mocktestsil"
 
 func (i Revision) String() string {
 	if i < 0 || i >= Revision(len(_RevisionIndex)-1) {
@@ -26,20 +26,24 @@ func _RevisionNoOp() {
 	var x [1]struct{}
 	_ = x[Ev5-(0)]
 	_ = x[MockTest-(1)]
+	_ = x[Sil-(2)]
 }
 
-var _RevisionValues = []Revision{Ev5, MockTest}
+var _RevisionValues = []Revision{Ev5, MockTest, Sil}
 
 var _RevisionNameToValueMap = map[string]Revision{
-	_RevisionName[0:3]:       Ev5,
-	_RevisionLowerName[0:3]:  Ev5,
-	_RevisionName[3:11]:      MockTest,
-	_RevisionLowerName[3:11]: MockTest,
+	_RevisionName[0:3]:        Ev5,
+	_RevisionLowerName[0:3]:   Ev5,
+	_RevisionName[3:11]:       MockTest,
+	_RevisionLowerName[3:11]:  MockTest,
+	_RevisionName[11:14]:      Sil,
+	_RevisionLowerName[11:14]: Sil,
 }
 
 var _RevisionNames = []string{
 	_RevisionName[0:3],
 	_RevisionName[3:11],
+	_RevisionName[11:14],
 }
 
 // RevisionString retrieves an enum value from the enum constants string name.

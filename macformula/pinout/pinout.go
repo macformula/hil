@@ -3,6 +3,7 @@ package pinout
 import (
 	"github.com/macformula/hil/iocontrol"
 	"github.com/macformula/hil/iocontrol/raspi"
+	"github.com/macformula/hil/iocontrol/sil"
 	"github.com/macformula/hil/iocontrol/speedgoat"
 	"github.com/pkg/errors"
 )
@@ -21,6 +22,9 @@ var _revisionDigitalInputPinout = map[Revision]DigitalPinout{
 	MockTest: {
 		HvilOk: raspi.NewDigitalPin(),
 	},
+	Sil: {
+		IndicatorLed: sil.NewDigitalInputPin("DemoProject", IndicatorLed.String()),
+	},
 }
 
 var _revisionDigitalOutputPinout = map[Revision]DigitalPinout{
@@ -31,6 +35,9 @@ var _revisionDigitalOutputPinout = map[Revision]DigitalPinout{
 	MockTest: {
 		LvEnableButton:     raspi.NewDigitalPin(),
 		ReadyToDriveButton: raspi.NewDigitalPin(),
+	},
+	Sil: {
+		IndicatorButton: sil.NewDigitalOutputPin("DemoProject", IndicatorButton.String()),
 	},
 }
 

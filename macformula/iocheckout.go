@@ -139,7 +139,15 @@ func (io *IoCheckout) Start() error {
 			return errors.New("reached unknown label")
 		}
 	}
+}
 
+func (io *IoCheckout) Close() error {
+	err := io.ioControl.Close()
+	if err != nil {
+		return errors.Wrap(err, "close iocontrol")
+	}
+
+	return nil
 }
 
 func (io *IoCheckout) promptSelect(label string, items []string) (string, error) {
