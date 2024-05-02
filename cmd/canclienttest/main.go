@@ -21,7 +21,7 @@ const (
 	_test2Timeout                 = 2 * time.Second
 	_test3Duration                = 5 * time.Second
 	_test3WaitTillGoRoutineStarts = 100 * time.Millisecond
-	_test3AcceptableDiffPercent   = 0.01
+	_test3AcceptableDiff          = 1
 )
 
 // NOTE: This requires the can interface of choice to be in loopback mode!!
@@ -204,16 +204,15 @@ func main() {
 		}
 
 		expectedNumFrames := int(math.Floor(float64(_test3Duration / periodicMessage.period)))
-		acceptableDiff := int(math.Ceil(float64(expectedNumFrames) * _test3AcceptableDiffPercent))
 
-		if int(math.Abs(float64(expectedNumFrames-numReceivedFrames))) > acceptableDiff {
+		if int(math.Abs(float64(expectedNumFrames-numReceivedFrames))) > _test3AcceptableDiff {
 			logger.Error("message receive count outside of tollerable range",
 				zap.String("message", periodicMessage.msg.Descriptor().Name),
 				zap.Uint32("msg_id", periodicMessage.msg.Frame().ID),
 				zap.Duration("periodicity", periodicMessage.period),
 				zap.Int("expected_num_frames", expectedNumFrames),
 				zap.Int("actual_num_frames", numReceivedFrames),
-				zap.Int("acceptable_diff", acceptableDiff),
+				zap.Int("acceptable_diff", _test3AcceptableDiff),
 			)
 
 			return

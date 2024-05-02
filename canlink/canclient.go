@@ -13,6 +13,7 @@ import (
 const (
 	_canClientLoggerName           = "can_client"
 	_idNotInDatabaseErrorIndicator = "ID not in database"
+	_bufferLen                     = 1000
 )
 
 // MessagesDescriptor is an interface mirroring the MessagesDescriptor struct found in Einride DBCs.
@@ -72,9 +73,7 @@ func (c *CanClient) Close() error {
 	return nil
 }
 
-// receive sends received frames through rxChan, only if a frame is available and Read is in progress. It is meant to be
-// called asynchronously with Read. Otherwise, rx.Receive() could block the thread while executing a switch statement
-// case, preventing it from being cancelled via context.
+// receive sends received frames through rxChan, only if a frame is available and Read is in progress.
 func (c *CanClient) receive() {
 	for c.rx.Receive() && c.reading {
 		c.rxChan <- c.rx.Frame()
@@ -85,6 +84,7 @@ func (c *CanClient) receive() {
 // will return the first message received from those types. If no types are given, it will return the
 // first message available.
 func (c *CanClient) Read(ctx context.Context, msgsToRead ...generated.Message) (generated.Message, error) {
+	c.reading = true
 	defer func() {
 		c.reading = false
 	}()
@@ -116,11 +116,6 @@ func (c *CanClient) Read(ctx context.Context, msgsToRead ...generated.Message) (
 					return msg, nil
 				}
 			}
-		default:
-			// Setting this in the default instead of at the top of the function to prevent a CAN frame from getting
-			// sent over rxChan just in between c.reading being set and the switch statement being executed (?).
-			// Which would cause a deadlock.
-			c.reading = true
 		}
 	}
 }
@@ -159,7 +154,7 @@ func (c *CanClient) StartTracking(ctx context.Context) error {
 				return
 			default:
 				msg, err := c.Read(ctx)
-				if err != nil { // TODO: maybe log these errors?
+				if err != nil {
 					c.l.Error("failed to read message",
 						zap.Error(err),
 					)

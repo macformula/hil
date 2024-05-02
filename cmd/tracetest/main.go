@@ -95,6 +95,7 @@ func main() {
 	}
 
 	fmt.Println("-------------- Starting Test --------------")
+	fmt.Println("-------------- CTRL-C to Stop -------------")
 
 	stop := make(chan struct{})
 
@@ -103,6 +104,8 @@ func main() {
 	waitForSigTerm(stop, logger)
 
 	fmt.Println("-------------- Test Complete --------------")
+
+	logger.Info("closing trace test")
 
 	err = tracer.StopTrace()
 	if err != nil {
@@ -122,8 +125,6 @@ func main() {
 	if tracer.Error() != nil {
 		logger.Error("tracer error", zap.Error(tracer.Error()))
 	}
-
-	logger.Info("End of Main")
 }
 
 func waitForSigTerm(stop chan struct{}, logger *zap.Logger) {
