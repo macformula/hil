@@ -31,7 +31,7 @@ func main() {
 
 	loggerConfig := zap.NewDevelopmentConfig()
 	loggerConfig.OutputPaths = []string{"stdout"}
-	loggerConfig.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
+	loggerConfig.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
 	logger, err := loggerConfig.Build()
 	if err != nil {
 		panic(errors.Wrap(err, "build logger config"))
@@ -63,8 +63,9 @@ func main() {
 			logger.Error("client close", zap.Error(err))
 		}
 	}()
-
-	fmt.Println("REQUIRES CAN INTERFACE TO BE IN LOOPBACK MODE")
+	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+	fmt.Println("!!!!!!!REQUIRES CAN INTERFACE BE IN LOOPBACK MODE!!!!!!!")
+	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
 	logger.Info("starting test 1")
 
@@ -144,14 +145,14 @@ func main() {
 			msg:    vehcan.NewContactor_States(),
 			period: 10 * time.Millisecond,
 		},
-		//{
-		//	msg:    vehcan.NewContactor_Feedback(),
-		//	period: 100 * time.Millisecond,
-		//},
-		//{
-		//	msg:    vehcan.NewThermistorBroadcast(),
-		//	period: 1000 * time.Millisecond,
-		//},
+		{
+			msg:    vehcan.NewContactor_Feedback(),
+			period: 100 * time.Millisecond,
+		},
+		{
+			msg:    vehcan.NewThermistorBroadcast(),
+			period: 1000 * time.Millisecond,
+		},
 	}
 
 	ctxTest3, cancelTest3 := context.WithTimeout(ctx, _test3Duration+100*time.Second)
@@ -164,9 +165,6 @@ func main() {
 			zap.Duration("period", periodicMessage.period))
 		go startSendRoutine(ctxTest3, canClient, periodicMessage.msg, periodicMessage.period, numMsgs, logger)
 	}
-
-	// Make sure all routines have started
-	time.Sleep(_test3WaitTillGoRoutineStarts)
 
 	err = canClient.StartTracking(ctxTest3)
 	if err != nil {
@@ -189,7 +187,7 @@ func main() {
 
 	fmt.Println(canIdToNumReceivedFrames)
 
-	logger.Info("map", zap.Any("map", canIdToNumReceivedFrames))
+	logger.Info("rx message map", zap.Any("id_to_num_received", canIdToNumReceivedFrames))
 	// Verify correct number of frames were sent
 	for _, periodicMessage := range msgsToSend3 {
 		msgId := periodicMessage.msg.Frame().ID
