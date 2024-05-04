@@ -26,7 +26,8 @@ const (
 	_logLevel          = zap.DebugLevel
 
 	// Timing
-	_msgPeriod = 100 * time.Millisecond
+	_msgPeriod         = 100 * time.Millisecond
+	_closeContactorDur = 2 * time.Second
 
 	// Can message values
 	_cellVoltage             = 3.3 // Volts
@@ -153,6 +154,7 @@ func startSendMessageRoutine(
 	ctrStates.SetPack_Precharge(0)
 
 	ticker := time.NewTicker(msgPeriod)
+	closeContactors := time.After(_closeContactorDur)
 
 	for i := 0; ; i++ {
 		select {
@@ -160,6 +162,9 @@ func startSendMessageRoutine(
 			return
 		case <-stop:
 			return
+		case <-closeContactors:
+			ctrStates.SetPack_Positive(1)
+			ctrStates.SetPack_Negative(1)
 		case <-ticker.C:
 			// +cellDeviation on even, -cellDeviation on odd
 			cellVoltageDeviation := _cellVoltageAbsDeviation * float64(i%2+1) * (-1)
