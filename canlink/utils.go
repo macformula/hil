@@ -10,6 +10,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	_idNotInDatabaseErrorIndicator = "ID not in database"
+)
+
 // createTraceFile creates an *os.File given information
 func createTraceFile(dir, busName, suffix string) (*os.File, error) {
 	dateStr := time.Now().Format(_filenameDateFormat)

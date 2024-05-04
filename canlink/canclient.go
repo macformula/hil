@@ -11,9 +11,8 @@ import (
 )
 
 const (
-	_canClientLoggerName           = "can_client"
-	_idNotInDatabaseErrorIndicator = "ID not in database"
-	_bufferLen                     = 1000
+	_canClientLoggerName = "can_client"
+	_bufferLen           = 1000
 )
 
 // MessagesDescriptor is an interface mirroring the MessagesDescriptor struct found in Einride DBCs.
