@@ -34,10 +34,11 @@ type Controller struct {
 	analogInputPins   map[string]map[string]float64
 	analogOutputPins  map[string]map[string]float64
 	signalInfo        map[string]map[string]*pb.SignalInfo
-	digitalInputMtx   *sync.Mutex
-	digitalOutputMtx  *sync.Mutex
-	analogInputMtx    *sync.Mutex
-	analogOutputMtx   *sync.Mutex
+
+	digitalInputMtx  *sync.Mutex
+	digitalOutputMtx *sync.Mutex
+	analogInputMtx   *sync.Mutex
+	analogOutputMtx  *sync.Mutex
 }
 
 // NewController returns a new SIL controller.
@@ -273,82 +274,55 @@ func (c *Controller) ReadSignal(_ context.Context, in *pb.ReadSignalRequest) (*p
 	case pb.SignalType_SIGNAL_TYPE_DIGITAL:
 		// Allow reading outputs or inputs. An output signal from the client perspective is an input on the server
 		// perspective and vise-versa.
+
+		var pins map[string]map[string]bool
 		switch in.SignalDirection {
 		case pb.SignalDirection_SIGNAL_DIRECTION_INPUT:
-			level, ok := mapLookup(c.digitalOutputPins, in.EcuName, in.SignalName)
-			if !ok {
-				return &pb.ReadSignalResponse{
-					Status: false,
-					Error: fmt.Sprintf("no digital intput signal with ecu name (%s) and signal name (%s)",
-						in.EcuName, in.SignalName),
-					Value: &pb.ReadSignalResponse_ValueDigital{ValueDigital: &pb.DigitalSignal{Level: false}},
-				}, nil
-			}
-
-			return &pb.ReadSignalResponse{
-				Status: true,
-				Error:  "",
-				Value:  &pb.ReadSignalResponse_ValueDigital{ValueDigital: &pb.DigitalSignal{Level: level}},
-			}, nil
+			c.digitalOutputMtx.Lock()
+			defer c.digitalOutputMtx.Unlock()
+			pins = c.digitalOutputPins
 		case pb.SignalDirection_SIGNAL_DIRECTION_OUTPUT:
-			level, ok := mapLookup(c.digitalInputPins, in.EcuName, in.SignalName)
-			if !ok {
-				return &pb.ReadSignalResponse{
-					Status: false,
-					Error: fmt.Sprintf("no digital output signal with ecu name (%s) and signal name (%s)",
-						in.EcuName, in.SignalName),
-					Value: &pb.ReadSignalResponse_ValueDigital{ValueDigital: &pb.DigitalSignal{Level: false}},
-				}, nil
-			}
-
-			return &pb.ReadSignalResponse{
-				Status: true,
-				Error:  "",
-				Value:  &pb.ReadSignalResponse_ValueDigital{ValueDigital: &pb.DigitalSignal{Level: level}},
-			}, nil
+			c.digitalInputMtx.Lock()
+			defer c.digitalInputMtx.Unlock()
+			pins = c.digitalInputPins
 		default:
 			return &pb.ReadSignalResponse{
 				Status: false,
 				Error:  _unknownSignalDirErr,
 				Value:  &pb.ReadSignalResponse_ValueDigital{ValueDigital: &pb.DigitalSignal{Level: false}},
 			}, nil
+
 		}
+
+		level, ok := mapLookup(pins, in.EcuName, in.SignalName)
+		if !ok {
+			return &pb.ReadSignalResponse{
+				Status: false,
+				Error: fmt.Sprintf("no digital signal with ecu name (%s) and signal name (%s)",
+					in.EcuName, in.SignalName),
+				Value: &pb.ReadSignalResponse_ValueDigital{ValueDigital: &pb.DigitalSignal{Level: false}},
+			}, nil
+		}
+
+		return &pb.ReadSignalResponse{
+			Status: true,
+			Error:  "",
+			Value:  &pb.ReadSignalResponse_ValueDigital{ValueDigital: &pb.DigitalSignal{Level: level}},
+		}, nil
 	case pb.SignalType_SIGNAL_TYPE_ANALOG:
 		// Allow reading outputs or inputs. An output signal from the client perspective is an input on the server
 		// perspective and vise-versa.
+
+		var pins map[string]map[string]float64
 		switch in.SignalDirection {
 		case pb.SignalDirection_SIGNAL_DIRECTION_INPUT:
-			voltage, ok := mapLookup(c.analogOutputPins, in.EcuName, in.SignalName)
-			if !ok {
-				return &pb.ReadSignalResponse{
-					Status: false,
-					Error: fmt.Sprintf("no analog intput signal with ecu name (%s) and signal name (%s)",
-						in.EcuName, in.SignalName),
-					Value: &pb.ReadSignalResponse_ValueAnalog{ValueAnalog: &pb.AnalogSignal{Voltage: 0.0}},
-				}, nil
-			}
-
-			return &pb.ReadSignalResponse{
-				Status: true,
-				Error:  "",
-				Value:  &pb.ReadSignalResponse_ValueAnalog{ValueAnalog: &pb.AnalogSignal{Voltage: voltage}},
-			}, nil
+			c.analogOutputMtx.Lock()
+			defer c.analogOutputMtx.Unlock()
+			pins = c.analogOutputPins
 		case pb.SignalDirection_SIGNAL_DIRECTION_OUTPUT:
-			voltage, ok := mapLookup(c.analogInputPins, in.EcuName, in.SignalName)
-			if !ok {
-				return &pb.ReadSignalResponse{
-					Status: false,
-					Error: fmt.Sprintf("no analog output signal with ecu name (%s) and signal name (%s)",
-						in.EcuName, in.SignalName),
-					Value: &pb.ReadSignalResponse_ValueAnalog{ValueAnalog: &pb.AnalogSignal{Voltage: 0.0}},
-				}, nil
-			}
-
-			return &pb.ReadSignalResponse{
-				Status: true,
-				Error:  "",
-				Value:  &pb.ReadSignalResponse_ValueAnalog{ValueAnalog: &pb.AnalogSignal{Voltage: voltage}},
-			}, nil
+			c.analogInputMtx.Lock()
+			defer c.analogInputMtx.Lock()
+			pins = c.analogInputPins
 		default:
 			return &pb.ReadSignalResponse{
 				Status: false,
@@ -356,6 +330,22 @@ func (c *Controller) ReadSignal(_ context.Context, in *pb.ReadSignalRequest) (*p
 				Value:  &pb.ReadSignalResponse_ValueAnalog{ValueAnalog: &pb.AnalogSignal{Voltage: 0.0}},
 			}, nil
 		}
+
+		voltage, ok := mapLookup(pins, in.EcuName, in.SignalName)
+		if !ok {
+			return &pb.ReadSignalResponse{
+				Status: false,
+				Error: fmt.Sprintf("no analog signal with ecu name (%s) and signal name (%s)",
+					in.EcuName, in.SignalName),
+				Value: &pb.ReadSignalResponse_ValueAnalog{ValueAnalog: &pb.AnalogSignal{Voltage: 0.0}},
+			}, nil
+		}
+
+		return &pb.ReadSignalResponse{
+			Status: true,
+			Error:  "",
+			Value:  &pb.ReadSignalResponse_ValueAnalog{ValueAnalog: &pb.AnalogSignal{Voltage: voltage}},
+		}, nil
 	default:
 		return &pb.ReadSignalResponse{
 			Status: false,
