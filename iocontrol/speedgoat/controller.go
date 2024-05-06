@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
@@ -36,7 +35,6 @@ const (
 type Controller struct {
 	addr string
 	conn net.Conn
-	err  *utils.ResettableError
 	l    *zap.Logger
 
 	opened bool
