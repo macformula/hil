@@ -2,13 +2,13 @@ package speedgoat
 
 // DigitalPin defines a digital pin for the Speedgoat
 type DigitalPin struct {
-	Index uint8
+	index uint8
 }
 
 // NewDigitalPin returns a new instance of a digital pin
 func NewDigitalPin(idx uint8) *DigitalPin {
 	pin := DigitalPin{
-		Index: idx,
+		index: idx,
 	}
 
 	return &pin

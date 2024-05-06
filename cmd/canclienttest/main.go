@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/macformula/hil/cangen/vehcan"
+	"github.com/macformula/hil/macformula/cangen/vehcan"
 	"go.einride.tech/can/pkg/generated"
 	"math"
 	"time"

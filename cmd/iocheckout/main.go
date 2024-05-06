@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
+	"flag"
+	"fmt"
 	"github.com/macformula/hil/iocontrol"
 	"github.com/macformula/hil/iocontrol/raspi"
+	"github.com/macformula/hil/iocontrol/sil"
 	"github.com/macformula/hil/iocontrol/speedgoat"
 	"github.com/macformula/hil/macformula"
 	"github.com/macformula/hil/macformula/pinout"
@@ -12,11 +16,22 @@ import (
 
 const (
 	_logFileName   = "iocontrol.log"
-	_revision      = pinout.Ev5
 	_speedgoatAddr = "192.168.10.1:8001"
+	_silPort       = 31522
+)
+
+var (
+	revisionStr  = flag.String("revision", "ev5", "Revision of the system")
+	useSpeedgoat = flag.Bool("use-speedgoat", true, "Use Speedgoat controller")
+	useRaspi     = flag.Bool("use-raspi", true, "Use Raspi controller")
+	useSil       = flag.Bool("use-sil", false, "Use Sil controller")
 )
 
 func main() {
+	ctx := context.Background()
+
+	flag.Parse()
+
 	cfg := zap.NewDevelopmentConfig()
 	cfg.OutputPaths = []string{_logFileName}
 	logger, err := cfg.Build()
@@ -25,26 +40,57 @@ func main() {
 	}
 	defer logger.Sync()
 
-	rpiController := raspi.NewController()
-	sgController := speedgoat.NewController(logger, _speedgoatAddr)
+	revision, err := pinout.RevisionString(*revisionStr)
+	if err != nil {
+		fmt.Printf("Invalid revision (%s) valid options (%v)", *revisionStr, pinout.RevisionStrings())
+		return
+	}
 
-	ioControl := iocontrol.NewIOControl(logger, iocontrol.WithRaspi(rpiController), iocontrol.WithSpeedgoat(sgController))
+	var ioControlOpts []iocontrol.IOControlOption
+
+	if *useSpeedgoat {
+		sg := speedgoat.NewController(logger, _speedgoatAddr)
+		ioControlOpts = append(ioControlOpts, iocontrol.WithSpeedgoat(sg))
+	}
+
+	if *useRaspi {
+		rp := raspi.NewController()
+		ioControlOpts = append(ioControlOpts, iocontrol.WithRaspi(rp))
+	}
+
+	if *useSil {
+		s := sil.NewController(_silPort, logger)
+		ioControlOpts = append(ioControlOpts, iocontrol.WithSil(s))
+	}
+
+	ioControl := iocontrol.NewIOControl(logger, ioControlOpts...)
 
 	logger.Info("opening iocontrol")
 
-	err = ioControl.Open()
+	err = ioControl.Open(ctx)
 	if err != nil {
-		panic(errors.Wrap(err, "open iocontrol"))
+		logger.Error("failed to open iocontrol", zap.Error(errors.Wrap(err, "open iocontrol")))
+
+		return
 	}
 
-	ioCheckout := macformula.NewIoCheckout(_revision, ioControl, logger)
+	iocheckout := macformula.NewIoCheckout(revision, ioControl, logger)
 
 	logger.Info("starting iocheckout")
 
-	err = ioCheckout.Start()
-	if err != nil {
-		logger.Error("iocheckout start", zap.Error(err))
-	}
+	defer func(io *macformula.IoCheckout, l *zap.Logger) {
+		l.Info("closing iocheckout")
 
-	return
+		err = io.Close()
+		if err != nil {
+			l.Error("failed to close iocheckout", zap.Error(err))
+		}
+	}(iocheckout, logger)
+
+	err = iocheckout.Start()
+	if err != nil {
+		logger.Error("failed iocheckout start", zap.Error(err))
+
+		return
+	}
 }

@@ -1,6 +1,7 @@
 package speedgoat
 
 import (
+	"context"
 	"encoding/binary"
 	"math"
 	"net"
@@ -14,17 +15,21 @@ import (
 )
 
 const (
-	_digitalInputCount  = 8
-	_digitalOutputCount = 8
-	_digitalOutputIndex = 8
-	_analogInputCount   = 8
-	_analogOutputCount  = 4
-	_analogOutputIndex  = 8
-	_loggerName         = "speedgoat_controller"
-	_tickTime           = time.Millisecond * 10
-	_readDeadline       = time.Second * 5
-	_startScript        = "iocontrol/speedgoat/scripts/startModel.sh"
-	_stopScript         = "iocontrol/speedgoat/scripts/stopModel.sh"
+	_digitalInputCount       = 8
+	_digitalOutputCount      = 8
+	_digitalArraySize        = _digitalInputCount + _digitalOutputCount
+	_digitalOutputStartIndex = 8
+	_digitalInputStartIndex  = 0
+	_analogInputCount        = 8
+	_analogOutputCount       = 4
+	_analogArraySize         = _analogInputCount + _analogOutputCount
+	_analogOutputStartIndex  = 8
+	_analogInputStartIndex   = 0
+	_loggerName              = "speedgoat_controller"
+	_tickTime                = time.Millisecond * 10
+	_readDeadline            = time.Second * 5
+	_startScript             = "iocontrol/speedgoat/scripts/startModel.sh"
+	_stopScript              = "iocontrol/speedgoat/scripts/stopModel.sh"
 )
 
 // Controller provides control for various Speedgoat pins
@@ -36,7 +41,7 @@ type Controller struct {
 
 	opened bool
 
-	digital   [_digitalInputCount + _digitalOutputCount]bool
+	digital   [_digitalArraySize]bool
 	analog    [_analogInputCount + _analogOutputCount]float64
 	muDigital sync.Mutex
 	muAnalog  sync.Mutex
@@ -75,7 +80,7 @@ func NewController(l *zap.Logger, address string, opts ...SpeedgoatOption) *Cont
 }
 
 // Open configures the controller.
-func (c *Controller) Open() error {
+func (c *Controller) Open(_ context.Context) error {
 	c.l.Info("opening speedgoat controller")
 
 	conn, err := net.Dial("tcp", c.addr)
@@ -90,7 +95,7 @@ func (c *Controller) Open() error {
 	go c.tickInputs()
 
 	if c.autoloadModel {
-		err := c.runSpeedgoatScript(_startScript, c.sgPassword, c.sgSSH, c.modelName)
+		err = c.runSpeedgoatScript(_startScript, c.sgPassword, c.sgSSH, c.modelName)
 		if err != nil {
 			return errors.Wrap(err, "run speedgoat script")
 		}
@@ -121,41 +126,65 @@ func (c *Controller) Close() error {
 }
 
 // SetDigital sets an output digital pin for a Speedgoat digital pin.
-func (c *Controller) SetDigital(output *DigitalPin, b bool) {
+func (c *Controller) SetDigital(output *DigitalPin, b bool) error {
 	c.muDigital.Lock()
 	defer c.muDigital.Unlock()
-	c.digital[output.Index] = b
+
+	if output.index >= _digitalArraySize || output.index < _digitalOutputStartIndex {
+		return errors.Errorf("invalid output index (%d)", output.index)
+	}
+
+	c.digital[output.index] = b
+
+	return nil
 }
 
 // ReadDigital returns the level of a Speedgoat digital pin.
-func (c *Controller) ReadDigital(output *DigitalPin) bool {
+func (c *Controller) ReadDigital(input *DigitalPin) (bool, error) {
 	c.muDigital.Lock()
 	defer c.muDigital.Unlock()
-	return c.digital[output.Index]
+
+	if input.index >= _digitalArraySize || input.index < _digitalInputStartIndex {
+		return false, errors.Errorf("invalid input index (%d)", input.index)
+	}
+
+	return c.digital[input.index], nil
 }
 
 // WriteVoltage sets the voltage of a Speedgoat analog pin.
-func (c *Controller) WriteVoltage(output *AnalogPin, voltage float64) {
+func (c *Controller) WriteVoltage(output *AnalogPin, voltage float64) error {
 	c.muAnalog.Lock()
 	defer c.muAnalog.Unlock()
-	c.analog[output.Index] = voltage
+
+	if output.index >= _analogArraySize || output.index < _analogOutputStartIndex {
+		return errors.Errorf("invalid output index (%d)", output.index)
+	}
+
+	c.analog[output.index] = voltage
+
+	return nil
 }
 
 // ReadVoltage returns the voltage of a Speedgoat analog pin.
-func (c *Controller) ReadVoltage(output *AnalogPin) float64 {
+func (c *Controller) ReadVoltage(input *AnalogPin) (float64, error) {
 	c.muAnalog.Lock()
 	defer c.muAnalog.Unlock()
-	return c.analog[output.Index]
+
+	if input.index >= _analogArraySize || input.index < _analogInputStartIndex {
+		return 0.0, errors.Errorf("invalid input index (%d)", input.index)
+	}
+
+	return c.analog[input.index], nil
 }
 
 // WriteCurrent sets the current of a Speedgoat analog pin (unimplemented for Speedgoat).
-func (c *Controller) WriteCurrent(output *AnalogPin, current float64) error {
+func (c *Controller) WriteCurrent(_ *AnalogPin, _ float64) error {
 	return errors.New("unimplemented function on speedgoat controller")
 }
 
 // ReadCurrent returns the current of a Speedgoat analog pin (unimplemented for Speedgoat).
-func (c *Controller) ReadCurrent(output *AnalogPin) (float64, error) {
-	return 0.00, errors.New("unimplemented function on speedgoat controller")
+func (c *Controller) ReadCurrent(_ *AnalogPin) (float64, error) {
+	return 0.0, errors.New("unimplemented function on speedgoat controller")
 }
 
 // tickOutputs transmits the packed data for the digital and analog outputs to the Speedgoat at a set time interval.
@@ -204,7 +233,7 @@ func (c *Controller) packOutputs() []byte {
 	data := make([]byte, _digitalOutputCount+_analogOutputCount*8)
 
 	c.muDigital.Lock()
-	for i, digitalOut := range c.digital[_digitalOutputIndex:] {
+	for i, digitalOut := range c.digital[_digitalOutputStartIndex:] {
 		if digitalOut {
 			data[i] = byte(1)
 		} else {
@@ -214,9 +243,9 @@ func (c *Controller) packOutputs() []byte {
 	c.muDigital.Unlock()
 
 	c.muAnalog.Lock()
-	for i, analogOutput := range c.analog[_analogOutputIndex:] {
+	for i, analogOutput := range c.analog[_analogOutputStartIndex:] {
 		// Convert the float64 to uint64 and append it as a byte array
-		binary.LittleEndian.PutUint64(data[_digitalOutputIndex+i*8:], math.Float64bits(analogOutput))
+		binary.LittleEndian.PutUint64(data[_digitalOutputStartIndex+i*8:], math.Float64bits(analogOutput))
 	}
 	c.muAnalog.Unlock()
 

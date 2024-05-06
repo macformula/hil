@@ -8,4 +8,5 @@ type Revision int
 const (
 	Ev5 Revision = iota
 	MockTest
+	Sil
 )

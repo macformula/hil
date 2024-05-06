@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _PhysicalIoName = "UnknownPhysicalIoLvEnableButtonReadyToDriveButtonHvilOkAcceleratorPedalPosition1AcceleratorPedalPosition2AccumulatorCurrentLvController3v3RefVoltage"
+const _PhysicalIoName = "UnknownPhysicalIoLvEnableButtonReadyToDriveButtonHvilOkAcceleratorPedalPosition1AcceleratorPedalPosition2AccumulatorCurrentLvController3v3RefVoltageIndicatorLedIndicatorButton"
 
-var _PhysicalIoIndex = [...]uint8{0, 17, 31, 49, 55, 80, 105, 123, 148}
+var _PhysicalIoIndex = [...]uint8{0, 17, 31, 49, 55, 80, 105, 123, 148, 160, 175}
 
-const _PhysicalIoLowerName = "unknownphysicaliolvenablebuttonreadytodrivebuttonhvilokacceleratorpedalposition1acceleratorpedalposition2accumulatorcurrentlvcontroller3v3refvoltage"
+const _PhysicalIoLowerName = "unknownphysicaliolvenablebuttonreadytodrivebuttonhvilokacceleratorpedalposition1acceleratorpedalposition2accumulatorcurrentlvcontroller3v3refvoltageindicatorledindicatorbutton"
 
 func (i PhysicalIo) String() string {
 	if i < 0 || i >= PhysicalIo(len(_PhysicalIoIndex)-1) {
@@ -32,9 +32,11 @@ func _PhysicalIoNoOp() {
 	_ = x[AcceleratorPedalPosition2-(5)]
 	_ = x[AccumulatorCurrent-(6)]
 	_ = x[LvController3v3RefVoltage-(7)]
+	_ = x[IndicatorLed-(8)]
+	_ = x[IndicatorButton-(9)]
 }
 
-var _PhysicalIoValues = []PhysicalIo{UnknownPhysicalIo, LvEnableButton, ReadyToDriveButton, HvilOk, AcceleratorPedalPosition1, AcceleratorPedalPosition2, AccumulatorCurrent, LvController3v3RefVoltage}
+var _PhysicalIoValues = []PhysicalIo{UnknownPhysicalIo, LvEnableButton, ReadyToDriveButton, HvilOk, AcceleratorPedalPosition1, AcceleratorPedalPosition2, AccumulatorCurrent, LvController3v3RefVoltage, IndicatorLed, IndicatorButton}
 
 var _PhysicalIoNameToValueMap = map[string]PhysicalIo{
 	_PhysicalIoName[0:17]:         UnknownPhysicalIo,
@@ -53,6 +55,10 @@ var _PhysicalIoNameToValueMap = map[string]PhysicalIo{
 	_PhysicalIoLowerName[105:123]: AccumulatorCurrent,
 	_PhysicalIoName[123:148]:      LvController3v3RefVoltage,
 	_PhysicalIoLowerName[123:148]: LvController3v3RefVoltage,
+	_PhysicalIoName[148:160]:      IndicatorLed,
+	_PhysicalIoLowerName[148:160]: IndicatorLed,
+	_PhysicalIoName[160:175]:      IndicatorButton,
+	_PhysicalIoLowerName[160:175]: IndicatorButton,
 }
 
 var _PhysicalIoNames = []string{
@@ -64,6 +70,8 @@ var _PhysicalIoNames = []string{
 	_PhysicalIoName[80:105],
 	_PhysicalIoName[105:123],
 	_PhysicalIoName[123:148],
+	_PhysicalIoName[148:160],
+	_PhysicalIoName[160:175],
 }
 
 // PhysicalIoString retrieves an enum value from the enum constants string name.
