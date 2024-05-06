@@ -1,8 +1,10 @@
 package fwutils
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -57,7 +59,6 @@ func (b *Builder) Open() error {
 
 // Build will checkout a commit hash, build, and return the binary
 func (b *Builder) Build(platform, project, commitHash string) (string, error) {
-
 	b.l.Info("saving current directory")
 
 	currentDir, err := os.Getwd()
@@ -65,7 +66,7 @@ func (b *Builder) Build(platform, project, commitHash string) (string, error) {
 		return "", errors.Wrap(err, "get pwd")
 	}
 
-	b.l.Info("changing to firmware directory")
+	b.l.Info("changing to firmware directory", zap.String("dir", b.firmwarePath))
 
 	err = os.Chdir(b.firmwarePath)
 	if err != nil {
@@ -83,9 +84,9 @@ func (b *Builder) Build(platform, project, commitHash string) (string, error) {
 
 	var binaryPath string
 	if platform == _platformStm32 {
-		binaryPath = b.firmwarePath + b.directoryBuilder(_buildFolder, project, platform) + project + _defaultBinaryExtension
+		binaryPath = filepath.Join(b.firmwarePath, _buildFolder, project, platform, project+_defaultBinaryExtension)
 	} else {
-		binaryPath = b.firmwarePath + b.directoryBuilder(_buildFolder, project, platform) + _defaultBinaryName
+		binaryPath = filepath.Join(b.firmwarePath, _buildFolder, project, platform, _defaultBinaryName)
 	}
 
 	b.l.Info("change directory to original")
@@ -99,21 +100,28 @@ func (b *Builder) Build(platform, project, commitHash string) (string, error) {
 }
 
 func (b *Builder) buildSequence(platform, project, commitHash string) error {
-	b.l.Info("checking out commit hash")
+	b.l.Info("checking out commit hash",
+		zap.String("cmd", fmt.Sprintf("%s %s", _checkoutCmd, commitHash)))
 
 	err := b.executeCommand(_checkoutCmd, commitHash)
 	if err != nil {
 		return errors.Wrap(err, "checkout commit hash")
 	}
 
-	b.l.Info("updating submodules")
+	b.l.Info("updating submodules", zap.String("cmd",
+		fmt.Sprintf("%s %s %s",
+			_submoduleUpdateCmd,
+			_submoduleInitArg,
+			_submoduleRecursiveArg,
+		)))
 
 	err = b.executeCommand(_submoduleUpdateCmd, _submoduleInitArg, _submoduleRecursiveArg)
 	if err != nil {
 		return errors.Wrap(err, "update submodules")
 	}
 
-	b.l.Info("making binary")
+	b.l.Info("making binary", zap.String("cmd", fmt.Sprintf("%s %s %s",
+		_makeCmd, _makePlatformArg+platform, _makeProjectArg+project)))
 
 	err = b.executeCommand(_makeCmd, _makePlatformArg+platform, _makeProjectArg+project)
 	if err != nil {
@@ -132,14 +140,4 @@ func (b *Builder) executeCommand(cmd string, args ...string) error {
 	}
 
 	return nil
-}
-
-func (b *Builder) directoryBuilder(component ...string) string {
-	var outputPath string
-
-	for _, c := range component {
-		outputPath += c + "/"
-	}
-
-	return outputPath
 }
