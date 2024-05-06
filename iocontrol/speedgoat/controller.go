@@ -171,7 +171,7 @@ func (c *Controller) ReadVoltage(input *AnalogPin) (float64, error) {
 	defer c.muAnalog.Unlock()
 
 	if input.index >= _analogArraySize || input.index < _analogInputStartIndex {
-		return 0.0, errors.Errorf("invalid output index (%d)", input.index)
+		return 0.0, errors.Errorf("invalid input index (%d)", input.index)
 	}
 
 	return c.analog[input.index], nil
