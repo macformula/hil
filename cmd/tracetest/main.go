@@ -3,15 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/macformula/hil/cangen/vehcan"
-	"github.com/pkg/errors"
 	"os"
 	"os/signal"
 	"time"
 
-	"github.com/macformula/hil/canlink"
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
+
+	"github.com/macformula/hil/cangen/vehcan"
+	"github.com/macformula/hil/canlink"
+	"github.com/pkg/errors"
 )
 
 const (

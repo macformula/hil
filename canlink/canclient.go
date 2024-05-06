@@ -2,17 +2,18 @@ package canlink
 
 import (
 	"context"
-	"github.com/pkg/errors"
+	"net"
+
 	"go.einride.tech/can"
 	"go.einride.tech/can/pkg/generated"
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
-	"net"
+
+	"github.com/pkg/errors"
 )
 
 const (
 	_canClientLoggerName = "can_client"
-	_bufferLen           = 1000
 )
 
 // MessagesDescriptor is an interface mirroring the MessagesDescriptor struct found in Einride DBCs.
@@ -102,11 +103,10 @@ func (c *CanClient) Read(ctx context.Context, msgsToRead ...generated.Message) (
 				continue
 			}
 
-			c.l.Debug("read a message")
+			c.l.Debug("read a message", zap.Uint32("id", msg.Frame().ID))
 
 			// No message types were specified, return first frame of any type
 			if len(msgsToRead) == 0 {
-				c.l.Debug("read a message")
 				return msg, nil
 			}
 

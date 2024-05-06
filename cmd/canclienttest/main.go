@@ -8,20 +8,20 @@ import (
 	"math"
 	"time"
 
-	"github.com/macformula/hil/canlink"
-	"github.com/pkg/errors"
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
+
+	"github.com/macformula/hil/canlink"
+	"github.com/pkg/errors"
 )
 
 const (
-	_canIface                     = "can1"
-	_test1MessagePeriod           = 100 * time.Millisecond
-	_test1Timeout                 = 10 * _test1MessagePeriod
-	_test2Timeout                 = 2 * time.Second
-	_test3Duration                = 5 * time.Second
-	_test3WaitTillGoRoutineStarts = 100 * time.Millisecond
-	_test3AcceptableDiff          = 1
+	_canIface            = "can1"
+	_test1MessagePeriod  = 100 * time.Millisecond
+	_test1Timeout        = 10 * _test1MessagePeriod
+	_test2Timeout        = 2 * time.Second
+	_test3Duration       = 5 * time.Second
+	_test3AcceptableDiff = 1
 )
 
 // NOTE: This requires the can interface of choice to be in loopback mode!!
