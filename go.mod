@@ -8,6 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/ethereum/go-ethereum v1.13.5
 	github.com/fatih/color v1.15.0
+	github.com/foxglove/mcap/go/mcap v1.1.0
 	github.com/google/uuid v1.3.1
 	github.com/manifoldco/promptui v0.9.0
 	github.com/muesli/reflow v0.3.0
@@ -21,15 +22,11 @@ require (
 )
 
 require (
-	github.com/alecthomas/kingpin/v2 v2.3.2 // indirect
-	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/fatih/color v1.15.0 // indirect
-	github.com/foxglove/mcap/go/mcap v1.1.0 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/klauspost/compress v1.15.15 // indirect
@@ -47,7 +44,6 @@ require (
 	github.com/shurcooL/go v0.0.0-20190704215121-7189cc372560 // indirect
 	github.com/shurcooL/go-goon v0.0.0-20170922171312-37c2f522c041 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
-	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/mod v0.13.0 // indirect
 	golang.org/x/net v0.20.0 // indirect

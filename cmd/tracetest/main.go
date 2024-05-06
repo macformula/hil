@@ -3,65 +3,88 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
 	"time"
 
-	"github.com/macformula/hil/can_gen/VEH_CAN"
-	"github.com/macformula/hil/canlink"
-	"github.com/macformula/hil/config"
-	"go.einride.tech/can"
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
+
+	"github.com/macformula/hil/cangen/vehcan"
+	"github.com/macformula/hil/canlink"
+	"github.com/pkg/errors"
 )
 
 const (
-	_configPath = "/opt/macfe/etc/config.yaml"
-	_busName    = "VEH_CAN"
-	_fastMsgs   = 15
-	_slowMsgs   = 5
+	// Can bus select
+	_busName  = "veh"
+	_canIface = "can1"
+
+	// Env config
+	_timeFormat        = "2006-01-02_15-04-05"
+	_logFilenameFormat = "./logs/tracetest_%s.log"
+	_traceDir          = "./traces"
+	_logLevel          = zap.DebugLevel
+
+	// Timing
+	_msgPeriod         = 100 * time.Millisecond
+	_closeContactorDur = 2 * time.Second
+
+	// Can message values
+	_cellVoltage             = 3.3 // Volts
+	_cellVoltageAbsDeviation = 0.1
+	_numBatteryModules       = 6
+	_numBricksPerModules     = 24
+	_numCells                = _numBatteryModules * _numBricksPerModules
+	_maxPackCurrent          = 300
+	_minPackCurrent          = 300
+	_packCurrentDeviation    = 2
+	_packCurrentIncrPerSec   = 5 // amps per second
 )
 
 func main() {
-	conf, err := config.NewConfig(_configPath)
-	if err != nil {
-		panic("error reading conf file")
-	}
-
 	ctx := context.Background()
 
-	cfg := zap.NewDevelopmentConfig()
-	formattedTime := time.Now().Format("2006.01.02_15.04.05")
-	fileName := fmt.Sprintf("/opt/macfe/traces/logs/tracetest_%s.log", formattedTime)
-	cfg.OutputPaths = []string{fileName}
-	logger, err := cfg.Build()
+	formattedTime := time.Now().Format(_timeFormat)
+	logFileName := fmt.Sprintf(_logFilenameFormat, formattedTime)
+
+	loggerConfig := zap.NewDevelopmentConfig()
+	loggerConfig.OutputPaths = []string{logFileName}
+	loggerConfig.Level = zap.NewAtomicLevelAt(_logLevel)
+	logger, err := loggerConfig.Build()
 	if err != nil {
-		panic(err)
+		panic(errors.Wrap(err, "failed to create logger"))
 	}
 
-	conn, err := socketcan.DialContext(context.Background(), "can", "can0")
+	conn, err := socketcan.DialContext(context.Background(), "can", _canIface)
 	if err != nil {
-		panic(err)
+		logger.Error("failed to create socket can connection",
+			zap.String("can_interface", _canIface),
+			zap.Error(err),
+		)
+
+		return
 	}
 
-	canClient := canlink.NewCANClient(VEH_CAN.Messages(), conn)
-
-	m, err := canlink.NewMcap(logger, canClient, conf.TracerDirectory, conf.BusName)
-	if err != nil {
-		panic(err)
-	}
-	a, err := canlink.NewAsc(logger, conf.TracerDirectory, conf.BusName)
-	if err != nil {
-		panic(err)
-	}
+	canClient := canlink.NewCanClient(vehcan.Messages(), conn, logger)
+	mcap := canlink.NewMcap(canClient, logger)
+	ascii := canlink.NewAscii(logger)
 
 	tracer := canlink.NewTracer(
-		conf.CanInterface,
-		conf.TracerDirectory,
+		_canIface,
+		_traceDir,
 		logger,
 		conn,
 		canlink.WithBusName(_busName),
-		canlink.WithFiles(m, a))
+		canlink.WithFiles(mcap, ascii))
 
-	canClient.Open()
+	err = canClient.Open()
+	if err != nil {
+		logger.Error("open can client", zap.Error(err))
+
+		return
+	}
+
 	err = tracer.Open(ctx)
 	if err != nil {
 		logger.Error("open tracer", zap.Error(err))
@@ -73,53 +96,18 @@ func main() {
 		logger.Error("start trace", zap.Error(err))
 	}
 
-	println("Start First Test")
-	// First Test
+	fmt.Println("-------------- Starting Test --------------")
+	fmt.Println("-------------- CTRL-C to Stop -------------")
 
-	for i := 0; i <= _fastMsgs; i++ {
-		p := VEH_CAN.NewPack_State()
-		p.SetAvg_Cell_Voltage(float64(i))
-		p.SetPopulated_Cells(uint8(i * 2))
-		p.SetPack_Inst_Voltage(float64(i * 3))
-		p.SetPack_Current(float64(i * 4))
+	stop := make(chan struct{})
 
-		newChannel2 := VEH_CAN.NewPack_SOC()
-		newChannel2.SetMaximum_Pack_Voltage(float64(i))
-		newChannel2.SetPack_SOC(float64(i))
+	go startSendMessageRoutine(ctx, stop, _msgPeriod, canClient, logger)
 
-		println("Sent faster: ", i)
-		frame, err := p.MarshalFrame()
-		if err != nil {
-			return
-		}
-		frame2, err := newChannel2.MarshalFrame()
-		if err != nil {
-			return
-		}
+	waitForSigTerm(stop, logger)
 
-		time.Sleep(500 * time.Millisecond)
-		canClient.Send(context.Background(), frame)
-		canClient.Send(context.Background(), frame2)
-	}
+	fmt.Println("-------------- Test Complete --------------")
 
-	time.Sleep(1 * time.Second)
-
-	for i := 0; i < _slowMsgs; i++ {
-		println("Sent slower: ", i)
-		c := can.Frame{
-			ID:         1600,
-			Length:     8,
-			Data:       can.Data{byte(i)},
-			IsRemote:   false,
-			IsExtended: false,
-		}
-		time.Sleep(1000 * time.Millisecond)
-		canClient.Send(context.Background(), c)
-	}
-
-	time.Sleep(500 * time.Millisecond)
-
-	println("End First Test")
+	logger.Info("closing trace test")
 
 	err = tracer.StopTrace()
 	if err != nil {
@@ -133,12 +121,94 @@ func main() {
 
 	err = canClient.Close()
 	if err != nil {
-		logger.Error("close canclient", zap.Error(err))
+		logger.Error("close can client", zap.Error(err))
 	}
 
 	if tracer.Error() != nil {
 		logger.Error("tracer error", zap.Error(tracer.Error()))
 	}
+}
 
-	logger.Info("End of Main")
+func waitForSigTerm(stop chan struct{}, logger *zap.Logger) {
+	// Create a channel to receive signals
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt)
+
+	// Wait for a signal on the channel
+	<-sig
+
+	logger.Info("received sig term")
+
+	// Send a value to the stop channel to signal shutdown
+	close(stop)
+}
+
+func startSendMessageRoutine(
+	ctx context.Context, stop chan struct{}, msgPeriod time.Duration, cc *canlink.CanClient, l *zap.Logger) {
+	packState := vehcan.NewPack_State()
+	packState.SetPopulated_Cells(_numCells)
+	packState.SetPack_Current(0)
+
+	ctrStates := vehcan.NewContactor_States()
+	ctrStates.SetPack_Positive(0)
+	ctrStates.SetPack_Negative(0)
+	ctrStates.SetPack_Precharge(0)
+
+	ticker := time.NewTicker(msgPeriod)
+	closeContactors := time.After(_closeContactorDur)
+
+	for i := 0; ; i++ {
+		select {
+		case <-ctx.Done():
+			return
+		case <-stop:
+			return
+		case <-closeContactors:
+			ctrStates.SetPack_Positive(1)
+			ctrStates.SetPack_Negative(1)
+		case <-ticker.C:
+			// +cellDeviation on even, -cellDeviation on odd
+			cellVoltageDeviation := _cellVoltageAbsDeviation * float64(i%2+1) * (-1)
+			packState.SetAvg_Cell_Voltage(_cellVoltage + cellVoltageDeviation)
+
+			packVoltage := float64(packState.Populated_Cells()) * packState.Avg_Cell_Voltage()
+			packState.SetPack_Inst_Voltage(packVoltage)
+
+			// Set pack current if the contactors are closed
+			if ctrStates.Pack_Positive() > 0 && ctrStates.Pack_Negative() > 0 {
+				// +packCurrentDeviation on even i, -packCurrentDeviation on odd i
+				packCurrentDeviation := _packCurrentDeviation * float64(i%2+1) * (-1)
+				packCurrentIncr := float64(msgPeriod/time.Second) * _packCurrentIncrPerSec
+				packCurrent := clamp(packState.Pack_Current()+packCurrentIncr, _minPackCurrent, _maxPackCurrent)
+				packCurrent += packCurrentDeviation
+				packState.SetPack_Current(packCurrent)
+			} else {
+				packState.SetPack_Current(0)
+			}
+
+			err := cc.Send(ctx, packState)
+			if err != nil {
+				l.Error("failed to send pack state", zap.Error(err))
+
+				return
+			}
+
+			err = cc.Send(ctx, ctrStates)
+			if err != nil {
+				l.Error("failed to send contactor states", zap.Error(err))
+
+				return
+			}
+		}
+	}
+}
+
+func clamp(value, min, max float64) float64 {
+	if value > max {
+		return max
+	} else if value < min {
+		return min
+	}
+
+	return value
 }

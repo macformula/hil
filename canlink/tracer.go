@@ -22,10 +22,10 @@ const (
 	_messageTimeFormat = "15:04:05.0000"
 
 	// format for 24-hour clock with minutes and seconds (period delimiter)
-	_filenameTimeFormat = "15.04.05"
+	_filenameTimeFormat = "15-04-05"
 
 	// format for year, month and day with two digits each (period delimiter)
-	_filenameDateFormat = "2006.01.02"
+	_filenameDateFormat = "2006-01-02"
 )
 
 // TracerOption is a type for functions operating on Tracer
@@ -41,7 +41,7 @@ type Tracer struct {
 	isRunning  bool
 	receiver   *socketcan.Receiver
 
-	directory    string
+	traceDir     string
 	canInterface string
 	timeout      time.Duration
 	busName      string
@@ -52,7 +52,7 @@ type Tracer struct {
 // NewTracer returns a new Tracer
 func NewTracer(
 	canInterface string,
-	directory string,
+	traceDir string,
 	l *zap.Logger,
 	conn net.Conn,
 	opts ...TracerOption) *Tracer {
@@ -63,7 +63,7 @@ func NewTracer(
 		err:          utils.NewResettaleError(),
 		timeout:      _defaultTimeout,
 		canInterface: canInterface,
-		directory:    directory,
+		traceDir:     traceDir,
 		busName:      canInterface,
 		types:        []TraceFile{},
 		conn:         conn,
@@ -142,11 +142,13 @@ func (t *Tracer) StopTrace() error {
 
 		close(t.stop)
 
+		t.l.Debug("dumping cached data to files", zap.Int("num_frames", len(t.cachedData)))
 		for _, files := range t.types {
-			err := files.dumpToFile(t.cachedData)
+			err := files.dumpToFile(t.cachedData, t.traceDir, t.busName)
 
 			if err != nil {
-				t.l.Error(err.Error())
+				t.l.Error("failed to dump to file", zap.Error(err))
+
 			}
 		}
 

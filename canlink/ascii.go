@@ -1,6 +1,7 @@
 package canlink
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -10,39 +11,43 @@ import (
 )
 
 const (
-	_asc = ".asc"
+	_asciiFileSuffix     = "asc"
+	_asciiFileLoggerName = "ascii_file"
+	_decimal             = 10
+	_hex                 = 16
 )
 
-// Asc stores the information required to create each ASCII file
-type Asc struct {
+// Ascii stores the information required to create each ASCII file.
+type Ascii struct {
 	l    *zap.Logger
 	file *os.File
 }
 
-// NewAsc returns a new Asc with its own ASCII file
-func NewAsc(l *zap.Logger, dir string, busName string) (*Asc, error) {
-	f, err := createFile(l, dir, busName, _asc)
-	if err != nil {
-		l.Error(err.Error())
-		return nil, errors.Wrap(err, "error creating ascii file")
+// NewAscii returns a new Ascii with its own ASCII file
+func NewAscii(l *zap.Logger) *Ascii {
+	return &Ascii{
+		l: l.Named(_asciiFileLoggerName),
 	}
-
-	asc := &Asc{
-		file: f,
-		l:    l.Named("ascii_file"),
-	}
-
-	return asc, nil
 }
 
 // dumpToFile takes a CAN frame and writes it to an ASCII file
-func (a *Asc) dumpToFile(s []TimestampedFrame) error {
-	a.l.Info("ASCII: Entered dumpToFile")
+func (a *Ascii) dumpToFile(frames []TimestampedFrame, traceDir, busName string) error {
+	a.l.Info("dumping data to ascii file")
 
-	for _, value := range s {
-		_, err := a.file.WriteString(a.parseFrame(value) + "\n")
+	f, err := createTraceFile(traceDir, busName, _asciiFileSuffix)
+	if err != nil {
+		a.l.Error("failed to create trace file",
+			zap.String("trace_dir", traceDir),
+			zap.Error(err),
+		)
+
+		return errors.Wrap(err, "create trace file")
+	}
+
+	for _, frame := range frames {
+		_, err = f.WriteString(a.formatFrame(&frame) + "\n")
 		if err != nil {
-			return errors.Wrap(err, "write string to file")
+			return errors.Wrap(err, "write string")
 		}
 	}
 
@@ -50,15 +55,15 @@ func (a *Asc) dumpToFile(s []TimestampedFrame) error {
 }
 
 // parseFrame concatenates the frame components in a standardized format
-func (a *Asc) parseFrame(data TimestampedFrame) string {
+func (a *Ascii) formatFrame(timestampedFrame *TimestampedFrame) string {
 	var builder strings.Builder
 
-	_, err := builder.WriteString(data.Time.Format(_messageTimeFormat))
+	_, err := builder.WriteString(timestampedFrame.Time.Format(_messageTimeFormat))
 	if err != nil {
 		a.l.Error(err.Error())
 	}
 
-	_, err = builder.WriteString(" " + strconv.FormatUint(uint64(data.Frame.ID), _decimal))
+	_, err = builder.WriteString(" " + strconv.FormatUint(uint64(timestampedFrame.Frame.ID), _decimal))
 	if err != nil {
 		a.l.Error(err.Error())
 	}
@@ -68,13 +73,13 @@ func (a *Asc) parseFrame(data TimestampedFrame) string {
 		a.l.Error(err.Error())
 	}
 
-	_, err = builder.WriteString(" " + strconv.FormatUint(uint64(data.Frame.Length), _decimal))
+	_, err = builder.WriteString(" " + strconv.FormatUint(uint64(timestampedFrame.Frame.Length), _decimal))
 	if err != nil {
 		a.l.Error(err.Error())
 	}
 
-	for i := uint8(0); i < data.Frame.Length; i++ {
-		builder.WriteString(" " + strconv.FormatUint(uint64(data.Frame.Data[i]), _hex))
+	for i := uint8(0); i < timestampedFrame.Frame.Length; i++ {
+		builder.WriteString(" " + fmt.Sprintf("%02X", timestampedFrame.Frame.Data[i]))
 		if err != nil {
 			a.l.Error(err.Error())
 		}

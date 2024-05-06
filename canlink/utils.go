@@ -4,22 +4,32 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
 )
 
 const (
-	_binary  = 2
-	_decimal = 10
-	_hex     = 16
+	_idNotInDatabaseErrorIndicator = "ID not in database"
 )
 
-// createFile creates an *os.File given information
-func createFile(l *zap.Logger, dir string, busName string, suffix string) (*os.File, error) {
-	l.Info("creating file")
-	fileName := fmt.Sprintf("%s_%s_%s%s", busName, time.Now().Format(_filenameDateFormat), time.Now().Format(_filenameTimeFormat), suffix)
+// createTraceFile creates an *os.File given information
+func createTraceFile(dir, busName, suffix string) (*os.File, error) {
+	dateStr := time.Now().Format(_filenameDateFormat)
+	timeStr := time.Now().Format(_filenameTimeFormat)
+
+	// remove '.' if included in suffix (done in the following line).
+	suffix = strings.TrimLeft(suffix, ".")
+
+	fileName := fmt.Sprintf(
+		"%s_%s_%s.%s",
+		busName,
+		dateStr,
+		timeStr,
+		suffix,
+	)
+
 	filePath := filepath.Join(dir, fileName)
 
 	file, err := os.Create(filePath)
@@ -28,4 +38,8 @@ func createFile(l *zap.Logger, dir string, busName string, suffix string) (*os.F
 	}
 
 	return file, nil
+}
+
+func isIdNotInDatabaseError(err error) bool {
+	return err != nil && strings.Contains(err.Error(), _idNotInDatabaseErrorIndicator)
 }
