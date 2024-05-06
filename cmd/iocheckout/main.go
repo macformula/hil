@@ -9,6 +9,7 @@ import (
 	"github.com/macformula/hil/iocontrol/sil"
 	"github.com/macformula/hil/iocontrol/speedgoat"
 	"github.com/macformula/hil/macformula"
+	"github.com/macformula/hil/macformula/pinout"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
@@ -39,9 +40,9 @@ func main() {
 	}
 	defer logger.Sync()
 
-	revision, err := macformula.RevisionString(*revisionStr)
+	revision, err := pinout.RevisionString(*revisionStr)
 	if err != nil {
-		fmt.Printf("Invalid revision (%s) valid options (%v)", *revisionStr, macformula.RevisionStrings())
+		fmt.Printf("Invalid revision (%s) valid options (%v)", *revisionStr, pinout.RevisionStrings())
 		return
 	}
 
