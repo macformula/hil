@@ -71,8 +71,8 @@ func NewIoCheckout(rev pinout.Revision, ioControl *iocontrol.IOControl, l *zap.L
 	}
 }
 
-func (io *IoCheckout) Open(_ context.Context) error {
-	err := io.ioControl.Open()
+func (io *IoCheckout) Open(ctx context.Context) error {
+	err := io.ioControl.Open(ctx)
 	if err != nil {
 		return errors.Wrap(err, "iocontrol open")
 	}
