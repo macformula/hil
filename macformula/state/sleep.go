@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const _sleepStateName = "sleep_state"
+
 // sleep sleeps in the Run function for a specified amount of time.
 type sleep struct {
 	sleepTime time.Duration
@@ -38,7 +40,7 @@ func (s *sleep) Setup(_ context.Context) error {
 
 // Name is the name of the state.
 func (s *sleep) Name() string {
-	return "sleep_state"
+	return _sleepStateName
 }
 
 // Run is the logic that gets executed after setup.

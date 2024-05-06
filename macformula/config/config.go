@@ -1,9 +1,11 @@
 package config
 
 import (
-	"github.com/pkg/errors"
-	"gopkg.in/yaml.v3"
 	"os"
+
+	"gopkg.in/yaml.v3"
+
+	"github.com/pkg/errors"
 )
 
 // Config holds configuration variables for the HIL setup

@@ -42,7 +42,7 @@ func (s *setup) Run(ctx context.Context) error {
 		return errors.Wrap(err, "start trace (veh)")
 	}
 
-	err = s.app.VehCanTracer.StartTrace(ctx)
+	err = s.app.PtCanTracer.StartTrace(ctx)
 	if err != nil {
 		return errors.Wrap(err, "start trace (pt)")
 	}

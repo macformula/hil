@@ -4,22 +4,23 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/macformula/hil/macformula"
-	"github.com/macformula/hil/macformula/config"
-	"github.com/macformula/hil/macformula/state"
-	"go.uber.org/zap/zapcore"
+	"path/filepath"
 	"time"
+
+	"go.einride.tech/can/pkg/socketcan"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/macformula/hil/canlink"
 	"github.com/macformula/hil/cli"
 	"github.com/macformula/hil/flow"
+	"github.com/macformula/hil/macformula"
+	"github.com/macformula/hil/macformula/config"
+	"github.com/macformula/hil/macformula/state"
 	"github.com/macformula/hil/orchestrator"
 	results "github.com/macformula/hil/results/client"
 	"github.com/pkg/errors"
-	"go.einride.tech/can/pkg/socketcan"
-	"go.uber.org/zap"
-	"path/filepath"
 )
 
 const (

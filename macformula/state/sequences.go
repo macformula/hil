@@ -1,11 +1,12 @@
 package state
 
 import (
-	"github.com/macformula/hil/macformula"
-	"go.uber.org/zap"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/macformula/hil/flow"
+	"github.com/macformula/hil/macformula"
 	"github.com/macformula/hil/test"
 )
 
