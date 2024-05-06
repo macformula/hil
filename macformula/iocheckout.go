@@ -1,6 +1,8 @@
 package macformula
 
 import (
+	"context"
+	"github.com/macformula/hil/macformula/pinout"
 	"strconv"
 
 	"github.com/fatih/color"
@@ -43,12 +45,13 @@ var (
 // IoCheckout is a cli tool to control io set out in pinout.go.
 type IoCheckout struct {
 	l         *zap.Logger
+	rev       pinout.Revision
 	ioControl *iocontrol.IOControl
 
-	diPins DigitalPinout
-	doPins DigitalPinout
-	aiPins AnalogPinout
-	aoPins AnalogPinout
+	diPins pinout.DigitalPinout
+	doPins pinout.DigitalPinout
+	aiPins pinout.AnalogPinout
+	aoPins pinout.AnalogPinout
 
 	diPinStrs []string
 	doPinStrs []string
@@ -59,16 +62,42 @@ type IoCheckout struct {
 }
 
 // NewIoCheckout returns a pointer to an IoCheckout object.
-func NewIoCheckout(rev Revision, ioControl *iocontrol.IOControl, l *zap.Logger) *IoCheckout {
+func NewIoCheckout(rev pinout.Revision, ioControl *iocontrol.IOControl, l *zap.Logger) *IoCheckout {
 	return &IoCheckout{
 		l:            l.Named(_loggerName),
+		rev:          rev,
 		ioControl:    ioControl,
-		diPins:       _revisionDigitalInputPinout[rev],
-		doPins:       _revisionDigitalOutputPinout[rev],
-		aiPins:       _revisionAnalogInputPinout[rev],
-		aoPins:       _revisionAnalogOutputPinout[rev],
 		currentLabel: _digitalVsAnalogLabel,
 	}
+}
+
+func (io *IoCheckout) Open(_ context.Context) error {
+	err := io.ioControl.Open()
+	if err != nil {
+		return errors.Wrap(err, "iocontrol open")
+	}
+
+	io.diPins, err = pinout.GetDigitalInputs(io.rev)
+	if err != nil {
+		return errors.Wrap(err, "get digital inputs")
+	}
+
+	io.doPins, err = pinout.GetDigitalOutputs(io.rev)
+	if err != nil {
+		return errors.Wrap(err, "get digital outputs")
+	}
+
+	io.aiPins, err = pinout.GetAnalogInputs(io.rev)
+	if err != nil {
+		return errors.Wrap(err, "get analog inputs")
+	}
+
+	io.aoPins, err = pinout.GetAnalogOutputs(io.rev)
+	if err != nil {
+		return errors.Wrap(err, "get analog outputs")
+	}
+
+	return nil
 }
 
 // Start starts the cli tool.
@@ -256,7 +285,7 @@ func (io *IoCheckout) handleDigitalInputSelect() error {
 		return nil
 	}
 
-	physicalIn, err := PhysicalIoString(digitalInputStr)
+	physicalIn, err := pinout.PhysicalIoString(digitalInputStr)
 	if err != nil {
 		return errors.Wrap(err, "physical io string")
 	}
@@ -291,7 +320,7 @@ func (io *IoCheckout) handleDigitalOutputSelect() error {
 		return nil
 	}
 
-	physicalOut, err := PhysicalIoString(digitalOutputStr)
+	physicalOut, err := pinout.PhysicalIoString(digitalOutputStr)
 	if err != nil {
 		return errors.Wrap(err, "physical io string")
 	}
@@ -338,7 +367,7 @@ func (io *IoCheckout) handleAnalogInputSelect() error {
 		return nil
 	}
 
-	physicalIn, err := PhysicalIoString(analogInputStr)
+	physicalIn, err := pinout.PhysicalIoString(analogInputStr)
 	if err != nil {
 		return errors.Wrap(err, "physical io string")
 	}
@@ -370,7 +399,7 @@ func (io *IoCheckout) handleAnalogOutputSelect() error {
 		return nil
 	}
 
-	physicalOut, err := PhysicalIoString(analogOutputStr)
+	physicalOut, err := pinout.PhysicalIoString(analogOutputStr)
 	if err != nil {
 		return errors.Wrap(err, "physical io string")
 	}

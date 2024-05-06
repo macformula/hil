@@ -2,8 +2,8 @@ package test
 
 import (
 	"context"
-	"github.com/macformula/hil"
 	"github.com/macformula/hil/flow"
+	"github.com/macformula/hil/macformula/config"
 	"time"
 )
 
@@ -12,10 +12,14 @@ type SleepState struct {
 	SleepTime time.Duration
 }
 
+func NewSleepState(sleepTime time.Duration) *SleepState {
+	return &SleepState{SleepTime: sleepTime}
+}
+
 func (s *SleepState) GetResults() map[flow.Tag]any {
 	return map[flow.Tag]any{
-		hil.FwTags.FrontControllerFlashed: true,
-		hil.FwTags.TmsFlashed:             true,
+		config.FirmwareTags.FrontControllerFlashed: true,
+		config.FirmwareTags.TmsFlashed:             true,
 	}
 }
 

@@ -17,6 +17,7 @@ class ResultAccumulator:
         tags_schema_fp: str,
         template_fp: str,
         historic_tests_fp: str,
+        temp_test_fp: str,
         reports_dir: str,
         repo_handler: RepoHandler,
     ) -> None:
@@ -26,6 +27,7 @@ class ResultAccumulator:
         self.error_submissions: list[str] = []  # list of cached errors
         self.historic_tests_fp = historic_tests_fp
         self.template_fp = template_fp
+        self.temp_test_fp = temp_test_fp
         self.reports_dir = reports_dir
         self.repo_handler = repo_handler
         self.all_tags_passing = True
@@ -110,19 +112,18 @@ class ResultAccumulator:
             error_submissions=self.error_submissions,
         )
 
-        test_file_path = "results/server/temp_test_file.py"
-        with open(test_file_path, "w") as file:
+        with open(self.temp_test_fp, "w") as file:
             file.write(test_file_content)
 
         dt = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         html_file_name = f"hil_report_{dt}.html"
         html_cli_arg = f"--html={self.reports_dir}/{html_file_name}"
         pytest.main(
-            ["-v", "--showlocals", "--durations=10", html_cli_arg, test_file_path],
+            ["-v", "--showlocals", "--durations=10", html_cli_arg, self.temp_test_fp],
             plugins=[self],
         )
 
-        os.remove(test_file_path)
+        os.remove(self.temp_test_fp)
 
         return dt
 

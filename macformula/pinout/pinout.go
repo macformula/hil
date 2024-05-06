@@ -1,9 +1,10 @@
-package macformula
+package pinout
 
 import (
 	"github.com/macformula/hil/iocontrol"
 	"github.com/macformula/hil/iocontrol/raspi"
 	"github.com/macformula/hil/iocontrol/speedgoat"
+	"github.com/pkg/errors"
 )
 
 type (
@@ -53,4 +54,44 @@ var _revisionAnalogOutputPinout = map[Revision]AnalogPinout{
 		AcceleratorPedalPosition2: raspi.NewAnalogPin(),
 		AccumulatorCurrent:        raspi.NewAnalogPin(),
 	},
+}
+
+// GetDigitalInputs returns a digital input pinout for the given revision.
+func GetDigitalInputs(rev Revision) (DigitalPinout, error) {
+	ret, ok := _revisionDigitalInputPinout[rev]
+	if !ok {
+		return nil, errors.Errorf("no digital input pinout for revision (%s)", rev.String())
+	}
+
+	return ret, nil
+}
+
+// GetDigitalOutputs returns a digital output pinout for the given revision.
+func GetDigitalOutputs(rev Revision) (DigitalPinout, error) {
+	ret, ok := _revisionDigitalOutputPinout[rev]
+	if !ok {
+		return nil, errors.Errorf("no digital output pinout for revision (%s)", rev.String())
+	}
+
+	return ret, nil
+}
+
+// GetAnalogInputs returns a analog input pinout for the given revision.
+func GetAnalogInputs(rev Revision) (AnalogPinout, error) {
+	ret, ok := _revisionAnalogInputPinout[rev]
+	if !ok {
+		return nil, errors.Errorf("no analog input pinout for revision (%s)", rev.String())
+	}
+
+	return ret, nil
+}
+
+// GetAnalogOutputs returns a analog output pinout for the given revision.
+func GetAnalogOutputs(rev Revision) (AnalogPinout, error) {
+	ret, ok := _revisionAnalogOutputPinout[rev]
+	if !ok {
+		return nil, errors.Errorf("no analog output pinout for revision (%s)", rev.String())
+	}
+
+	return ret, nil
 }

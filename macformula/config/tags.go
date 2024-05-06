@@ -1,23 +1,23 @@
-package hil
+package config
 
 import "github.com/macformula/hil/flow"
 
-// TODO: generate from tags.yaml
-
-type FirmwareTags struct {
+type FirmwareTagCollection struct {
 	FrontControllerFlashed flow.Tag
 	LvControllerFlashed    flow.Tag
 	TmsFlashed             flow.Tag
 }
 
-type LvNominal struct {
-	TimingGood  flow.Tag
-	FanPwm      flow.Tag
-	PumpControl flow.Tag
-}
-
-var FwTags = FirmwareTags{
+var FirmwareTags = FirmwareTagCollection{
 	FrontControllerFlashed: flow.Tag{ID: "FW001", Description: "Front controller flashed."},
 	LvControllerFlashed:    flow.Tag{ID: "FW002"},
 	TmsFlashed:             flow.Tag{ID: "FW003"},
+}
+
+type TestTagCollection struct {
+	TestTag1 flow.Tag
+}
+
+var TestTags = TestTagCollection{
+	TestTag1: flow.Tag{ID: "TEST001", Description: "Test tag."},
 }
