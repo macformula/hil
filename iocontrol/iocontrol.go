@@ -2,11 +2,12 @@ package iocontrol
 
 import (
 	"context"
-	"github.com/macformula/hil/iocontrol/sil"
+
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
 	"github.com/macformula/hil/iocontrol/raspi"
+	"github.com/macformula/hil/iocontrol/sil"
 	"github.com/macformula/hil/iocontrol/speedgoat"
 )
 

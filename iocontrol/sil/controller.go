@@ -3,13 +3,15 @@ package sil
 import (
 	"context"
 	"fmt"
-	pb "github.com/macformula/hil/iocontrol/sil/proto"
+	"net"
+	"sync"
+
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"net"
-	"sync"
+
+	pb "github.com/macformula/hil/iocontrol/sil/proto"
 )
 
 const (
