@@ -3,8 +3,8 @@ package test
 import (
 	"context"
 	"errors"
-	"github.com/macformula/hil/config"
 	"github.com/macformula/hil/flow"
+	"github.com/macformula/hil/macformula/config"
 	"time"
 )
 

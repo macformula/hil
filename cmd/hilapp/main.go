@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/macformula/hil/macformula"
+	"github.com/macformula/hil/macformula/config"
 	"github.com/macformula/hil/macformula/state"
 	"go.uber.org/zap/zapcore"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/macformula/hil/canlink"
 	"github.com/macformula/hil/cli"
-	"github.com/macformula/hil/config"
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/orchestrator"
 	results "github.com/macformula/hil/results/client"
@@ -152,7 +152,7 @@ func main() {
 	}
 
 	// Create AppState.
-	appState := macformula.AppState{
+	appState := macformula.App{
 		Config:       cfg,
 		VehCanTracer: vehCanTracer,
 		PtCanTracer:  ptCanTracer,

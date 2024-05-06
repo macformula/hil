@@ -14,27 +14,27 @@ const (
 	_initStateTimeout = 10 * time.Second
 )
 
-type InitState struct {
+type setup struct {
 	l   *zap.Logger
-	app *macformula.AppState
+	app *macformula.App
 }
 
-func NewInitState(a *macformula.AppState, l *zap.Logger) *InitState {
-	return &InitState{
+func newSetup(a *macformula.App, l *zap.Logger) *setup {
+	return &setup{
 		l:   l.Named(_initStateName),
 		app: a,
 	}
 }
 
-func (s *InitState) Name() string {
+func (s *setup) Name() string {
 	return _initStateName
 }
 
-func (s *InitState) Setup(ctx context.Context) error {
+func (s *setup) Setup(ctx context.Context) error {
 	return nil
 }
 
-func (s *InitState) Run(ctx context.Context) error {
+func (s *setup) Run(ctx context.Context) error {
 	s.app.CurrProcess = macformula.NewProcessInfo()
 
 	err := s.app.VehCanTracer.StartTrace(ctx)
@@ -50,19 +50,19 @@ func (s *InitState) Run(ctx context.Context) error {
 	return nil
 }
 
-func (s *InitState) GetResults() map[flow.Tag]any {
+func (s *setup) GetResults() map[flow.Tag]any {
 	// No results for init state.
 	return nil
 }
 
-func (s *InitState) ContinueOnFail() bool {
+func (s *setup) ContinueOnFail() bool {
 	return false
 }
 
-func (s *InitState) Timeout() time.Duration {
+func (s *setup) Timeout() time.Duration {
 	return _initStateTimeout
 }
 
-func (s *InitState) FatalError() error {
+func (s *setup) FatalError() error {
 	return nil
 }

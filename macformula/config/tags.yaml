@@ -1,0 +1,23 @@
+TEST001:
+  description: Test tag.
+  compareOp: LOG
+  type: string
+  unit: N/A
+FW001:
+  description: Front controller flashed.
+  compareOp: EQ
+  expectedVal: true
+  type: bool
+  unit: N/A
+FW002:
+  description: Low voltage controller flashed.
+  compareOp: EQ
+  expectedVal: true
+  type: bool
+  unit: N/A
+FW003:
+  description: Thermal monitoring system flashed.
+  compareOp: EQ
+  expectedVal: true
+  type: bool
+  unit: N/A

@@ -14,27 +14,27 @@ const (
 	_cleanupStateTimeout = 10 * time.Second
 )
 
-type CleanupState struct {
+type cleanup struct {
 	l   *zap.Logger
-	app *macformula.AppState
+	app *macformula.App
 }
 
-func NewCleanupState(a *macformula.AppState, l *zap.Logger) *CleanupState {
-	return &CleanupState{
+func newCleanup(a *macformula.App, l *zap.Logger) *cleanup {
+	return &cleanup{
 		l:   l.Named(_cleanupStateName),
 		app: a,
 	}
 }
 
-func (c *CleanupState) Name() string {
+func (c *cleanup) Name() string {
 	return _cleanupStateName
 }
 
-func (c *CleanupState) Setup(_ context.Context) error {
+func (c *cleanup) Setup(_ context.Context) error {
 	return nil
 }
 
-func (c *CleanupState) Run(ctx context.Context) error {
+func (c *cleanup) Run(ctx context.Context) error {
 	err := c.app.VehCanTracer.StopTrace()
 	if err != nil {
 		return errors.Wrap(err, "stop trace (veh)")
@@ -48,19 +48,19 @@ func (c *CleanupState) Run(ctx context.Context) error {
 	return nil
 }
 
-func (c *CleanupState) GetResults() map[flow.Tag]any {
+func (c *cleanup) GetResults() map[flow.Tag]any {
 	// No results to return
 	return nil
 }
 
-func (c *CleanupState) ContinueOnFail() bool {
+func (c *cleanup) ContinueOnFail() bool {
 	return false
 }
 
-func (c *CleanupState) Timeout() time.Duration {
+func (c *cleanup) Timeout() time.Duration {
 	return _cleanupStateTimeout
 }
 
-func (c *CleanupState) FatalError() error {
+func (c *cleanup) FatalError() error {
 	return nil
 }
