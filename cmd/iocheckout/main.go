@@ -5,13 +5,14 @@ import (
 	"github.com/macformula/hil/iocontrol/raspi"
 	"github.com/macformula/hil/iocontrol/speedgoat"
 	"github.com/macformula/hil/macformula"
+	"github.com/macformula/hil/macformula/pinout"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
 const (
 	_logFileName   = "iocontrol.log"
-	_revision      = macformula.Ev5
+	_revision      = pinout.Ev5
 	_speedgoatAddr = "192.168.10.1:8001"
 )
 

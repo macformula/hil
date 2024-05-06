@@ -1,8 +1,9 @@
-package hil
+package state
 
 import (
 	"context"
 	"github.com/macformula/hil/flow"
+	"github.com/macformula/hil/macformula"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"time"
@@ -15,10 +16,10 @@ const (
 
 type CleanupState struct {
 	l   *zap.Logger
-	app *AppState
+	app *macformula.AppState
 }
 
-func NewCleanupState(a *AppState, l *zap.Logger) *CleanupState {
+func NewCleanupState(a *macformula.AppState, l *zap.Logger) *CleanupState {
 	return &CleanupState{
 		l:   l.Named(_cleanupStateName),
 		app: a,

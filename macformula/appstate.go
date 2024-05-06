@@ -1,4 +1,4 @@
-package hil
+package macformula
 
 import (
 	"github.com/macformula/hil/canlink"
@@ -10,5 +10,5 @@ type AppState struct {
 	VehCanTracer *canlink.Tracer
 	PtCanTracer  *canlink.Tracer
 
-	currProcess *ProcessInfo
+	CurrProcess *ProcessInfo
 }

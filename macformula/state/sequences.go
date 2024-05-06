@@ -1,6 +1,7 @@
-package hil
+package state
 
 import (
+	"github.com/macformula/hil/macformula"
 	"go.uber.org/zap"
 	"time"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/macformula/hil/test"
 )
 
-func GetSequences(a *AppState, l *zap.Logger) []flow.Sequence {
+func GetSequences(a *macformula.AppState, l *zap.Logger) []flow.Sequence {
 	ret := make([]flow.Sequence, len(_sequenceConstructors))
 
 	for i, seqConstructor := range _sequenceConstructors {
@@ -18,7 +19,7 @@ func GetSequences(a *AppState, l *zap.Logger) []flow.Sequence {
 	return ret
 }
 
-type sequenceConstructor = func(a *AppState, l *zap.Logger) flow.Sequence
+type sequenceConstructor = func(a *macformula.AppState, l *zap.Logger) flow.Sequence
 
 var _sequenceConstructors = []sequenceConstructor{
 	newTracerSequence,
@@ -29,7 +30,7 @@ var _sequenceConstructors = []sequenceConstructor{
 	newErrorSequence,
 }
 
-func newTracerSequence(a *AppState, l *zap.Logger) flow.Sequence {
+func newTracerSequence(a *macformula.AppState, l *zap.Logger) flow.Sequence {
 	return flow.Sequence{
 		Name: "Can Tracer ✍️",
 		Desc: "Obtains a can trace",
@@ -41,7 +42,7 @@ func newTracerSequence(a *AppState, l *zap.Logger) flow.Sequence {
 	}
 }
 
-func newDoNothingSequence(_ *AppState, _ *zap.Logger) flow.Sequence {
+func newDoNothingSequence(_ *macformula.AppState, _ *zap.Logger) flow.Sequence {
 	return flow.Sequence{
 		Name: "Do Nothing 🥱",
 		Desc: "Wow... it does nothing",
@@ -61,7 +62,7 @@ func newDoNothingSequence(_ *AppState, _ *zap.Logger) flow.Sequence {
 		},
 	}
 }
-func newSleepSequence(_ *AppState, _ *zap.Logger) flow.Sequence {
+func newSleepSequence(_ *macformula.AppState, _ *zap.Logger) flow.Sequence {
 	return flow.Sequence{
 		Name: "Sleeper 💤",
 		Desc: "zzz",
@@ -73,7 +74,7 @@ func newSleepSequence(_ *AppState, _ *zap.Logger) flow.Sequence {
 		},
 	}
 }
-func newFatalErrorSequence(_ *AppState, _ *zap.Logger) flow.Sequence {
+func newFatalErrorSequence(_ *macformula.AppState, _ *zap.Logger) flow.Sequence {
 	return flow.Sequence{
 		Name: "Fatal Error 💀",
 		Desc: "This will fatal... duh",
@@ -88,7 +89,7 @@ func newFatalErrorSequence(_ *AppState, _ *zap.Logger) flow.Sequence {
 	}
 }
 
-func newPanicSequence(_ *AppState, _ *zap.Logger) flow.Sequence {
+func newPanicSequence(_ *macformula.AppState, _ *zap.Logger) flow.Sequence {
 	return flow.Sequence{
 		Name: "Panic 😨",
 		Desc: "This will panic the hil app.",
@@ -102,7 +103,7 @@ func newPanicSequence(_ *AppState, _ *zap.Logger) flow.Sequence {
 		},
 	}
 }
-func newErrorSequence(_ *AppState, _ *zap.Logger) flow.Sequence {
+func newErrorSequence(_ *macformula.AppState, _ *zap.Logger) flow.Sequence {
 	return flow.Sequence{
 		Name: "Normal Error",
 		Desc: "ERROR ERROR ERROR",

@@ -1,8 +1,9 @@
-package hil
+package state
 
 import (
 	"context"
 	"github.com/macformula/hil/flow"
+	"github.com/macformula/hil/macformula"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"time"
@@ -15,10 +16,10 @@ const (
 
 type InitState struct {
 	l   *zap.Logger
-	app *AppState
+	app *macformula.AppState
 }
 
-func NewInitState(a *AppState, l *zap.Logger) *InitState {
+func NewInitState(a *macformula.AppState, l *zap.Logger) *InitState {
 	return &InitState{
 		l:   l.Named(_initStateName),
 		app: a,
@@ -34,7 +35,7 @@ func (s *InitState) Setup(ctx context.Context) error {
 }
 
 func (s *InitState) Run(ctx context.Context) error {
-	s.app.currProcess = NewProcessInfo()
+	s.app.CurrProcess = macformula.NewProcessInfo()
 
 	err := s.app.VehCanTracer.StartTrace(ctx)
 	if err != nil {

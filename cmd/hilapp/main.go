@@ -4,11 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/macformula/hil/macformula"
+	"github.com/macformula/hil/macformula/state"
 	"go.uber.org/zap/zapcore"
 	"time"
 
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/macformula/hil"
 	"github.com/macformula/hil/canlink"
 	"github.com/macformula/hil/cli"
 	"github.com/macformula/hil/config"
@@ -151,14 +152,14 @@ func main() {
 	}
 
 	// Create AppState.
-	appState := hil.AppState{
+	appState := macformula.AppState{
 		Config:       cfg,
 		VehCanTracer: vehCanTracer,
 		PtCanTracer:  ptCanTracer,
 	}
 
 	// Create sequences.
-	sequences := hil.GetSequences(&appState, logger)
+	sequences := state.GetSequences(&appState, logger)
 
 	// Create command line dispatcher.
 	cliDispatcher := cli.NewCliDispatcher(sequences, logger)

@@ -1,4 +1,4 @@
-package hil
+package macformula
 
 type ProcessInfo struct {
 	boardSerial string
