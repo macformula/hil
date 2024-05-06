@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/macformula/hil/macformula/cangen/vehcan"
 	"os"
 	"os/signal"
 	"time"
@@ -10,7 +11,6 @@ import (
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
 
-	"github.com/macformula/hil/cangen/vehcan"
 	"github.com/macformula/hil/canlink"
 	"github.com/pkg/errors"
 )
