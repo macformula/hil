@@ -1,6 +1,7 @@
 package pinout
 
 import (
+	"github.com/macformula/hil/fwutils"
 	"github.com/macformula/hil/iocontrol"
 	"github.com/macformula/hil/iocontrol/raspi"
 	"github.com/macformula/hil/iocontrol/sil"
@@ -24,6 +25,12 @@ var _revisionDigitalInputPinout = map[Revision]DigitalPinout{
 	},
 	Sil: {
 		IndicatorLed: sil.NewDigitalInputPin("DemoProject", IndicatorLed.String()),
+		DebugLedEn:   sil.NewDigitalInputPin(fwutils.FrontController.String(), DebugLedEn.String()),
+		DashboardEn:  sil.NewDigitalInputPin(fwutils.FrontController.String(), DashboardEn.String()),
+		HvilLedEn:    sil.NewDigitalInputPin(fwutils.FrontController.String(), HvilLedEn.String()),
+		BrakeLightEn: sil.NewDigitalInputPin(fwutils.FrontController.String(), BrakeLightEn.String()),
+		StatusLedEn:  sil.NewDigitalInputPin(fwutils.FrontController.String(), StatusLedEn.String()),
+		RtdsEn:       sil.NewDigitalInputPin(fwutils.FrontController.String(), RtdsEn.String()),
 	},
 }
 
@@ -37,7 +44,14 @@ var _revisionDigitalOutputPinout = map[Revision]DigitalPinout{
 		ReadyToDriveButton: raspi.NewDigitalPin(),
 	},
 	Sil: {
-		IndicatorButton: sil.NewDigitalOutputPin("DemoProject", IndicatorButton.String()),
+		IndicatorButton:  sil.NewDigitalOutputPin("DemoProject", IndicatorButton.String()),
+		StartButtonN:     sil.NewDigitalOutputPin(fwutils.FrontController.String(), StartButtonN.String()),
+		WheelSpeedLeftA:  sil.NewDigitalOutputPin(fwutils.FrontController.String(), WheelSpeedLeftA.String()),
+		WheelSpeedLeftB:  sil.NewDigitalOutputPin(fwutils.FrontController.String(), WheelSpeedLeftB.String()),
+		WheelSpeedRightA: sil.NewDigitalOutputPin(fwutils.FrontController.String(), WheelSpeedRightA.String()),
+		WheelSpeedRightB: sil.NewDigitalOutputPin(fwutils.FrontController.String(), WheelSpeedRightB.String()),
+		WaitForStart:     sil.NewDigitalOutputPin(fwutils.FrontController.String(), WaitForStart.String()),
+		HvilDisable:      sil.NewDigitalOutputPin(fwutils.FrontController.String(), HvilDisable.String()),
 	},
 }
 
@@ -47,6 +61,9 @@ var _revisionAnalogInputPinout = map[Revision]AnalogPinout{
 	},
 	MockTest: {
 		LvController3v3RefVoltage: raspi.NewAnalogPin(),
+	},
+	Sil: {
+		HvilFeedback: sil.NewAnalogInputPin(fwutils.FrontController.String(), HvilFeedback.String()),
 	},
 }
 
@@ -60,6 +77,11 @@ var _revisionAnalogOutputPinout = map[Revision]AnalogPinout{
 		AcceleratorPedalPosition1: raspi.NewAnalogPin(),
 		AcceleratorPedalPosition2: raspi.NewAnalogPin(),
 		AccumulatorCurrent:        raspi.NewAnalogPin(),
+	},
+	Sil: {
+		AccelPedalPosition1: sil.NewAnalogOutputPin(fwutils.FrontController.String(), AccelPedalPosition1.String()),
+		AccelPedalPosition2: sil.NewAnalogOutputPin(fwutils.FrontController.String(), AccelPedalPosition2.String()),
+		SteeringAngle:       sil.NewAnalogOutputPin(fwutils.FrontController.String(), SteeringAngle.String()),
 	},
 }
 

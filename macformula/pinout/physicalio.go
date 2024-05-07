@@ -25,4 +25,30 @@ const (
 	IndicatorLed
 	// IndicatorButton is used in the firmware DemoProject.
 	IndicatorButton
+	// HvCurrentSense does not go into a microcontroller, it is an electrical only signal.
+	HvCurrentSense
+
+	// IoFcCheckoutProject:
+
+	DebugLedEn
+	DashboardEn
+	HvilLedEn
+	BrakeLightEn
+	StatusLedEn
+	RtdsEn
+	AccelPedalPosition1
+	AccelPedalPosition2
+	BrakePedalPosition1
+	BrakePedalPosition2
+	SuspensionTravel1
+	SuspensionTravel2
+	HvilFeedback
+	SteeringAngle
+	StartButtonN
+	WheelSpeedLeftA
+	WheelSpeedLeftB
+	WheelSpeedRightA
+	WheelSpeedRightB
+	WaitForStart
+	HvilDisable
 )
