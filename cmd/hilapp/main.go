@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/macformula/hil/macformula/pinout"
 	"path/filepath"
 	"time"
 
@@ -69,6 +70,13 @@ func main() {
 	cfg, err := config.NewConfig(*configPath)
 	if err != nil {
 		panic(errors.Errorf("new config (%s)", *configPath))
+	}
+
+	// Get pinout revision.
+	rev, err := pinout.RevisionString(cfg.Revision)
+	if err != nil {
+		panic(errors.Errorf("invalid revision (%s) valid options (%v)",
+			cfg.Revision, pinout.RevisionStrings()))
 	}
 
 	// Create Logger.
@@ -152,15 +160,26 @@ func main() {
 		return
 	}
 
-	// Create AppState.
-	appState := macformula.App{
-		Config:       cfg,
-		VehCanTracer: vehCanTracer,
-		PtCanTracer:  ptCanTracer,
+	// Create pinout controller.
+	pinoutController := pinout.NewController(rev, logger)
+
+	err = pinoutController.Open(ctx)
+	if err != nil {
+		logger.Error("failed to open pinout controller",
+			zap.Error(errors.Wrap(err, "dial context")))
+		return
+	}
+
+	// Create app object.
+	app := macformula.App{
+		Config:           cfg,
+		VehCanTracer:     vehCanTracer,
+		PtCanTracer:      ptCanTracer,
+		PinoutController: pinoutController,
 	}
 
 	// Create sequences.
-	sequences := state.GetSequences(&appState, logger)
+	sequences := state.GetSequences(&app, logger)
 
 	// Create command line dispatcher.
 	cliDispatcher := cli.NewCliDispatcher(sequences, logger)

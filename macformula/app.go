@@ -3,6 +3,7 @@ package macformula
 import (
 	"github.com/macformula/hil/canlink"
 	"github.com/macformula/hil/macformula/config"
+	"github.com/macformula/hil/macformula/pinout"
 )
 
 type App struct {
@@ -10,5 +11,6 @@ type App struct {
 	VehCanTracer *canlink.Tracer
 	PtCanTracer  *canlink.Tracer
 
-	CurrProcess *ProcessInfo
+	PinoutController *pinout.Controller
+	CurrProcess      *ProcessInfo
 }
