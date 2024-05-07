@@ -13,23 +13,24 @@ const (
 	ReadyToDriveButton
 	// HvilOk indicates that the high voltage interlock loop is satisfied.
 	HvilOk
-	// AcceleratorPedalPosition1 determines how fast the car should go. It should be offset from AcceleratorPedalPosition2.
-	AcceleratorPedalPosition1
-	// AcceleratorPedalPosition2 determines how fast the car should go. It should be offset from AcceleratorPedalPosition1.
-	AcceleratorPedalPosition2
 	// AccumulatorCurrent determines the current that is passing through the battery pack (accumulator).
 	AccumulatorCurrent
 	// LvController3v3RefVoltage is connected to the 3.3V touch point on the lv controller.
 	LvController3v3RefVoltage
+	FrontController3v3RefVoltage
 	// IndicatorLed is used in the firmware DemoProject.
 	IndicatorLed
 	// IndicatorButton is used in the firmware DemoProject.
 	IndicatorButton
 	// HvCurrentSense does not go into a microcontroller, it is an electrical only signal.
 	HvCurrentSense
+	MotorControllerPrechargeEn
+	InverterEn
+	ShutdownCircuitEn
+	AccumulatorEn
 
 	// IoFcCheckoutProject:
-
+	GlvmsDisable
 	DebugLedEn
 	DashboardEn
 	HvilLedEn
@@ -51,4 +52,7 @@ const (
 	WheelSpeedRightB
 	WaitForStart
 	HvilDisable
+
+	SgTestOutput
+	SgTestInput
 )

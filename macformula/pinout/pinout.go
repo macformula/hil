@@ -18,7 +18,10 @@ type (
 
 var _revisionDigitalInputPinout = map[Revision]DigitalPinout{
 	Ev5: {
-		HvilOk: speedgoat.NewDigitalPin(0),
+		InverterEn:                 speedgoat.NewDigitalPin(0),
+		MotorControllerPrechargeEn: speedgoat.NewDigitalPin(1),
+		ShutdownCircuitEn:          speedgoat.NewDigitalPin(2),
+		AccumulatorEn:              speedgoat.NewDigitalPin(3),
 	},
 	MockTest: {
 		HvilOk: raspi.NewDigitalPin(),
@@ -32,12 +35,16 @@ var _revisionDigitalInputPinout = map[Revision]DigitalPinout{
 		StatusLedEn:  sil.NewDigitalInputPin(fwutils.FrontController.String(), StatusLedEn.String()),
 		RtdsEn:       sil.NewDigitalInputPin(fwutils.FrontController.String(), RtdsEn.String()),
 	},
+	SgTest: {
+		SgTestInput: speedgoat.NewDigitalPin(6),
+	},
 }
 
 var _revisionDigitalOutputPinout = map[Revision]DigitalPinout{
 	Ev5: {
-		LvEnableButton:     speedgoat.NewDigitalPin(8),
+		GlvmsDisable:       speedgoat.NewDigitalPin(8),
 		ReadyToDriveButton: speedgoat.NewDigitalPin(9),
+		HvilDisable:        speedgoat.NewDigitalPin(10),
 	},
 	MockTest: {
 		LvEnableButton:     raspi.NewDigitalPin(),
@@ -53,11 +60,16 @@ var _revisionDigitalOutputPinout = map[Revision]DigitalPinout{
 		WaitForStart:     sil.NewDigitalOutputPin(fwutils.FrontController.String(), WaitForStart.String()),
 		HvilDisable:      sil.NewDigitalOutputPin(fwutils.FrontController.String(), HvilDisable.String()),
 	},
+	SgTest: {
+		SgTestOutput: speedgoat.NewDigitalPin(12),
+	},
 }
 
 var _revisionAnalogInputPinout = map[Revision]AnalogPinout{
 	Ev5: {
-		LvController3v3RefVoltage: speedgoat.NewAnalogPin(0),
+		HvilFeedback:                 speedgoat.NewAnalogPin(0),
+		LvController3v3RefVoltage:    speedgoat.NewAnalogPin(1),
+		FrontController3v3RefVoltage: speedgoat.NewAnalogPin(2),
 	},
 	MockTest: {
 		LvController3v3RefVoltage: raspi.NewAnalogPin(),
@@ -65,24 +77,27 @@ var _revisionAnalogInputPinout = map[Revision]AnalogPinout{
 	Sil: {
 		HvilFeedback: sil.NewAnalogInputPin(fwutils.FrontController.String(), HvilFeedback.String()),
 	},
+	SgTest: {},
 }
 
 var _revisionAnalogOutputPinout = map[Revision]AnalogPinout{
 	Ev5: {
-		AcceleratorPedalPosition1: speedgoat.NewAnalogPin(8),
-		AcceleratorPedalPosition2: speedgoat.NewAnalogPin(1),
-		AccumulatorCurrent:        speedgoat.NewAnalogPin(2),
+		SteeringAngle:       speedgoat.NewAnalogPin(8),
+		HvCurrentSense:      speedgoat.NewAnalogPin(9),
+		AccelPedalPosition1: speedgoat.NewAnalogPin(10),
+		AccelPedalPosition2: speedgoat.NewAnalogPin(11),
 	},
 	MockTest: {
-		AcceleratorPedalPosition1: raspi.NewAnalogPin(),
-		AcceleratorPedalPosition2: raspi.NewAnalogPin(),
-		AccumulatorCurrent:        raspi.NewAnalogPin(),
+		AccelPedalPosition1: raspi.NewAnalogPin(),
+		AccelPedalPosition2: raspi.NewAnalogPin(),
+		AccumulatorCurrent:  raspi.NewAnalogPin(),
 	},
 	Sil: {
 		AccelPedalPosition1: sil.NewAnalogOutputPin(fwutils.FrontController.String(), AccelPedalPosition1.String()),
 		AccelPedalPosition2: sil.NewAnalogOutputPin(fwutils.FrontController.String(), AccelPedalPosition2.String()),
 		SteeringAngle:       sil.NewAnalogOutputPin(fwutils.FrontController.String(), SteeringAngle.String()),
 	},
+	SgTest: {},
 }
 
 // GetDigitalInputs returns a digital input pinout for the given revision.
