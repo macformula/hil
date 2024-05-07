@@ -21,3 +21,163 @@ FW003:
   expectedVal: true
   type: bool
   unit: N/A
+LVSTART001:
+  description: Successfully power cycled the testbench.
+  compareOp: EQ
+  expectedVal: true
+  type: bool
+  unit: N/A
+LVSTART002:
+  description: TSAL indicator enabled after power cycle.
+  compareOp: EQ
+  expectedVal: true
+  type: bool
+  unit: N/A
+LVSTART003:
+  description: TSAL indicator time to enable after startup (ms).
+  compareOp: GELE
+  lowerLimit: 0
+  upperLimit: 1000
+  type: int
+  unit: ms
+LVSTART004:
+  description: Raspi indicator enabled after tsal.
+  compareOp: EQ
+  expectedVal: true
+  type: bool
+  unit: N/A
+LVSTART005:
+  description: Raspi time to enable after tsal (ms).
+  compareOp: LOG
+  type: int
+  unit: ms
+LVSTART006:
+  description: Front controller enabled after raspi.
+  compareOp: EQ
+  expectedVal: true
+  type: bool
+  unit: N/A
+LVSTART007:
+  description: Front controller time to enable after raspi (ms).
+  compareOp: LOG
+  type: int
+  unit: ms
+LVSTART008:
+  description: Speedgoat enabled after front controller.
+  compareOp: EQ
+  expectedVal: true
+  type: bool
+  unit: N/A
+LVSTART009:
+  description: Speedgoat time to enable after front controller (ms).
+  compareOp: LOG
+  type: int
+  unit: ms
+LVSTART010:
+  description: Accumulator enabled after speedgoat.
+  compareOp: EQ
+  expectedVal: true
+  type: bool
+  unit: N/A
+LVSTART011:
+  description: Accumulator time to enable after speedgoat (ms).
+  compareOp: LOG
+  type: int
+  unit: ms
+LVSTART012:
+  description: Motor controller precharge enabled after accumulator.
+  compareOp: EQ
+  expectedVal: true
+  type: bool
+  unit: N/A
+LVSTART013:
+  description: Motor controller precharge time to enable after accumulator (ms).
+  compareOp: LOG
+  type: int
+  unit: ms
+LVSTART014:
+  description: Motor controller enabled after motor controller precharge.
+  compareOp: EQ
+  expectedVal: true
+  type: bool
+  unit: N/A
+LVSTART015:
+  description: Motor controller time to enable after motor controller precharge (ms).
+  compareOp: LOG
+  type: int
+  unit: ms
+LVSTART016:
+  description: Shutdown circuit enabled before can contactors command sent.
+  compareOp: EQ
+  expectedVal: false
+  type: bool
+  unit: N/A
+LVSTART017:
+  description: Shutdown circuit enabled before contactors commanded open.
+  compareOp: EQ
+  expectedVal: false
+  type: bool
+  unit: N/A
+LVSTART018:
+  description: Shutdown circuit enabled after contactors commanded open.
+  compareOp: EQ
+  expectedVal: true
+  type: bool
+  unit: N/A
+LVSTART019:
+  description:  Shutdown circuit time to enable after contactos commanded open (ms).
+  compareOp: LOG
+  type: int
+  unit: ms
+LVSTART020:
+  description: Dcdc enabled before contactors commanded closed (ms).
+  compareOp: EQ
+  expectedVal: false
+  type: bool
+  unit: N/A
+LVSTART021:
+  description: Dcdc enabled after contactors commanded closed (ms).
+  compareOp: EQ
+  expectedVal: true
+  type: bool
+  unit: N/A
+LVSTART022:
+  description: Inverter switch enabled before can contactors command sent.
+  compareOp: EQ
+  expectedVal: false
+  type: bool
+  unit: N/A
+LVSTART023:
+  description: Inverter switch enabled before contactors commanded closed.
+  compareOp: EQ
+  expectedVal: false
+  type: bool
+  unit: N/A
+LVSTART024:
+  description: Inverter switch enabled before commanded to enable by the front controller.
+  compareOp: EQ
+  expectedVal: false
+  type: bool
+  unit: N/A
+LVSTART025:
+  description: Inverter switch enabled after commanded to enable by the front controller.
+  compareOp: EQ
+  expectedVal: true
+  type: bool
+  unit: N/A
+LVSTART026:
+  description: Inverter switch time to enable after commanded to enable by the front controller (ms).
+  compareOp: LOG
+  type: int
+  unit: ms
+LVSTART027:
+    description: Motor controller precharge disabled after motor controller on.
+    compareOp: EQ
+    expectedVal: false
+    type: bool
+    unit: N/A
+LVSTART028:
+    description: Motor controller precharge time to disable after motor controller on (ms).
+    compareOp: LOG
+    type: int
+    unit: ms

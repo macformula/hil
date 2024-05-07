@@ -107,7 +107,7 @@ func main() {
 	logger.Info("starting test 2")
 
 	// Second Test: send wrong message, expect nil when reading from canclient.
-	msgSent2 := vehcan.Contactor_States{}
+	msgSent2 := vehcan.ContactorStates{}
 	tryToReadMsg2 := vehcan.Contactor_Feedback{}
 	numMsgsToSend2 := int(_test2Timeout / _test1MessagePeriod)
 
@@ -142,7 +142,7 @@ func main() {
 		period time.Duration
 	}{
 		{
-			msg:    vehcan.NewContactor_States(),
+			msg:    vehcan.NewContactorStates(),
 			period: 10 * time.Millisecond,
 		},
 		{

@@ -34,6 +34,206 @@ var (
 )
 
 // Generated code. DO NOT EDIT.
+// LvControllerStatusReader provides read access to a LvControllerStatus message.
+type LvControllerStatusReader interface {
+	// LvControllerState returns the physical value of the LvControllerState signal.
+	LvControllerState() float64
+
+	// LvControllerState returns the raw (encoded) value of the LvControllerState signal.
+	RawLvControllerState() LvControllerStatus_LvControllerState
+}
+
+// LvControllerStatusWriter provides write access to a LvControllerStatus message.
+type LvControllerStatusWriter interface {
+	// CopyFrom copies all values from LvControllerStatusReader.
+	CopyFrom(LvControllerStatusReader) *LvControllerStatus
+	// SetLvControllerState sets the physical value of the LvControllerState signal.
+	SetLvControllerState(float64) *LvControllerStatus
+
+	// SetRawLvControllerState sets the raw (encoded) value of the LvControllerState signal.
+	SetRawLvControllerState(LvControllerStatus_LvControllerState) *LvControllerStatus
+}
+
+type LvControllerStatus struct {
+	xxx_LvControllerState LvControllerStatus_LvControllerState
+}
+
+func NewLvControllerStatus() *LvControllerStatus {
+	m := &LvControllerStatus{}
+	m.Reset()
+	return m
+}
+
+func (m *LvControllerStatus) Reset() {
+	m.xxx_LvControllerState = 0
+}
+
+func (m *LvControllerStatus) CopyFrom(o LvControllerStatusReader) *LvControllerStatus {
+	m.SetLvControllerState(o.LvControllerState())
+	return m
+}
+
+// Descriptor returns the LvControllerStatus descriptor.
+func (m *LvControllerStatus) Descriptor() *descriptor.Message {
+	return Messages().LvControllerStatus.Message
+}
+
+// String returns a compact string representation of the message.
+func (m *LvControllerStatus) String() string {
+	return cantext.MessageString(m)
+}
+
+func (m *LvControllerStatus) LvControllerState() float64 {
+	return Messages().LvControllerStatus.LvControllerState.ToPhysical(float64(m.xxx_LvControllerState))
+}
+
+func (m *LvControllerStatus) SetLvControllerState(v float64) *LvControllerStatus {
+	m.xxx_LvControllerState = LvControllerStatus_LvControllerState(Messages().LvControllerStatus.LvControllerState.FromPhysical(v))
+	return m
+}
+
+func (m *LvControllerStatus) RawLvControllerState() LvControllerStatus_LvControllerState {
+	return m.xxx_LvControllerState
+}
+
+func (m *LvControllerStatus) SetRawLvControllerState(v LvControllerStatus_LvControllerState) *LvControllerStatus {
+	m.xxx_LvControllerState = LvControllerStatus_LvControllerState(Messages().LvControllerStatus.LvControllerState.SaturatedCastUnsigned(uint64(v)))
+	return m
+}
+
+// LvControllerStatus_LvControllerState models the LvControllerState signal of the LvControllerStatus message.
+type LvControllerStatus_LvControllerState uint8
+
+// Value descriptions for the LvControllerState signal of the LvControllerStatus message.
+const (
+	LvControllerStatus_LvControllerState_Unknown                          LvControllerStatus_LvControllerState = 0
+	LvControllerStatus_LvControllerState_Startup                          LvControllerStatus_LvControllerState = 1
+	LvControllerStatus_LvControllerState_TsalEnabled                      LvControllerStatus_LvControllerState = 2
+	LvControllerStatus_LvControllerState_RaspiEnabled                     LvControllerStatus_LvControllerState = 3
+	LvControllerStatus_LvControllerState_FrontControllerEnabled           LvControllerStatus_LvControllerState = 4
+	LvControllerStatus_LvControllerState_SpeedgoatEnabled                 LvControllerStatus_LvControllerState = 5
+	LvControllerStatus_LvControllerState_AccumulatorEnabled               LvControllerStatus_LvControllerState = 6
+	LvControllerStatus_LvControllerState_MotorControllerPrechargeEnabled  LvControllerStatus_LvControllerState = 7
+	LvControllerStatus_LvControllerState_MotorControllerEnabled           LvControllerStatus_LvControllerState = 8
+	LvControllerStatus_LvControllerState_MotorControllerPrechargeDisabled LvControllerStatus_LvControllerState = 9
+	LvControllerStatus_LvControllerState_ImuGpsEnabled                    LvControllerStatus_LvControllerState = 10
+	LvControllerStatus_LvControllerState_ShutdownCircuitEnabled           LvControllerStatus_LvControllerState = 11
+	LvControllerStatus_LvControllerState_WaitingForClosedContactors       LvControllerStatus_LvControllerState = 12
+	LvControllerStatus_LvControllerState_WaitingForDcdcValid              LvControllerStatus_LvControllerState = 13
+	LvControllerStatus_LvControllerState_DcdcValid                        LvControllerStatus_LvControllerState = 14
+	LvControllerStatus_LvControllerState_DcdcLedEnabled                   LvControllerStatus_LvControllerState = 15
+	LvControllerStatus_LvControllerState_PowertrainPumpEnabled            LvControllerStatus_LvControllerState = 16
+	LvControllerStatus_LvControllerState_PowertrainFanEnabled             LvControllerStatus_LvControllerState = 17
+	LvControllerStatus_LvControllerState_PowertrainFanSweeping            LvControllerStatus_LvControllerState = 18
+	LvControllerStatus_LvControllerState_SequenceComplete                 LvControllerStatus_LvControllerState = 19
+	LvControllerStatus_LvControllerState_LostDcdcValid                    LvControllerStatus_LvControllerState = 20
+	LvControllerStatus_LvControllerState_DisabledLed                      LvControllerStatus_LvControllerState = 21
+	LvControllerStatus_LvControllerState_PowertrainPumpOff                LvControllerStatus_LvControllerState = 22
+	LvControllerStatus_LvControllerState_PowertrainFanOff                 LvControllerStatus_LvControllerState = 23
+	LvControllerStatus_LvControllerState_PowertrainFanPwmOff              LvControllerStatus_LvControllerState = 24
+	LvControllerStatus_LvControllerState_WaitingForOpenContactors         LvControllerStatus_LvControllerState = 25
+	LvControllerStatus_LvControllerState_DcdcEnabled                      LvControllerStatus_LvControllerState = 26
+)
+
+func (v LvControllerStatus_LvControllerState) String() string {
+	switch v {
+	case 0:
+		return "Unknown"
+	case 1:
+		return "Startup"
+	case 2:
+		return "TsalEnabled"
+	case 3:
+		return "RaspiEnabled"
+	case 4:
+		return "FrontControllerEnabled"
+	case 5:
+		return "SpeedgoatEnabled"
+	case 6:
+		return "AccumulatorEnabled"
+	case 7:
+		return "MotorControllerPrechargeEnabled"
+	case 8:
+		return "MotorControllerEnabled"
+	case 9:
+		return "MotorControllerPrechargeDisabled"
+	case 10:
+		return "ImuGpsEnabled"
+	case 11:
+		return "ShutdownCircuitEnabled"
+	case 12:
+		return "WaitingForClosedContactors"
+	case 13:
+		return "WaitingForDcdcValid"
+	case 14:
+		return "DcdcValid"
+	case 15:
+		return "DcdcLedEnabled"
+	case 16:
+		return "PowertrainPumpEnabled"
+	case 17:
+		return "PowertrainFanEnabled"
+	case 18:
+		return "PowertrainFanSweeping"
+	case 19:
+		return "SequenceComplete"
+	case 20:
+		return "LostDcdcValid"
+	case 21:
+		return "DisabledLed"
+	case 22:
+		return "PowertrainPumpOff"
+	case 23:
+		return "PowertrainFanOff"
+	case 24:
+		return "PowertrainFanPwmOff"
+	case 25:
+		return "WaitingForOpenContactors"
+	case 26:
+		return "DcdcEnabled"
+	default:
+		return fmt.Sprintf("LvControllerStatus_LvControllerState(%d)", v)
+	}
+}
+
+// Frame returns a CAN frame representing the message.
+func (m *LvControllerStatus) Frame() can.Frame {
+	md := Messages().LvControllerStatus
+	f := can.Frame{ID: md.ID, IsExtended: md.IsExtended, Length: md.Length}
+	md.LvControllerState.MarshalUnsigned(&f.Data, uint64(m.xxx_LvControllerState))
+	return f
+}
+
+// MarshalFrame encodes the message as a CAN frame.
+func (m *LvControllerStatus) MarshalFrame() (can.Frame, error) {
+	return m.Frame(), nil
+}
+
+// UnmarshalFrame decodes the message from a CAN frame.
+func (m *LvControllerStatus) UnmarshalFrame(f can.Frame) error {
+	md := Messages().LvControllerStatus
+	switch {
+	case f.ID != md.ID:
+		return fmt.Errorf(
+			"unmarshal LvControllerStatus: expects ID 111 (got %s with ID %d)", f.String(), f.ID,
+		)
+	case f.Length != md.Length:
+		return fmt.Errorf(
+			"unmarshal LvControllerStatus: expects length 1 (got %s with length %d)", f.String(), f.Length,
+		)
+	case f.IsRemote:
+		return fmt.Errorf(
+			"unmarshal LvControllerStatus: expects non-remote frame (got remote frame %s)", f.String(),
+		)
+	case f.IsExtended != md.IsExtended:
+		return fmt.Errorf(
+			"unmarshal LvControllerStatus: expects standard ID (got %s with extended ID)", f.String(),
+		)
+	}
+	m.xxx_LvControllerState = LvControllerStatus_LvControllerState(md.LvControllerState.UnmarshalUnsigned(f.Data))
+	return nil
+}
+
 // VC_StatusReader provides read access to a VC_Status message.
 type VC_StatusReader interface {
 	// VC_govStatus returns the value of the VC_govStatus signal.
@@ -1800,129 +2000,219 @@ func (m *GnssImu) UnmarshalFrame(f can.Frame) error {
 	return nil
 }
 
-// Contactor_StatesReader provides read access to a Contactor_States message.
-type Contactor_StatesReader interface {
-	// Pack_Positive returns the value of the Pack_Positive signal.
-	Pack_Positive() uint8
-	// Pack_Precharge returns the value of the Pack_Precharge signal.
-	Pack_Precharge() uint8
-	// Pack_Negative returns the value of the Pack_Negative signal.
-	Pack_Negative() uint8
+// InverterCommandReader provides read access to a InverterCommand message.
+type InverterCommandReader interface {
+	// EnableInverter returns the value of the EnableInverter signal.
+	EnableInverter() bool
 }
 
-// Contactor_StatesWriter provides write access to a Contactor_States message.
-type Contactor_StatesWriter interface {
-	// CopyFrom copies all values from Contactor_StatesReader.
-	CopyFrom(Contactor_StatesReader) *Contactor_States
-	// SetPack_Positive sets the value of the Pack_Positive signal.
-	SetPack_Positive(uint8) *Contactor_States
-	// SetPack_Precharge sets the value of the Pack_Precharge signal.
-	SetPack_Precharge(uint8) *Contactor_States
-	// SetPack_Negative sets the value of the Pack_Negative signal.
-	SetPack_Negative(uint8) *Contactor_States
+// InverterCommandWriter provides write access to a InverterCommand message.
+type InverterCommandWriter interface {
+	// CopyFrom copies all values from InverterCommandReader.
+	CopyFrom(InverterCommandReader) *InverterCommand
+	// SetEnableInverter sets the value of the EnableInverter signal.
+	SetEnableInverter(bool) *InverterCommand
 }
 
-type Contactor_States struct {
-	xxx_Pack_Positive  uint8
-	xxx_Pack_Precharge uint8
-	xxx_Pack_Negative  uint8
+type InverterCommand struct {
+	xxx_EnableInverter bool
 }
 
-func NewContactor_States() *Contactor_States {
-	m := &Contactor_States{}
+func NewInverterCommand() *InverterCommand {
+	m := &InverterCommand{}
 	m.Reset()
 	return m
 }
 
-func (m *Contactor_States) Reset() {
-	m.xxx_Pack_Positive = 0
-	m.xxx_Pack_Precharge = 0
-	m.xxx_Pack_Negative = 0
+func (m *InverterCommand) Reset() {
+	m.xxx_EnableInverter = false
 }
 
-func (m *Contactor_States) CopyFrom(o Contactor_StatesReader) *Contactor_States {
-	m.xxx_Pack_Positive = o.Pack_Positive()
-	m.xxx_Pack_Precharge = o.Pack_Precharge()
-	m.xxx_Pack_Negative = o.Pack_Negative()
+func (m *InverterCommand) CopyFrom(o InverterCommandReader) *InverterCommand {
+	m.xxx_EnableInverter = o.EnableInverter()
 	return m
 }
 
-// Descriptor returns the Contactor_States descriptor.
-func (m *Contactor_States) Descriptor() *descriptor.Message {
-	return Messages().Contactor_States.Message
+// Descriptor returns the InverterCommand descriptor.
+func (m *InverterCommand) Descriptor() *descriptor.Message {
+	return Messages().InverterCommand.Message
 }
 
 // String returns a compact string representation of the message.
-func (m *Contactor_States) String() string {
+func (m *InverterCommand) String() string {
 	return cantext.MessageString(m)
 }
 
-func (m *Contactor_States) Pack_Positive() uint8 {
-	return m.xxx_Pack_Positive
+func (m *InverterCommand) EnableInverter() bool {
+	return m.xxx_EnableInverter
 }
 
-func (m *Contactor_States) SetPack_Positive(v uint8) *Contactor_States {
-	m.xxx_Pack_Positive = uint8(Messages().Contactor_States.Pack_Positive.SaturatedCastUnsigned(uint64(v)))
-	return m
-}
-
-func (m *Contactor_States) Pack_Precharge() uint8 {
-	return m.xxx_Pack_Precharge
-}
-
-func (m *Contactor_States) SetPack_Precharge(v uint8) *Contactor_States {
-	m.xxx_Pack_Precharge = uint8(Messages().Contactor_States.Pack_Precharge.SaturatedCastUnsigned(uint64(v)))
-	return m
-}
-
-func (m *Contactor_States) Pack_Negative() uint8 {
-	return m.xxx_Pack_Negative
-}
-
-func (m *Contactor_States) SetPack_Negative(v uint8) *Contactor_States {
-	m.xxx_Pack_Negative = uint8(Messages().Contactor_States.Pack_Negative.SaturatedCastUnsigned(uint64(v)))
+func (m *InverterCommand) SetEnableInverter(v bool) *InverterCommand {
+	m.xxx_EnableInverter = v
 	return m
 }
 
 // Frame returns a CAN frame representing the message.
-func (m *Contactor_States) Frame() can.Frame {
-	md := Messages().Contactor_States
+func (m *InverterCommand) Frame() can.Frame {
+	md := Messages().InverterCommand
 	f := can.Frame{ID: md.ID, IsExtended: md.IsExtended, Length: md.Length}
-	md.Pack_Positive.MarshalUnsigned(&f.Data, uint64(m.xxx_Pack_Positive))
-	md.Pack_Precharge.MarshalUnsigned(&f.Data, uint64(m.xxx_Pack_Precharge))
-	md.Pack_Negative.MarshalUnsigned(&f.Data, uint64(m.xxx_Pack_Negative))
+	md.EnableInverter.MarshalBool(&f.Data, bool(m.xxx_EnableInverter))
 	return f
 }
 
 // MarshalFrame encodes the message as a CAN frame.
-func (m *Contactor_States) MarshalFrame() (can.Frame, error) {
+func (m *InverterCommand) MarshalFrame() (can.Frame, error) {
 	return m.Frame(), nil
 }
 
 // UnmarshalFrame decodes the message from a CAN frame.
-func (m *Contactor_States) UnmarshalFrame(f can.Frame) error {
-	md := Messages().Contactor_States
+func (m *InverterCommand) UnmarshalFrame(f can.Frame) error {
+	md := Messages().InverterCommand
 	switch {
 	case f.ID != md.ID:
 		return fmt.Errorf(
-			"unmarshal Contactor_States: expects ID 1570 (got %s with ID %d)", f.String(), f.ID,
+			"unmarshal InverterCommand: expects ID 1560 (got %s with ID %d)", f.String(), f.ID,
 		)
 	case f.Length != md.Length:
 		return fmt.Errorf(
-			"unmarshal Contactor_States: expects length 3 (got %s with length %d)", f.String(), f.Length,
+			"unmarshal InverterCommand: expects length 1 (got %s with length %d)", f.String(), f.Length,
 		)
 	case f.IsRemote:
 		return fmt.Errorf(
-			"unmarshal Contactor_States: expects non-remote frame (got remote frame %s)", f.String(),
+			"unmarshal InverterCommand: expects non-remote frame (got remote frame %s)", f.String(),
 		)
 	case f.IsExtended != md.IsExtended:
 		return fmt.Errorf(
-			"unmarshal Contactor_States: expects standard ID (got %s with extended ID)", f.String(),
+			"unmarshal InverterCommand: expects standard ID (got %s with extended ID)", f.String(),
 		)
 	}
-	m.xxx_Pack_Positive = uint8(md.Pack_Positive.UnmarshalUnsigned(f.Data))
-	m.xxx_Pack_Precharge = uint8(md.Pack_Precharge.UnmarshalUnsigned(f.Data))
-	m.xxx_Pack_Negative = uint8(md.Pack_Negative.UnmarshalUnsigned(f.Data))
+	m.xxx_EnableInverter = bool(md.EnableInverter.UnmarshalBool(f.Data))
+	return nil
+}
+
+// ContactorStatesReader provides read access to a ContactorStates message.
+type ContactorStatesReader interface {
+	// PackPositive returns the value of the PackPositive signal.
+	PackPositive() uint8
+	// PackPrecharge returns the value of the PackPrecharge signal.
+	PackPrecharge() uint8
+	// PackNegative returns the value of the PackNegative signal.
+	PackNegative() uint8
+}
+
+// ContactorStatesWriter provides write access to a ContactorStates message.
+type ContactorStatesWriter interface {
+	// CopyFrom copies all values from ContactorStatesReader.
+	CopyFrom(ContactorStatesReader) *ContactorStates
+	// SetPackPositive sets the value of the PackPositive signal.
+	SetPackPositive(uint8) *ContactorStates
+	// SetPackPrecharge sets the value of the PackPrecharge signal.
+	SetPackPrecharge(uint8) *ContactorStates
+	// SetPackNegative sets the value of the PackNegative signal.
+	SetPackNegative(uint8) *ContactorStates
+}
+
+type ContactorStates struct {
+	xxx_PackPositive  uint8
+	xxx_PackPrecharge uint8
+	xxx_PackNegative  uint8
+}
+
+func NewContactorStates() *ContactorStates {
+	m := &ContactorStates{}
+	m.Reset()
+	return m
+}
+
+func (m *ContactorStates) Reset() {
+	m.xxx_PackPositive = 0
+	m.xxx_PackPrecharge = 0
+	m.xxx_PackNegative = 0
+}
+
+func (m *ContactorStates) CopyFrom(o ContactorStatesReader) *ContactorStates {
+	m.xxx_PackPositive = o.PackPositive()
+	m.xxx_PackPrecharge = o.PackPrecharge()
+	m.xxx_PackNegative = o.PackNegative()
+	return m
+}
+
+// Descriptor returns the ContactorStates descriptor.
+func (m *ContactorStates) Descriptor() *descriptor.Message {
+	return Messages().ContactorStates.Message
+}
+
+// String returns a compact string representation of the message.
+func (m *ContactorStates) String() string {
+	return cantext.MessageString(m)
+}
+
+func (m *ContactorStates) PackPositive() uint8 {
+	return m.xxx_PackPositive
+}
+
+func (m *ContactorStates) SetPackPositive(v uint8) *ContactorStates {
+	m.xxx_PackPositive = uint8(Messages().ContactorStates.PackPositive.SaturatedCastUnsigned(uint64(v)))
+	return m
+}
+
+func (m *ContactorStates) PackPrecharge() uint8 {
+	return m.xxx_PackPrecharge
+}
+
+func (m *ContactorStates) SetPackPrecharge(v uint8) *ContactorStates {
+	m.xxx_PackPrecharge = uint8(Messages().ContactorStates.PackPrecharge.SaturatedCastUnsigned(uint64(v)))
+	return m
+}
+
+func (m *ContactorStates) PackNegative() uint8 {
+	return m.xxx_PackNegative
+}
+
+func (m *ContactorStates) SetPackNegative(v uint8) *ContactorStates {
+	m.xxx_PackNegative = uint8(Messages().ContactorStates.PackNegative.SaturatedCastUnsigned(uint64(v)))
+	return m
+}
+
+// Frame returns a CAN frame representing the message.
+func (m *ContactorStates) Frame() can.Frame {
+	md := Messages().ContactorStates
+	f := can.Frame{ID: md.ID, IsExtended: md.IsExtended, Length: md.Length}
+	md.PackPositive.MarshalUnsigned(&f.Data, uint64(m.xxx_PackPositive))
+	md.PackPrecharge.MarshalUnsigned(&f.Data, uint64(m.xxx_PackPrecharge))
+	md.PackNegative.MarshalUnsigned(&f.Data, uint64(m.xxx_PackNegative))
+	return f
+}
+
+// MarshalFrame encodes the message as a CAN frame.
+func (m *ContactorStates) MarshalFrame() (can.Frame, error) {
+	return m.Frame(), nil
+}
+
+// UnmarshalFrame decodes the message from a CAN frame.
+func (m *ContactorStates) UnmarshalFrame(f can.Frame) error {
+	md := Messages().ContactorStates
+	switch {
+	case f.ID != md.ID:
+		return fmt.Errorf(
+			"unmarshal ContactorStates: expects ID 1570 (got %s with ID %d)", f.String(), f.ID,
+		)
+	case f.Length != md.Length:
+		return fmt.Errorf(
+			"unmarshal ContactorStates: expects length 3 (got %s with length %d)", f.String(), f.Length,
+		)
+	case f.IsRemote:
+		return fmt.Errorf(
+			"unmarshal ContactorStates: expects non-remote frame (got remote frame %s)", f.String(),
+		)
+	case f.IsExtended != md.IsExtended:
+		return fmt.Errorf(
+			"unmarshal ContactorStates: expects standard ID (got %s with extended ID)", f.String(),
+		)
+	}
+	m.xxx_PackPositive = uint8(md.PackPositive.UnmarshalUnsigned(f.Data))
+	m.xxx_PackPrecharge = uint8(md.PackPrecharge.UnmarshalUnsigned(f.Data))
+	m.xxx_PackNegative = uint8(md.PackNegative.UnmarshalUnsigned(f.Data))
 	return nil
 }
 
@@ -2836,7 +3126,9 @@ type NodesDescriptor struct {
 	BMS    *descriptor.Node
 	CANmod *descriptor.Node
 	FC     *descriptor.Node
+	LVC    *descriptor.Node
 	PC_SG  *descriptor.Node
+	RPI    *descriptor.Node
 	TMS    *descriptor.Node
 }
 
@@ -2847,6 +3139,7 @@ func Messages() *MessagesDescriptor {
 
 // MessagesDescriptor contains all veh message descriptors.
 type MessagesDescriptor struct {
+	LvControllerStatus  *LvControllerStatusDescriptor
 	VC_Status           *VC_StatusDescriptor
 	FC_cmd              *FC_cmdDescriptor
 	FC_msg              *FC_msgDescriptor
@@ -2859,7 +3152,8 @@ type MessagesDescriptor struct {
 	GnssSpeed           *GnssSpeedDescriptor
 	GnssGeofence        *GnssGeofenceDescriptor
 	GnssImu             *GnssImuDescriptor
-	Contactor_States    *Contactor_StatesDescriptor
+	InverterCommand     *InverterCommandDescriptor
+	ContactorStates     *ContactorStatesDescriptor
 	Pack_Current_Limits *Pack_Current_LimitsDescriptor
 	Pack_State          *Pack_StateDescriptor
 	Pack_SOC            *Pack_SOCDescriptor
@@ -2871,6 +3165,12 @@ type MessagesDescriptor struct {
 // UnmarshalFrame unmarshals the provided veh CAN frame.
 func (md *MessagesDescriptor) UnmarshalFrame(f can.Frame) (generated.Message, error) {
 	switch f.ID {
+	case md.LvControllerStatus.ID:
+		var msg LvControllerStatus
+		if err := msg.UnmarshalFrame(f); err != nil {
+			return nil, fmt.Errorf("unmarshal veh frame: %w", err)
+		}
+		return &msg, nil
 	case md.VC_Status.ID:
 		var msg VC_Status
 		if err := msg.UnmarshalFrame(f); err != nil {
@@ -2943,8 +3243,14 @@ func (md *MessagesDescriptor) UnmarshalFrame(f can.Frame) (generated.Message, er
 			return nil, fmt.Errorf("unmarshal veh frame: %w", err)
 		}
 		return &msg, nil
-	case md.Contactor_States.ID:
-		var msg Contactor_States
+	case md.InverterCommand.ID:
+		var msg InverterCommand
+		if err := msg.UnmarshalFrame(f); err != nil {
+			return nil, fmt.Errorf("unmarshal veh frame: %w", err)
+		}
+		return &msg, nil
+	case md.ContactorStates.ID:
+		var msg ContactorStates
 		if err := msg.UnmarshalFrame(f); err != nil {
 			return nil, fmt.Errorf("unmarshal veh frame: %w", err)
 		}
@@ -2988,6 +3294,11 @@ func (md *MessagesDescriptor) UnmarshalFrame(f can.Frame) (generated.Message, er
 	default:
 		return nil, fmt.Errorf("unmarshal veh frame: ID not in database: %d", f.ID)
 	}
+}
+
+type LvControllerStatusDescriptor struct {
+	*descriptor.Message
+	LvControllerState *descriptor.Signal
 }
 
 type VC_StatusDescriptor struct {
@@ -3086,11 +3397,16 @@ type GnssImuDescriptor struct {
 	AngularRateZ  *descriptor.Signal
 }
 
-type Contactor_StatesDescriptor struct {
+type InverterCommandDescriptor struct {
 	*descriptor.Message
-	Pack_Positive  *descriptor.Signal
-	Pack_Precharge *descriptor.Signal
-	Pack_Negative  *descriptor.Signal
+	EnableInverter *descriptor.Signal
+}
+
+type ContactorStatesDescriptor struct {
+	*descriptor.Message
+	PackPositive  *descriptor.Signal
+	PackPrecharge *descriptor.Signal
+	PackNegative  *descriptor.Signal
 }
 
 type Pack_Current_LimitsDescriptor struct {
@@ -3152,144 +3468,154 @@ var nd = &NodesDescriptor{
 	BMS:    d.Nodes[0],
 	CANmod: d.Nodes[1],
 	FC:     d.Nodes[2],
-	PC_SG:  d.Nodes[3],
-	TMS:    d.Nodes[4],
+	LVC:    d.Nodes[3],
+	PC_SG:  d.Nodes[4],
+	RPI:    d.Nodes[5],
+	TMS:    d.Nodes[6],
 }
 
 var md = &MessagesDescriptor{
+	LvControllerStatus: &LvControllerStatusDescriptor{
+		Message:           d.Messages[0],
+		LvControllerState: d.Messages[0].Signals[0],
+	},
 	VC_Status: &VC_StatusDescriptor{
-		Message:      d.Messages[0],
-		VC_govStatus: d.Messages[0].Signals[0],
+		Message:      d.Messages[1],
+		VC_govStatus: d.Messages[1].Signals[0],
 	},
 	FC_cmd: &FC_cmdDescriptor{
-		Message:                d.Messages[1],
-		FC_brakeLight:          d.Messages[1].Signals[0],
-		FC_readyToDriveSpeaker: d.Messages[1].Signals[1],
+		Message:                d.Messages[2],
+		FC_brakeLight:          d.Messages[2].Signals[0],
+		FC_readyToDriveSpeaker: d.Messages[2].Signals[1],
 	},
 	FC_msg: &FC_msgDescriptor{
-		Message:              d.Messages[2],
-		FC_apps1:             d.Messages[2].Signals[0],
-		FC_apps2:             d.Messages[2].Signals[1],
-		FC_bpps:              d.Messages[2].Signals[2],
-		FC_steeringAngle:     d.Messages[2].Signals[3],
-		FC_hvilSts:           d.Messages[2].Signals[4],
-		FC_readyToDriveBtn_n: d.Messages[2].Signals[5],
+		Message:              d.Messages[3],
+		FC_apps1:             d.Messages[3].Signals[0],
+		FC_apps2:             d.Messages[3].Signals[1],
+		FC_bpps:              d.Messages[3].Signals[2],
+		FC_steeringAngle:     d.Messages[3].Signals[3],
+		FC_hvilSts:           d.Messages[3].Signals[4],
+		FC_readyToDriveBtn_n: d.Messages[3].Signals[5],
 	},
 	GnssStatus: &GnssStatusDescriptor{
-		Message:    d.Messages[3],
-		FixType:    d.Messages[3].Signals[0],
-		Satellites: d.Messages[3].Signals[1],
+		Message:    d.Messages[4],
+		FixType:    d.Messages[4].Signals[0],
+		Satellites: d.Messages[4].Signals[1],
 	},
 	GnssTime: &GnssTimeDescriptor{
-		Message:       d.Messages[4],
-		TimeValid:     d.Messages[4].Signals[0],
-		TimeConfirmed: d.Messages[4].Signals[1],
-		Epoch:         d.Messages[4].Signals[2],
+		Message:       d.Messages[5],
+		TimeValid:     d.Messages[5].Signals[0],
+		TimeConfirmed: d.Messages[5].Signals[1],
+		Epoch:         d.Messages[5].Signals[2],
 	},
 	GnssPosition: &GnssPositionDescriptor{
-		Message:          d.Messages[5],
-		PositionValid:    d.Messages[5].Signals[0],
-		Latitude:         d.Messages[5].Signals[1],
-		Longitude:        d.Messages[5].Signals[2],
-		PositionAccuracy: d.Messages[5].Signals[3],
+		Message:          d.Messages[6],
+		PositionValid:    d.Messages[6].Signals[0],
+		Latitude:         d.Messages[6].Signals[1],
+		Longitude:        d.Messages[6].Signals[2],
+		PositionAccuracy: d.Messages[6].Signals[3],
 	},
 	GnssAltitude: &GnssAltitudeDescriptor{
-		Message:          d.Messages[6],
-		AltitudeValid:    d.Messages[6].Signals[0],
-		Altitude:         d.Messages[6].Signals[1],
-		AltitudeAccuracy: d.Messages[6].Signals[2],
+		Message:          d.Messages[7],
+		AltitudeValid:    d.Messages[7].Signals[0],
+		Altitude:         d.Messages[7].Signals[1],
+		AltitudeAccuracy: d.Messages[7].Signals[2],
 	},
 	GnssAttitude: &GnssAttitudeDescriptor{
-		Message:         d.Messages[7],
-		AttitudeValid:   d.Messages[7].Signals[0],
-		Roll:            d.Messages[7].Signals[1],
-		RollAccuracy:    d.Messages[7].Signals[2],
-		Pitch:           d.Messages[7].Signals[3],
-		PitchAccuracy:   d.Messages[7].Signals[4],
-		Heading:         d.Messages[7].Signals[5],
-		HeadingAccuracy: d.Messages[7].Signals[6],
+		Message:         d.Messages[8],
+		AttitudeValid:   d.Messages[8].Signals[0],
+		Roll:            d.Messages[8].Signals[1],
+		RollAccuracy:    d.Messages[8].Signals[2],
+		Pitch:           d.Messages[8].Signals[3],
+		PitchAccuracy:   d.Messages[8].Signals[4],
+		Heading:         d.Messages[8].Signals[5],
+		HeadingAccuracy: d.Messages[8].Signals[6],
 	},
 	GnssOdo: &GnssOdoDescriptor{
-		Message:          d.Messages[8],
-		DistanceValid:    d.Messages[8].Signals[0],
-		DistanceTrip:     d.Messages[8].Signals[1],
-		DistanceAccuracy: d.Messages[8].Signals[2],
-		DistanceTotal:    d.Messages[8].Signals[3],
+		Message:          d.Messages[9],
+		DistanceValid:    d.Messages[9].Signals[0],
+		DistanceTrip:     d.Messages[9].Signals[1],
+		DistanceAccuracy: d.Messages[9].Signals[2],
+		DistanceTotal:    d.Messages[9].Signals[3],
 	},
 	GnssSpeed: &GnssSpeedDescriptor{
-		Message:       d.Messages[9],
-		SpeedValid:    d.Messages[9].Signals[0],
-		Speed:         d.Messages[9].Signals[1],
-		SpeedAccuracy: d.Messages[9].Signals[2],
+		Message:       d.Messages[10],
+		SpeedValid:    d.Messages[10].Signals[0],
+		Speed:         d.Messages[10].Signals[1],
+		SpeedAccuracy: d.Messages[10].Signals[2],
 	},
 	GnssGeofence: &GnssGeofenceDescriptor{
-		Message:       d.Messages[10],
-		FenceValid:    d.Messages[10].Signals[0],
-		FenceCombined: d.Messages[10].Signals[1],
-		Fence1:        d.Messages[10].Signals[2],
-		Fence2:        d.Messages[10].Signals[3],
-		Fence3:        d.Messages[10].Signals[4],
-		Fence4:        d.Messages[10].Signals[5],
+		Message:       d.Messages[11],
+		FenceValid:    d.Messages[11].Signals[0],
+		FenceCombined: d.Messages[11].Signals[1],
+		Fence1:        d.Messages[11].Signals[2],
+		Fence2:        d.Messages[11].Signals[3],
+		Fence3:        d.Messages[11].Signals[4],
+		Fence4:        d.Messages[11].Signals[5],
 	},
 	GnssImu: &GnssImuDescriptor{
-		Message:       d.Messages[11],
-		ImuValid:      d.Messages[11].Signals[0],
-		AccelerationX: d.Messages[11].Signals[1],
-		AccelerationY: d.Messages[11].Signals[2],
-		AccelerationZ: d.Messages[11].Signals[3],
-		AngularRateX:  d.Messages[11].Signals[4],
-		AngularRateY:  d.Messages[11].Signals[5],
-		AngularRateZ:  d.Messages[11].Signals[6],
+		Message:       d.Messages[12],
+		ImuValid:      d.Messages[12].Signals[0],
+		AccelerationX: d.Messages[12].Signals[1],
+		AccelerationY: d.Messages[12].Signals[2],
+		AccelerationZ: d.Messages[12].Signals[3],
+		AngularRateX:  d.Messages[12].Signals[4],
+		AngularRateY:  d.Messages[12].Signals[5],
+		AngularRateZ:  d.Messages[12].Signals[6],
 	},
-	Contactor_States: &Contactor_StatesDescriptor{
-		Message:        d.Messages[12],
-		Pack_Positive:  d.Messages[12].Signals[0],
-		Pack_Precharge: d.Messages[12].Signals[1],
-		Pack_Negative:  d.Messages[12].Signals[2],
+	InverterCommand: &InverterCommandDescriptor{
+		Message:        d.Messages[13],
+		EnableInverter: d.Messages[13].Signals[0],
+	},
+	ContactorStates: &ContactorStatesDescriptor{
+		Message:       d.Messages[14],
+		PackPositive:  d.Messages[14].Signals[0],
+		PackPrecharge: d.Messages[14].Signals[1],
+		PackNegative:  d.Messages[14].Signals[2],
 	},
 	Pack_Current_Limits: &Pack_Current_LimitsDescriptor{
-		Message:  d.Messages[13],
-		Pack_CCL: d.Messages[13].Signals[0],
-		Pack_DCL: d.Messages[13].Signals[1],
+		Message:  d.Messages[15],
+		Pack_CCL: d.Messages[15].Signals[0],
+		Pack_DCL: d.Messages[15].Signals[1],
 	},
 	Pack_State: &Pack_StateDescriptor{
-		Message:           d.Messages[14],
-		Pack_Current:      d.Messages[14].Signals[0],
-		Pack_Inst_Voltage: d.Messages[14].Signals[1],
-		Avg_Cell_Voltage:  d.Messages[14].Signals[2],
-		Populated_Cells:   d.Messages[14].Signals[3],
+		Message:           d.Messages[16],
+		Pack_Current:      d.Messages[16].Signals[0],
+		Pack_Inst_Voltage: d.Messages[16].Signals[1],
+		Avg_Cell_Voltage:  d.Messages[16].Signals[2],
+		Populated_Cells:   d.Messages[16].Signals[3],
 	},
 	Pack_SOC: &Pack_SOCDescriptor{
-		Message:              d.Messages[15],
-		Pack_SOC:             d.Messages[15].Signals[0],
-		Maximum_Pack_Voltage: d.Messages[15].Signals[1],
+		Message:              d.Messages[17],
+		Pack_SOC:             d.Messages[17].Signals[0],
+		Maximum_Pack_Voltage: d.Messages[17].Signals[1],
 	},
 	Contactor_Feedback: &Contactor_FeedbackDescriptor{
-		Message:                 d.Messages[16],
-		Pack_Positive_Feedback:  d.Messages[16].Signals[0],
-		Pack_Negative_Feedback:  d.Messages[16].Signals[1],
-		Pack_Precharge_Feedback: d.Messages[16].Signals[2],
+		Message:                 d.Messages[18],
+		Pack_Positive_Feedback:  d.Messages[18].Signals[0],
+		Pack_Negative_Feedback:  d.Messages[18].Signals[1],
+		Pack_Precharge_Feedback: d.Messages[18].Signals[2],
 	},
 	BMSBroadcast: &BMSBroadcastDescriptor{
-		Message:        d.Messages[17],
-		ThermModuleNum: d.Messages[17].Signals[0],
-		LowThermValue:  d.Messages[17].Signals[1],
-		HighThermValue: d.Messages[17].Signals[2],
-		AvgThermValue:  d.Messages[17].Signals[3],
-		NumThermEn:     d.Messages[17].Signals[4],
-		HighThermID:    d.Messages[17].Signals[5],
-		LowThermID:     d.Messages[17].Signals[6],
-		Checksum:       d.Messages[17].Signals[7],
+		Message:        d.Messages[19],
+		ThermModuleNum: d.Messages[19].Signals[0],
+		LowThermValue:  d.Messages[19].Signals[1],
+		HighThermValue: d.Messages[19].Signals[2],
+		AvgThermValue:  d.Messages[19].Signals[3],
+		NumThermEn:     d.Messages[19].Signals[4],
+		HighThermID:    d.Messages[19].Signals[5],
+		LowThermID:     d.Messages[19].Signals[6],
+		Checksum:       d.Messages[19].Signals[7],
 	},
 	ThermistorBroadcast: &ThermistorBroadcastDescriptor{
-		Message:        d.Messages[18],
-		RelThermID:     d.Messages[18].Signals[0],
-		ThermValue:     d.Messages[18].Signals[1],
-		NumEnTherm:     d.Messages[18].Signals[2],
-		LowThermValue:  d.Messages[18].Signals[3],
-		HighThermValue: d.Messages[18].Signals[4],
-		HighThermID:    d.Messages[18].Signals[5],
-		LowThermID:     d.Messages[18].Signals[6],
+		Message:        d.Messages[20],
+		RelThermID:     d.Messages[20].Signals[0],
+		ThermValue:     d.Messages[20].Signals[1],
+		NumEnTherm:     d.Messages[20].Signals[2],
+		LowThermValue:  d.Messages[20].Signals[3],
+		HighThermValue: d.Messages[20].Signals[4],
+		HighThermID:    d.Messages[20].Signals[5],
+		LowThermID:     d.Messages[20].Signals[6],
 	},
 }
 
@@ -3297,6 +3623,149 @@ var d = (*descriptor.Database)(&descriptor.Database{
 	SourceFile: (string)("temp/vehcan/veh.dbc"),
 	Version:    (string)(""),
 	Messages: ([]*descriptor.Message)([]*descriptor.Message{
+		(*descriptor.Message)(&descriptor.Message{
+			Name:        (string)("LvControllerStatus"),
+			ID:          (uint32)(111),
+			IsExtended:  (bool)(false),
+			Length:      (uint8)(1),
+			SendType:    (descriptor.SendType)(0),
+			Description: (string)(""),
+			Signals: ([]*descriptor.Signal)([]*descriptor.Signal{
+				(*descriptor.Signal)(&descriptor.Signal{
+					Name:             (string)("LvControllerState"),
+					Start:            (uint8)(0),
+					Length:           (uint8)(8),
+					IsBigEndian:      (bool)(false),
+					IsSigned:         (bool)(false),
+					IsMultiplexer:    (bool)(false),
+					IsMultiplexed:    (bool)(false),
+					MultiplexerValue: (uint)(0),
+					Offset:           (float64)(0),
+					Scale:            (float64)(1),
+					Min:              (float64)(0),
+					Max:              (float64)(1),
+					Unit:             (string)(""),
+					Description:      (string)(""),
+					ValueDescriptions: ([]*descriptor.ValueDescription)([]*descriptor.ValueDescription{
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(0),
+							Description: (string)("Unknown"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(1),
+							Description: (string)("Startup"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(2),
+							Description: (string)("TsalEnabled"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(3),
+							Description: (string)("RaspiEnabled"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(4),
+							Description: (string)("FrontControllerEnabled"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(5),
+							Description: (string)("SpeedgoatEnabled"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(6),
+							Description: (string)("AccumulatorEnabled"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(7),
+							Description: (string)("MotorControllerPrechargeEnabled"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(8),
+							Description: (string)("MotorControllerEnabled"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(9),
+							Description: (string)("MotorControllerPrechargeDisabled"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(10),
+							Description: (string)("ImuGpsEnabled"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(11),
+							Description: (string)("ShutdownCircuitEnabled"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(12),
+							Description: (string)("WaitingForClosedContactors"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(13),
+							Description: (string)("WaitingForDcdcValid"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(14),
+							Description: (string)("DcdcValid"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(15),
+							Description: (string)("DcdcLedEnabled"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(16),
+							Description: (string)("PowertrainPumpEnabled"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(17),
+							Description: (string)("PowertrainFanEnabled"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(18),
+							Description: (string)("PowertrainFanSweeping"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(19),
+							Description: (string)("SequenceComplete"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(20),
+							Description: (string)("LostDcdcValid"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(21),
+							Description: (string)("DisabledLed"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(22),
+							Description: (string)("PowertrainPumpOff"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(23),
+							Description: (string)("PowertrainFanOff"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(24),
+							Description: (string)("PowertrainFanPwmOff"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(25),
+							Description: (string)("WaitingForOpenContactors"),
+						}),
+						(*descriptor.ValueDescription)(&descriptor.ValueDescription{
+							Value:       (int64)(26),
+							Description: (string)("DcdcEnabled"),
+						}),
+					}),
+					ReceiverNodes: ([]string)([]string{
+						(string)("RPI"),
+					}),
+					DefaultValue: (int)(0),
+				}),
+			}),
+			SenderNode: (string)("LVC"),
+			CycleTime:  (time.Duration)(0),
+			DelayTime:  (time.Duration)(0),
+		}),
 		(*descriptor.Message)(&descriptor.Message{
 			Name:        (string)("VC_Status"),
 			ID:          (uint32)(255),
@@ -4495,7 +4964,41 @@ var d = (*descriptor.Database)(&descriptor.Database{
 			DelayTime:  (time.Duration)(0),
 		}),
 		(*descriptor.Message)(&descriptor.Message{
-			Name:        (string)("Contactor_States"),
+			Name:        (string)("InverterCommand"),
+			ID:          (uint32)(1560),
+			IsExtended:  (bool)(false),
+			Length:      (uint8)(1),
+			SendType:    (descriptor.SendType)(0),
+			Description: (string)(""),
+			Signals: ([]*descriptor.Signal)([]*descriptor.Signal{
+				(*descriptor.Signal)(&descriptor.Signal{
+					Name:              (string)("EnableInverter"),
+					Start:             (uint8)(0),
+					Length:            (uint8)(1),
+					IsBigEndian:       (bool)(false),
+					IsSigned:          (bool)(false),
+					IsMultiplexer:     (bool)(false),
+					IsMultiplexed:     (bool)(false),
+					MultiplexerValue:  (uint)(0),
+					Offset:            (float64)(0),
+					Scale:             (float64)(1),
+					Min:               (float64)(0),
+					Max:               (float64)(0),
+					Unit:              (string)(""),
+					Description:       (string)(""),
+					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
+					ReceiverNodes: ([]string)([]string{
+						(string)("LVC"),
+					}),
+					DefaultValue: (int)(0),
+				}),
+			}),
+			SenderNode: (string)("FC"),
+			CycleTime:  (time.Duration)(0),
+			DelayTime:  (time.Duration)(0),
+		}),
+		(*descriptor.Message)(&descriptor.Message{
+			Name:        (string)("ContactorStates"),
 			ID:          (uint32)(1570),
 			IsExtended:  (bool)(false),
 			Length:      (uint8)(3),
@@ -4503,7 +5006,7 @@ var d = (*descriptor.Database)(&descriptor.Database{
 			Description: (string)(""),
 			Signals: ([]*descriptor.Signal)([]*descriptor.Signal{
 				(*descriptor.Signal)(&descriptor.Signal{
-					Name:              (string)("Pack_Positive"),
+					Name:              (string)("PackPositive"),
 					Start:             (uint8)(0),
 					Length:            (uint8)(8),
 					IsBigEndian:       (bool)(false),
@@ -4520,11 +5023,12 @@ var d = (*descriptor.Database)(&descriptor.Database{
 					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
 					ReceiverNodes: ([]string)([]string{
 						(string)("BMS"),
+						(string)("LVC"),
 					}),
 					DefaultValue: (int)(0),
 				}),
 				(*descriptor.Signal)(&descriptor.Signal{
-					Name:              (string)("Pack_Precharge"),
+					Name:              (string)("PackPrecharge"),
 					Start:             (uint8)(8),
 					Length:            (uint8)(8),
 					IsBigEndian:       (bool)(false),
@@ -4541,11 +5045,12 @@ var d = (*descriptor.Database)(&descriptor.Database{
 					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
 					ReceiverNodes: ([]string)([]string{
 						(string)("BMS"),
+						(string)("LVC"),
 					}),
 					DefaultValue: (int)(0),
 				}),
 				(*descriptor.Signal)(&descriptor.Signal{
-					Name:              (string)("Pack_Negative"),
+					Name:              (string)("PackNegative"),
 					Start:             (uint8)(16),
 					Length:            (uint8)(8),
 					IsBigEndian:       (bool)(false),
@@ -4562,6 +5067,7 @@ var d = (*descriptor.Database)(&descriptor.Database{
 					ValueDescriptions: ([]*descriptor.ValueDescription)(nil),
 					ReceiverNodes: ([]string)([]string{
 						(string)("BMS"),
+						(string)("LVC"),
 					}),
 					DefaultValue: (int)(0),
 				}),
@@ -5209,7 +5715,15 @@ var d = (*descriptor.Database)(&descriptor.Database{
 			Description: (string)(""),
 		}),
 		(*descriptor.Node)(&descriptor.Node{
+			Name:        (string)("LVC"),
+			Description: (string)(""),
+		}),
+		(*descriptor.Node)(&descriptor.Node{
 			Name:        (string)("PC_SG"),
+			Description: (string)(""),
+		}),
+		(*descriptor.Node)(&descriptor.Node{
+			Name:        (string)("RPI"),
 			Description: (string)(""),
 		}),
 		(*descriptor.Node)(&descriptor.Node{

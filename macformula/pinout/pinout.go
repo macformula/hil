@@ -8,58 +8,90 @@ import (
 	"github.com/pkg/errors"
 )
 
-type (
-	// DigitalPinout maps physical io to digital pins.
-	DigitalPinout map[PhysicalIo]iocontrol.DigitalPin
-	// AnalogPinout maps physical io to analog pins.
-	AnalogPinout map[PhysicalIo]iocontrol.AnalogPin
-)
+// DigitalPinout maps physical IO to digital pins.
+type DigitalPinout map[PhysicalIo]iocontrol.DigitalPin
 
+// AnalogPinout maps physical IO to analog pins.
+type AnalogPinout map[PhysicalIo]iocontrol.AnalogPin
+
+// Revision-specific digital input pinouts
 var _revisionDigitalInputPinout = map[Revision]DigitalPinout{
 	Ev5: {
-		HvilOk: speedgoat.NewDigitalPin(0),
+		InverterSwitchEn:           speedgoat.NewDigitalPin(0),
+		MotorControllerPrechargeEn: speedgoat.NewDigitalPin(1),
+		ShutdownCircuitEn:          speedgoat.NewDigitalPin(2),
+		AccumulatorEn:              speedgoat.NewDigitalPin(3),
 	},
-	MockTest: {
-		HvilOk: raspi.NewDigitalPin(),
-	},
+	MockTest: {},
 	Sil: {
-		IndicatorLed: sil.NewDigitalInputPin("DemoProject", IndicatorLed.String()),
+		IndicatorLed:               sil.NewDigitalInputPin("DemoProject", IndicatorLed.String()),
+		MotorControllerPrechargeEn: sil.NewDigitalInputPin("LvController", MotorControllerPrechargeEn.String()),
+		InverterSwitchEn:           sil.NewDigitalInputPin("LvController", InverterSwitchEn.String()),
+		AccumulatorEn:              sil.NewDigitalInputPin("LvController", AccumulatorEn.String()),
+		ShutdownCircuitEn:          sil.NewDigitalInputPin("LvController", ShutdownCircuitEn.String()),
+		DebugLedEn:                 sil.NewDigitalInputPin("FrontController", DebugLedEn.String()),
+		DashboardEn:                sil.NewDigitalInputPin("FrontController", DashboardEn.String()),
+		HvilLedEn:                  sil.NewDigitalInputPin("FrontController", HvilLedEn.String()),
+		BrakeLightEn:               sil.NewDigitalInputPin("FrontController", BrakeLightEn.String()),
+		StatusLedEn:                sil.NewDigitalInputPin("FrontController", StatusLedEn.String()),
+		RtdsEn:                     sil.NewDigitalInputPin("FrontController", RtdsEn.String()),
 	},
 }
 
+// Revision-specific digital output pinouts
 var _revisionDigitalOutputPinout = map[Revision]DigitalPinout{
 	Ev5: {
-		LvEnableButton:     speedgoat.NewDigitalPin(8),
-		ReadyToDriveButton: speedgoat.NewDigitalPin(9),
+		GlvmsDisable: speedgoat.NewDigitalPin(8),
+		StartButtonN: speedgoat.NewDigitalPin(9),
+		HvilDisable:  speedgoat.NewDigitalPin(10),
 	},
 	MockTest: {
-		LvEnableButton:     raspi.NewDigitalPin(),
-		ReadyToDriveButton: raspi.NewDigitalPin(),
+		StartButtonN: raspi.NewDigitalPin(),
 	},
 	Sil: {
-		IndicatorButton: sil.NewDigitalOutputPin("DemoProject", IndicatorButton.String()),
+		IndicatorButton:  sil.NewDigitalOutputPin("DemoProject", IndicatorButton.String()),
+		StartButtonN:     sil.NewDigitalOutputPin("FrontController", StartButtonN.String()),
+		WheelSpeedLeftA:  sil.NewDigitalOutputPin("FrontController", WheelSpeedLeftA.String()),
+		WheelSpeedLeftB:  sil.NewDigitalOutputPin("FrontController", WheelSpeedLeftB.String()),
+		WheelSpeedRightA: sil.NewDigitalOutputPin("FrontController", WheelSpeedRightA.String()),
+		WheelSpeedRightB: sil.NewDigitalOutputPin("FrontController", WheelSpeedRightB.String()),
+		HvilDisable:      sil.NewDigitalOutputPin("FrontController", HvilDisable.String()),
+		GlvmsDisable:     sil.NewDigitalOutputPin("LvController", GlvmsDisable.String()),
 	},
 }
 
+// Revision-specific analog input pinouts
 var _revisionAnalogInputPinout = map[Revision]AnalogPinout{
 	Ev5: {
-		LvController3v3RefVoltage: speedgoat.NewAnalogPin(0),
+		HvilFeedback:                 speedgoat.NewAnalogPin(0),
+		LvController3v3RefVoltage:    speedgoat.NewAnalogPin(1),
+		FrontController3v3RefVoltage: speedgoat.NewAnalogPin(2),
 	},
 	MockTest: {
 		LvController3v3RefVoltage: raspi.NewAnalogPin(),
 	},
+	Sil: {
+		HvilFeedback: sil.NewAnalogInputPin("FrontController", HvilFeedback.String()),
+	},
 }
 
+// Revision-specific analog output pinouts
 var _revisionAnalogOutputPinout = map[Revision]AnalogPinout{
 	Ev5: {
-		AcceleratorPedalPosition1: speedgoat.NewAnalogPin(8),
-		AcceleratorPedalPosition2: speedgoat.NewAnalogPin(1),
-		AccumulatorCurrent:        speedgoat.NewAnalogPin(2),
+		SteeringAngle:       speedgoat.NewAnalogPin(8),
+		HvCurrentSense:      speedgoat.NewAnalogPin(9),
+		AccelPedalPosition1: speedgoat.NewAnalogPin(10),
+		AccelPedalPosition2: speedgoat.NewAnalogPin(11),
 	},
 	MockTest: {
-		AcceleratorPedalPosition1: raspi.NewAnalogPin(),
-		AcceleratorPedalPosition2: raspi.NewAnalogPin(),
-		AccumulatorCurrent:        raspi.NewAnalogPin(),
+		AccelPedalPosition1: raspi.NewAnalogPin(),
+		AccelPedalPosition2: raspi.NewAnalogPin(),
+		HvCurrentSense:      raspi.NewAnalogPin(),
+	},
+	Sil: {
+		AccelPedalPosition1: sil.NewAnalogOutputPin("FrontController", AccelPedalPosition1.String()),
+		AccelPedalPosition2: sil.NewAnalogOutputPin("FrontController", AccelPedalPosition2.String()),
+		SteeringAngle:       sil.NewAnalogOutputPin("FrontController", SteeringAngle.String()),
 	},
 }
 
@@ -83,7 +115,7 @@ func GetDigitalOutputs(rev Revision) (DigitalPinout, error) {
 	return ret, nil
 }
 
-// GetAnalogInputs returns a analog input pinout for the given revision.
+// GetAnalogInputs returns an analog input pinout for the given revision.
 func GetAnalogInputs(rev Revision) (AnalogPinout, error) {
 	ret, ok := _revisionAnalogInputPinout[rev]
 	if !ok {
@@ -93,7 +125,7 @@ func GetAnalogInputs(rev Revision) (AnalogPinout, error) {
 	return ret, nil
 }
 
-// GetAnalogOutputs returns a analog output pinout for the given revision.
+// GetAnalogOutputs returns an analog output pinout for the given revision.
 func GetAnalogOutputs(rev Revision) (AnalogPinout, error) {
 	ret, ok := _revisionAnalogOutputPinout[rev]
 	if !ok {

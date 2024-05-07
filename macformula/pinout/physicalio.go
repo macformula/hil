@@ -1,28 +1,44 @@
 package pinout
 
-// PhysicalIo represents an input output in its physical meaning.
-type PhysicalIo int
-
 //go:generate enumer -type=PhysicalIo "physicalio.go"
+
+// PhysicalIo represents an input/output in its physical meaning.
+type PhysicalIo int
 
 const (
 	UnknownPhysicalIo PhysicalIo = iota
-	// LvEnableButton enables the low voltage system.
-	LvEnableButton
-	// ReadyToDriveButton is the final button to be pressed before the car can be driven.
-	ReadyToDriveButton
-	// HvilOk indicates that the high voltage interlock loop is satisfied.
-	HvilOk
-	// AcceleratorPedalPosition1 determines how fast the car should go. It should be offset from AcceleratorPedalPosition2.
-	AcceleratorPedalPosition1
-	// AcceleratorPedalPosition2 determines how fast the car should go. It should be offset from AcceleratorPedalPosition1.
-	AcceleratorPedalPosition2
-	// AccumulatorCurrent determines the current that is passing through the battery pack (accumulator).
-	AccumulatorCurrent
-	// LvController3v3RefVoltage is connected to the 3.3V touch point on the lv controller.
-	LvController3v3RefVoltage
-	// IndicatorLed is used in the firmware DemoProject.
+
+	// Front Controller IOs
+	DebugLedEn
+	DashboardEn
+	HvilLedEn
+	BrakeLightEn
+	StatusLedEn
+	RtdsEn
+	AccelPedalPosition1
+	AccelPedalPosition2
+	SteeringAngle
+	StartButtonN
+	WheelSpeedLeftA
+	WheelSpeedLeftB
+	WheelSpeedRightA
+	WheelSpeedRightB
+
+	// LV Controller IOs
+	MotorControllerPrechargeEn // Digital output from LV controller, read as digital input
+	InverterSwitchEn           // Digital output from LV controller, read as digital input
+	AccumulatorEn              // Digital output from LV controller, read as digital input
+	ShutdownCircuitEn          // Digital output from LV controller, read as digital input
+
+	// Test bench control IOs
+	HvCurrentSense               // Current through the accumulator (electrical signal only)
+	LvController3v3RefVoltage    // Connected to 3.3V touch point on LV controller
+	FrontController3v3RefVoltage // Connected to 3.3V touch point on front controller
+	HvilDisable                  // Disables HVIL on the test bench
+	HvilFeedback                 // Reads back HVIL circuit voltage on the testbench (max 5V)
+	GlvmsDisable                 // Disables power to the test bench
+
+	// Demo Project IOs
 	IndicatorLed
-	// IndicatorButton is used in the firmware DemoProject.
 	IndicatorButton
 )
