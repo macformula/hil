@@ -31,7 +31,7 @@ func NewAscii(l *zap.Logger) *Ascii {
 }
 
 // dumpToFile takes a CAN frame and writes it to an ASCII file
-func (a *Ascii) dumpToFile(frames []TimestampedFrame, traceDir, busName string) error {
+func (a *Ascii) DumpToFile(frames []TimestampedFrame, traceDir, busName string) error {
 	a.l.Info("dumping data to ascii file")
 
 	f, err := createTraceFile(traceDir, busName, _asciiFileSuffix)

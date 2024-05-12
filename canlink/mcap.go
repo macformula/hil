@@ -61,7 +61,7 @@ func NewMcap(c *CanClient, l *zap.Logger) *Mcap {
 }
 
 // dumpToFile takes a CAN frame and writes it to an MCAP file.
-func (m *Mcap) dumpToFile(frames []TimestampedFrame, traceDirectory, busName string) error {
+func (m *Mcap) DumpToFile(frames []TimestampedFrame, traceDirectory, busName string) error {
 	var (
 		oneTimeErr        = utils.ResettableError{}
 		mcapWriterOptions = &mcap.WriterOptions{

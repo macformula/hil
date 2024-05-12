@@ -144,7 +144,7 @@ func (t *Tracer) StopTrace() error {
 
 		t.l.Debug("dumping cached data to files", zap.Int("num_frames", len(t.cachedData)))
 		for _, files := range t.types {
-			err := files.dumpToFile(t.cachedData, t.traceDir, t.busName)
+			err := files.DumpToFile(t.cachedData, t.traceDir, t.busName)
 
 			if err != nil {
 				t.l.Error("failed to dump to file", zap.Error(err))
