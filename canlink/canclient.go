@@ -2,12 +2,11 @@ package canlink
 
 import (
 	"context"
-	"net"
-
 	"go.einride.tech/can"
 	"go.einride.tech/can/pkg/generated"
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
+	"net"
 
 	"github.com/pkg/errors"
 )

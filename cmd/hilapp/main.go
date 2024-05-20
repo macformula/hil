@@ -30,7 +30,7 @@ const (
 	_canNetwork      = "can"
 	_vehCan          = "veh"
 	_ptCan           = "pt"
-	_defaultLogLevel = zap.DebugLevel
+	_defaultLogLevel = zap.InfoLevel
 )
 
 // These are set by the build.sh
@@ -51,16 +51,19 @@ func main() {
 	// Parse command-line flags before accessing them.
 	flag.Parse()
 
+	// Print version and exit.
 	if *version {
 		fmt.Printf("Git Commit: %v (%s)\n", GitCommit, DirtyVsCleanCommit)
 		fmt.Printf("Date Built: %v\n", Date)
 		return
 	}
 
+	// Config path is required.
 	if *configPath == "" {
 		fmt.Println("Missing required flag: --config")
 	}
 
+	// Set log level.
 	logLevel, err := zapcore.ParseLevel(*logLevelStr)
 	if err != nil {
 		fmt.Printf("Invalid log level (%s)", *logLevelStr)
@@ -85,7 +88,6 @@ func main() {
 
 	loggerConfig := zap.NewDevelopmentConfig()
 	loggerConfig.OutputPaths = []string{logFilePath}
-
 	loggerConfig.Level = zap.NewAtomicLevelAt(logLevel)
 
 	logger, err := loggerConfig.Build()
