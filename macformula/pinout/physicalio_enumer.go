@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _PhysicalIoName = "UnknownPhysicalIoLvEnableButtonReadyToDriveButtonHvilOkAccumulatorCurrentLvController3v3RefVoltageFrontController3v3RefVoltageIndicatorLedIndicatorButtonHvCurrentSenseMotorControllerPrechargeEnInverterEnShutdownCircuitEnAccumulatorEnGlvmsDisableDebugLedEnDashboardEnHvilLedEnBrakeLightEnStatusLedEnRtdsEnAccelPedalPosition1AccelPedalPosition2BrakePedalPosition1BrakePedalPosition2SuspensionTravel1SuspensionTravel2HvilFeedbackSteeringAngleStartButtonNWheelSpeedLeftAWheelSpeedLeftBWheelSpeedRightAWheelSpeedRightBWaitForStartHvilDisableSgTestOutputSgTestInput"
+const _PhysicalIoName = "UnknownPhysicalIoDebugLedEnDashboardEnHvilLedEnBrakeLightEnStatusLedEnRtdsEnAccelPedalPosition1AccelPedalPosition2BrakePedalPosition1BrakePedalPosition2SuspensionTravel1SuspensionTravel2SteeringAngleStartButtonNWheelSpeedLeftAWheelSpeedLeftBWheelSpeedRightAWheelSpeedRightBMotorControllerPrechargeEnInverterEnAccumulatorEnShutdownCircuitEnTsalEnRaspiEnFrontControllerEnSpeedgoatEnMotorControllerEnImuGpsEnDcdcValidDcdcEnDcdcEnLedPowerTrainPumpEnPowertrainFanEnHvCurrentSenseLvController3v3RefVoltageFrontController3v3RefVoltageHvilDisableHvilFeedbackGlvmsDisableIndicatorLedIndicatorButton"
 
-var _PhysicalIoIndex = [...]uint16{0, 17, 31, 49, 55, 73, 98, 126, 138, 153, 167, 193, 203, 220, 233, 245, 255, 266, 275, 287, 298, 304, 323, 342, 361, 380, 397, 414, 426, 439, 451, 466, 481, 497, 513, 525, 536, 548, 559}
+var _PhysicalIoIndex = [...]uint16{0, 17, 27, 38, 47, 59, 70, 76, 95, 114, 133, 152, 169, 186, 199, 211, 226, 241, 257, 273, 299, 309, 322, 339, 345, 352, 369, 380, 397, 405, 414, 420, 429, 445, 460, 474, 499, 527, 538, 550, 562, 574, 589}
 
-const _PhysicalIoLowerName = "unknownphysicaliolvenablebuttonreadytodrivebuttonhvilokaccumulatorcurrentlvcontroller3v3refvoltagefrontcontroller3v3refvoltageindicatorledindicatorbuttonhvcurrentsensemotorcontrollerprechargeeninverterenshutdowncircuitenaccumulatorenglvmsdisabledebugledendashboardenhvilledenbrakelightenstatusledenrtdsenaccelpedalposition1accelpedalposition2brakepedalposition1brakepedalposition2suspensiontravel1suspensiontravel2hvilfeedbacksteeringanglestartbuttonnwheelspeedleftawheelspeedleftbwheelspeedrightawheelspeedrightbwaitforstarthvildisablesgtestoutputsgtestinput"
+const _PhysicalIoLowerName = "unknownphysicaliodebugledendashboardenhvilledenbrakelightenstatusledenrtdsenaccelpedalposition1accelpedalposition2brakepedalposition1brakepedalposition2suspensiontravel1suspensiontravel2steeringanglestartbuttonnwheelspeedleftawheelspeedleftbwheelspeedrightawheelspeedrightbmotorcontrollerprechargeeninverterenaccumulatorenshutdowncircuitentsalenraspienfrontcontrollerenspeedgoatenmotorcontrollerenimugpsendcdcvaliddcdcendcdcenledpowertrainpumpenpowertrainfanenhvcurrentsenselvcontroller3v3refvoltagefrontcontroller3v3refvoltagehvildisablehvilfeedbackglvmsdisableindicatorledindicatorbutton"
 
 func (i PhysicalIo) String() string {
 	if i < 0 || i >= PhysicalIo(len(_PhysicalIoIndex)-1) {
@@ -25,165 +25,181 @@ func (i PhysicalIo) String() string {
 func _PhysicalIoNoOp() {
 	var x [1]struct{}
 	_ = x[UnknownPhysicalIo-(0)]
-	_ = x[LvEnableButton-(1)]
-	_ = x[ReadyToDriveButton-(2)]
-	_ = x[HvilOk-(3)]
-	_ = x[AccumulatorCurrent-(4)]
-	_ = x[LvController3v3RefVoltage-(5)]
-	_ = x[FrontController3v3RefVoltage-(6)]
-	_ = x[IndicatorLed-(7)]
-	_ = x[IndicatorButton-(8)]
-	_ = x[HvCurrentSense-(9)]
-	_ = x[MotorControllerPrechargeEn-(10)]
-	_ = x[InverterEn-(11)]
-	_ = x[ShutdownCircuitEn-(12)]
-	_ = x[AccumulatorEn-(13)]
-	_ = x[GlvmsDisable-(14)]
-	_ = x[DebugLedEn-(15)]
-	_ = x[DashboardEn-(16)]
-	_ = x[HvilLedEn-(17)]
-	_ = x[BrakeLightEn-(18)]
-	_ = x[StatusLedEn-(19)]
-	_ = x[RtdsEn-(20)]
-	_ = x[AccelPedalPosition1-(21)]
-	_ = x[AccelPedalPosition2-(22)]
-	_ = x[BrakePedalPosition1-(23)]
-	_ = x[BrakePedalPosition2-(24)]
-	_ = x[SuspensionTravel1-(25)]
-	_ = x[SuspensionTravel2-(26)]
-	_ = x[HvilFeedback-(27)]
-	_ = x[SteeringAngle-(28)]
-	_ = x[StartButtonN-(29)]
-	_ = x[WheelSpeedLeftA-(30)]
-	_ = x[WheelSpeedLeftB-(31)]
-	_ = x[WheelSpeedRightA-(32)]
-	_ = x[WheelSpeedRightB-(33)]
-	_ = x[WaitForStart-(34)]
-	_ = x[HvilDisable-(35)]
-	_ = x[SgTestOutput-(36)]
-	_ = x[SgTestInput-(37)]
+	_ = x[DebugLedEn-(1)]
+	_ = x[DashboardEn-(2)]
+	_ = x[HvilLedEn-(3)]
+	_ = x[BrakeLightEn-(4)]
+	_ = x[StatusLedEn-(5)]
+	_ = x[RtdsEn-(6)]
+	_ = x[AccelPedalPosition1-(7)]
+	_ = x[AccelPedalPosition2-(8)]
+	_ = x[BrakePedalPosition1-(9)]
+	_ = x[BrakePedalPosition2-(10)]
+	_ = x[SuspensionTravel1-(11)]
+	_ = x[SuspensionTravel2-(12)]
+	_ = x[SteeringAngle-(13)]
+	_ = x[StartButtonN-(14)]
+	_ = x[WheelSpeedLeftA-(15)]
+	_ = x[WheelSpeedLeftB-(16)]
+	_ = x[WheelSpeedRightA-(17)]
+	_ = x[WheelSpeedRightB-(18)]
+	_ = x[MotorControllerPrechargeEn-(19)]
+	_ = x[InverterEn-(20)]
+	_ = x[AccumulatorEn-(21)]
+	_ = x[ShutdownCircuitEn-(22)]
+	_ = x[TsalEn-(23)]
+	_ = x[RaspiEn-(24)]
+	_ = x[FrontControllerEn-(25)]
+	_ = x[SpeedgoatEn-(26)]
+	_ = x[MotorControllerEn-(27)]
+	_ = x[ImuGpsEn-(28)]
+	_ = x[DcdcValid-(29)]
+	_ = x[DcdcEn-(30)]
+	_ = x[DcdcEnLed-(31)]
+	_ = x[PowerTrainPumpEn-(32)]
+	_ = x[PowertrainFanEn-(33)]
+	_ = x[HvCurrentSense-(34)]
+	_ = x[LvController3v3RefVoltage-(35)]
+	_ = x[FrontController3v3RefVoltage-(36)]
+	_ = x[HvilDisable-(37)]
+	_ = x[HvilFeedback-(38)]
+	_ = x[GlvmsDisable-(39)]
+	_ = x[IndicatorLed-(40)]
+	_ = x[IndicatorButton-(41)]
 }
 
-var _PhysicalIoValues = []PhysicalIo{UnknownPhysicalIo, LvEnableButton, ReadyToDriveButton, HvilOk, AccumulatorCurrent, LvController3v3RefVoltage, FrontController3v3RefVoltage, IndicatorLed, IndicatorButton, HvCurrentSense, MotorControllerPrechargeEn, InverterEn, ShutdownCircuitEn, AccumulatorEn, GlvmsDisable, DebugLedEn, DashboardEn, HvilLedEn, BrakeLightEn, StatusLedEn, RtdsEn, AccelPedalPosition1, AccelPedalPosition2, BrakePedalPosition1, BrakePedalPosition2, SuspensionTravel1, SuspensionTravel2, HvilFeedback, SteeringAngle, StartButtonN, WheelSpeedLeftA, WheelSpeedLeftB, WheelSpeedRightA, WheelSpeedRightB, WaitForStart, HvilDisable, SgTestOutput, SgTestInput}
+var _PhysicalIoValues = []PhysicalIo{UnknownPhysicalIo, DebugLedEn, DashboardEn, HvilLedEn, BrakeLightEn, StatusLedEn, RtdsEn, AccelPedalPosition1, AccelPedalPosition2, BrakePedalPosition1, BrakePedalPosition2, SuspensionTravel1, SuspensionTravel2, SteeringAngle, StartButtonN, WheelSpeedLeftA, WheelSpeedLeftB, WheelSpeedRightA, WheelSpeedRightB, MotorControllerPrechargeEn, InverterEn, AccumulatorEn, ShutdownCircuitEn, TsalEn, RaspiEn, FrontControllerEn, SpeedgoatEn, MotorControllerEn, ImuGpsEn, DcdcValid, DcdcEn, DcdcEnLed, PowerTrainPumpEn, PowertrainFanEn, HvCurrentSense, LvController3v3RefVoltage, FrontController3v3RefVoltage, HvilDisable, HvilFeedback, GlvmsDisable, IndicatorLed, IndicatorButton}
 
 var _PhysicalIoNameToValueMap = map[string]PhysicalIo{
 	_PhysicalIoName[0:17]:         UnknownPhysicalIo,
 	_PhysicalIoLowerName[0:17]:    UnknownPhysicalIo,
-	_PhysicalIoName[17:31]:        LvEnableButton,
-	_PhysicalIoLowerName[17:31]:   LvEnableButton,
-	_PhysicalIoName[31:49]:        ReadyToDriveButton,
-	_PhysicalIoLowerName[31:49]:   ReadyToDriveButton,
-	_PhysicalIoName[49:55]:        HvilOk,
-	_PhysicalIoLowerName[49:55]:   HvilOk,
-	_PhysicalIoName[55:73]:        AccumulatorCurrent,
-	_PhysicalIoLowerName[55:73]:   AccumulatorCurrent,
-	_PhysicalIoName[73:98]:        LvController3v3RefVoltage,
-	_PhysicalIoLowerName[73:98]:   LvController3v3RefVoltage,
-	_PhysicalIoName[98:126]:       FrontController3v3RefVoltage,
-	_PhysicalIoLowerName[98:126]:  FrontController3v3RefVoltage,
-	_PhysicalIoName[126:138]:      IndicatorLed,
-	_PhysicalIoLowerName[126:138]: IndicatorLed,
-	_PhysicalIoName[138:153]:      IndicatorButton,
-	_PhysicalIoLowerName[138:153]: IndicatorButton,
-	_PhysicalIoName[153:167]:      HvCurrentSense,
-	_PhysicalIoLowerName[153:167]: HvCurrentSense,
-	_PhysicalIoName[167:193]:      MotorControllerPrechargeEn,
-	_PhysicalIoLowerName[167:193]: MotorControllerPrechargeEn,
-	_PhysicalIoName[193:203]:      InverterEn,
-	_PhysicalIoLowerName[193:203]: InverterEn,
-	_PhysicalIoName[203:220]:      ShutdownCircuitEn,
-	_PhysicalIoLowerName[203:220]: ShutdownCircuitEn,
-	_PhysicalIoName[220:233]:      AccumulatorEn,
-	_PhysicalIoLowerName[220:233]: AccumulatorEn,
-	_PhysicalIoName[233:245]:      GlvmsDisable,
-	_PhysicalIoLowerName[233:245]: GlvmsDisable,
-	_PhysicalIoName[245:255]:      DebugLedEn,
-	_PhysicalIoLowerName[245:255]: DebugLedEn,
-	_PhysicalIoName[255:266]:      DashboardEn,
-	_PhysicalIoLowerName[255:266]: DashboardEn,
-	_PhysicalIoName[266:275]:      HvilLedEn,
-	_PhysicalIoLowerName[266:275]: HvilLedEn,
-	_PhysicalIoName[275:287]:      BrakeLightEn,
-	_PhysicalIoLowerName[275:287]: BrakeLightEn,
-	_PhysicalIoName[287:298]:      StatusLedEn,
-	_PhysicalIoLowerName[287:298]: StatusLedEn,
-	_PhysicalIoName[298:304]:      RtdsEn,
-	_PhysicalIoLowerName[298:304]: RtdsEn,
-	_PhysicalIoName[304:323]:      AccelPedalPosition1,
-	_PhysicalIoLowerName[304:323]: AccelPedalPosition1,
-	_PhysicalIoName[323:342]:      AccelPedalPosition2,
-	_PhysicalIoLowerName[323:342]: AccelPedalPosition2,
-	_PhysicalIoName[342:361]:      BrakePedalPosition1,
-	_PhysicalIoLowerName[342:361]: BrakePedalPosition1,
-	_PhysicalIoName[361:380]:      BrakePedalPosition2,
-	_PhysicalIoLowerName[361:380]: BrakePedalPosition2,
-	_PhysicalIoName[380:397]:      SuspensionTravel1,
-	_PhysicalIoLowerName[380:397]: SuspensionTravel1,
-	_PhysicalIoName[397:414]:      SuspensionTravel2,
-	_PhysicalIoLowerName[397:414]: SuspensionTravel2,
-	_PhysicalIoName[414:426]:      HvilFeedback,
-	_PhysicalIoLowerName[414:426]: HvilFeedback,
-	_PhysicalIoName[426:439]:      SteeringAngle,
-	_PhysicalIoLowerName[426:439]: SteeringAngle,
-	_PhysicalIoName[439:451]:      StartButtonN,
-	_PhysicalIoLowerName[439:451]: StartButtonN,
-	_PhysicalIoName[451:466]:      WheelSpeedLeftA,
-	_PhysicalIoLowerName[451:466]: WheelSpeedLeftA,
-	_PhysicalIoName[466:481]:      WheelSpeedLeftB,
-	_PhysicalIoLowerName[466:481]: WheelSpeedLeftB,
-	_PhysicalIoName[481:497]:      WheelSpeedRightA,
-	_PhysicalIoLowerName[481:497]: WheelSpeedRightA,
-	_PhysicalIoName[497:513]:      WheelSpeedRightB,
-	_PhysicalIoLowerName[497:513]: WheelSpeedRightB,
-	_PhysicalIoName[513:525]:      WaitForStart,
-	_PhysicalIoLowerName[513:525]: WaitForStart,
-	_PhysicalIoName[525:536]:      HvilDisable,
-	_PhysicalIoLowerName[525:536]: HvilDisable,
-	_PhysicalIoName[536:548]:      SgTestOutput,
-	_PhysicalIoLowerName[536:548]: SgTestOutput,
-	_PhysicalIoName[548:559]:      SgTestInput,
-	_PhysicalIoLowerName[548:559]: SgTestInput,
+	_PhysicalIoName[17:27]:        DebugLedEn,
+	_PhysicalIoLowerName[17:27]:   DebugLedEn,
+	_PhysicalIoName[27:38]:        DashboardEn,
+	_PhysicalIoLowerName[27:38]:   DashboardEn,
+	_PhysicalIoName[38:47]:        HvilLedEn,
+	_PhysicalIoLowerName[38:47]:   HvilLedEn,
+	_PhysicalIoName[47:59]:        BrakeLightEn,
+	_PhysicalIoLowerName[47:59]:   BrakeLightEn,
+	_PhysicalIoName[59:70]:        StatusLedEn,
+	_PhysicalIoLowerName[59:70]:   StatusLedEn,
+	_PhysicalIoName[70:76]:        RtdsEn,
+	_PhysicalIoLowerName[70:76]:   RtdsEn,
+	_PhysicalIoName[76:95]:        AccelPedalPosition1,
+	_PhysicalIoLowerName[76:95]:   AccelPedalPosition1,
+	_PhysicalIoName[95:114]:       AccelPedalPosition2,
+	_PhysicalIoLowerName[95:114]:  AccelPedalPosition2,
+	_PhysicalIoName[114:133]:      BrakePedalPosition1,
+	_PhysicalIoLowerName[114:133]: BrakePedalPosition1,
+	_PhysicalIoName[133:152]:      BrakePedalPosition2,
+	_PhysicalIoLowerName[133:152]: BrakePedalPosition2,
+	_PhysicalIoName[152:169]:      SuspensionTravel1,
+	_PhysicalIoLowerName[152:169]: SuspensionTravel1,
+	_PhysicalIoName[169:186]:      SuspensionTravel2,
+	_PhysicalIoLowerName[169:186]: SuspensionTravel2,
+	_PhysicalIoName[186:199]:      SteeringAngle,
+	_PhysicalIoLowerName[186:199]: SteeringAngle,
+	_PhysicalIoName[199:211]:      StartButtonN,
+	_PhysicalIoLowerName[199:211]: StartButtonN,
+	_PhysicalIoName[211:226]:      WheelSpeedLeftA,
+	_PhysicalIoLowerName[211:226]: WheelSpeedLeftA,
+	_PhysicalIoName[226:241]:      WheelSpeedLeftB,
+	_PhysicalIoLowerName[226:241]: WheelSpeedLeftB,
+	_PhysicalIoName[241:257]:      WheelSpeedRightA,
+	_PhysicalIoLowerName[241:257]: WheelSpeedRightA,
+	_PhysicalIoName[257:273]:      WheelSpeedRightB,
+	_PhysicalIoLowerName[257:273]: WheelSpeedRightB,
+	_PhysicalIoName[273:299]:      MotorControllerPrechargeEn,
+	_PhysicalIoLowerName[273:299]: MotorControllerPrechargeEn,
+	_PhysicalIoName[299:309]:      InverterEn,
+	_PhysicalIoLowerName[299:309]: InverterEn,
+	_PhysicalIoName[309:322]:      AccumulatorEn,
+	_PhysicalIoLowerName[309:322]: AccumulatorEn,
+	_PhysicalIoName[322:339]:      ShutdownCircuitEn,
+	_PhysicalIoLowerName[322:339]: ShutdownCircuitEn,
+	_PhysicalIoName[339:345]:      TsalEn,
+	_PhysicalIoLowerName[339:345]: TsalEn,
+	_PhysicalIoName[345:352]:      RaspiEn,
+	_PhysicalIoLowerName[345:352]: RaspiEn,
+	_PhysicalIoName[352:369]:      FrontControllerEn,
+	_PhysicalIoLowerName[352:369]: FrontControllerEn,
+	_PhysicalIoName[369:380]:      SpeedgoatEn,
+	_PhysicalIoLowerName[369:380]: SpeedgoatEn,
+	_PhysicalIoName[380:397]:      MotorControllerEn,
+	_PhysicalIoLowerName[380:397]: MotorControllerEn,
+	_PhysicalIoName[397:405]:      ImuGpsEn,
+	_PhysicalIoLowerName[397:405]: ImuGpsEn,
+	_PhysicalIoName[405:414]:      DcdcValid,
+	_PhysicalIoLowerName[405:414]: DcdcValid,
+	_PhysicalIoName[414:420]:      DcdcEn,
+	_PhysicalIoLowerName[414:420]: DcdcEn,
+	_PhysicalIoName[420:429]:      DcdcEnLed,
+	_PhysicalIoLowerName[420:429]: DcdcEnLed,
+	_PhysicalIoName[429:445]:      PowerTrainPumpEn,
+	_PhysicalIoLowerName[429:445]: PowerTrainPumpEn,
+	_PhysicalIoName[445:460]:      PowertrainFanEn,
+	_PhysicalIoLowerName[445:460]: PowertrainFanEn,
+	_PhysicalIoName[460:474]:      HvCurrentSense,
+	_PhysicalIoLowerName[460:474]: HvCurrentSense,
+	_PhysicalIoName[474:499]:      LvController3v3RefVoltage,
+	_PhysicalIoLowerName[474:499]: LvController3v3RefVoltage,
+	_PhysicalIoName[499:527]:      FrontController3v3RefVoltage,
+	_PhysicalIoLowerName[499:527]: FrontController3v3RefVoltage,
+	_PhysicalIoName[527:538]:      HvilDisable,
+	_PhysicalIoLowerName[527:538]: HvilDisable,
+	_PhysicalIoName[538:550]:      HvilFeedback,
+	_PhysicalIoLowerName[538:550]: HvilFeedback,
+	_PhysicalIoName[550:562]:      GlvmsDisable,
+	_PhysicalIoLowerName[550:562]: GlvmsDisable,
+	_PhysicalIoName[562:574]:      IndicatorLed,
+	_PhysicalIoLowerName[562:574]: IndicatorLed,
+	_PhysicalIoName[574:589]:      IndicatorButton,
+	_PhysicalIoLowerName[574:589]: IndicatorButton,
 }
 
 var _PhysicalIoNames = []string{
 	_PhysicalIoName[0:17],
-	_PhysicalIoName[17:31],
-	_PhysicalIoName[31:49],
-	_PhysicalIoName[49:55],
-	_PhysicalIoName[55:73],
-	_PhysicalIoName[73:98],
-	_PhysicalIoName[98:126],
-	_PhysicalIoName[126:138],
-	_PhysicalIoName[138:153],
-	_PhysicalIoName[153:167],
-	_PhysicalIoName[167:193],
-	_PhysicalIoName[193:203],
-	_PhysicalIoName[203:220],
-	_PhysicalIoName[220:233],
-	_PhysicalIoName[233:245],
-	_PhysicalIoName[245:255],
-	_PhysicalIoName[255:266],
-	_PhysicalIoName[266:275],
-	_PhysicalIoName[275:287],
-	_PhysicalIoName[287:298],
-	_PhysicalIoName[298:304],
-	_PhysicalIoName[304:323],
-	_PhysicalIoName[323:342],
-	_PhysicalIoName[342:361],
-	_PhysicalIoName[361:380],
+	_PhysicalIoName[17:27],
+	_PhysicalIoName[27:38],
+	_PhysicalIoName[38:47],
+	_PhysicalIoName[47:59],
+	_PhysicalIoName[59:70],
+	_PhysicalIoName[70:76],
+	_PhysicalIoName[76:95],
+	_PhysicalIoName[95:114],
+	_PhysicalIoName[114:133],
+	_PhysicalIoName[133:152],
+	_PhysicalIoName[152:169],
+	_PhysicalIoName[169:186],
+	_PhysicalIoName[186:199],
+	_PhysicalIoName[199:211],
+	_PhysicalIoName[211:226],
+	_PhysicalIoName[226:241],
+	_PhysicalIoName[241:257],
+	_PhysicalIoName[257:273],
+	_PhysicalIoName[273:299],
+	_PhysicalIoName[299:309],
+	_PhysicalIoName[309:322],
+	_PhysicalIoName[322:339],
+	_PhysicalIoName[339:345],
+	_PhysicalIoName[345:352],
+	_PhysicalIoName[352:369],
+	_PhysicalIoName[369:380],
 	_PhysicalIoName[380:397],
-	_PhysicalIoName[397:414],
-	_PhysicalIoName[414:426],
-	_PhysicalIoName[426:439],
-	_PhysicalIoName[439:451],
-	_PhysicalIoName[451:466],
-	_PhysicalIoName[466:481],
-	_PhysicalIoName[481:497],
-	_PhysicalIoName[497:513],
-	_PhysicalIoName[513:525],
-	_PhysicalIoName[525:536],
-	_PhysicalIoName[536:548],
-	_PhysicalIoName[548:559],
+	_PhysicalIoName[397:405],
+	_PhysicalIoName[405:414],
+	_PhysicalIoName[414:420],
+	_PhysicalIoName[420:429],
+	_PhysicalIoName[429:445],
+	_PhysicalIoName[445:460],
+	_PhysicalIoName[460:474],
+	_PhysicalIoName[474:499],
+	_PhysicalIoName[499:527],
+	_PhysicalIoName[527:538],
+	_PhysicalIoName[538:550],
+	_PhysicalIoName[550:562],
+	_PhysicalIoName[562:574],
+	_PhysicalIoName[574:589],
 }
 
 // PhysicalIoString retrieves an enum value from the enum constants string name.
