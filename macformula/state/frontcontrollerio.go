@@ -30,13 +30,19 @@ func (f *frontControllerIo) Name() string {
 	return _frontControllerIo
 }
 
+// Setup will power-cycle the testbench.
 func (f *frontControllerIo) Setup(_ context.Context) error {
-	err := f.pinController.SetDigitalLevel(pinout.WaitForStart, true)
+	err := f.pinController.SetDigitalLevel(pinout.GlvmsDisable, true)
 	if err != nil {
 		return errors.Wrap(err, "set digital level")
 	}
 
 	time.Sleep(100 * time.Millisecond)
+
+	err = f.pinController.SetDigitalLevel(pinout.GlvmsDisable, false)
+	if err != nil {
+		return errors.Wrap(err, "set digital level")
+	}
 
 	return nil
 }
