@@ -23,9 +23,7 @@ var _revisionDigitalInputPinout = map[Revision]DigitalPinout{
 		ShutdownCircuitEn:          speedgoat.NewDigitalPin(2),
 		AccumulatorEn:              speedgoat.NewDigitalPin(3),
 	},
-	MockTest: {
-		HvilOk: raspi.NewDigitalPin(),
-	},
+	MockTest: {},
 	Sil: {
 		IndicatorLed: sil.NewDigitalInputPin("DemoProject", IndicatorLed.String()),
 		DebugLedEn:   sil.NewDigitalInputPin(fwutils.FrontController.String(), DebugLedEn.String()),
@@ -35,20 +33,16 @@ var _revisionDigitalInputPinout = map[Revision]DigitalPinout{
 		StatusLedEn:  sil.NewDigitalInputPin(fwutils.FrontController.String(), StatusLedEn.String()),
 		RtdsEn:       sil.NewDigitalInputPin(fwutils.FrontController.String(), RtdsEn.String()),
 	},
-	SgTest: {
-		SgTestInput: speedgoat.NewDigitalPin(6),
-	},
 }
 
 var _revisionDigitalOutputPinout = map[Revision]DigitalPinout{
 	Ev5: {
-		GlvmsDisable:       speedgoat.NewDigitalPin(8),
-		ReadyToDriveButton: speedgoat.NewDigitalPin(9),
-		HvilDisable:        speedgoat.NewDigitalPin(10),
+		GlvmsDisable: speedgoat.NewDigitalPin(8),
+		StartButtonN: speedgoat.NewDigitalPin(9),
+		HvilDisable:  speedgoat.NewDigitalPin(10),
 	},
 	MockTest: {
-		LvEnableButton:     raspi.NewDigitalPin(),
-		ReadyToDriveButton: raspi.NewDigitalPin(),
+		StartButtonN: raspi.NewDigitalPin(),
 	},
 	Sil: {
 		IndicatorButton:  sil.NewDigitalOutputPin("DemoProject", IndicatorButton.String()),
@@ -57,11 +51,7 @@ var _revisionDigitalOutputPinout = map[Revision]DigitalPinout{
 		WheelSpeedLeftB:  sil.NewDigitalOutputPin(fwutils.FrontController.String(), WheelSpeedLeftB.String()),
 		WheelSpeedRightA: sil.NewDigitalOutputPin(fwutils.FrontController.String(), WheelSpeedRightA.String()),
 		WheelSpeedRightB: sil.NewDigitalOutputPin(fwutils.FrontController.String(), WheelSpeedRightB.String()),
-		WaitForStart:     sil.NewDigitalOutputPin(fwutils.FrontController.String(), WaitForStart.String()),
 		HvilDisable:      sil.NewDigitalOutputPin(fwutils.FrontController.String(), HvilDisable.String()),
-	},
-	SgTest: {
-		SgTestOutput: speedgoat.NewDigitalPin(12),
 	},
 }
 
@@ -90,7 +80,7 @@ var _revisionAnalogOutputPinout = map[Revision]AnalogPinout{
 	MockTest: {
 		AccelPedalPosition1: raspi.NewAnalogPin(),
 		AccelPedalPosition2: raspi.NewAnalogPin(),
-		AccumulatorCurrent:  raspi.NewAnalogPin(),
+		HvCurrentSense:      raspi.NewAnalogPin(),
 	},
 	Sil: {
 		AccelPedalPosition1: sil.NewAnalogOutputPin(fwutils.FrontController.String(), AccelPedalPosition1.String()),
