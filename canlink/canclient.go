@@ -65,11 +65,6 @@ func (c *CanClient) Open() error {
 
 // Close closes the socketcan receiver. This also kills the receive() goroutine.
 func (c *CanClient) Close() error {
-	err := c.rx.Close()
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 

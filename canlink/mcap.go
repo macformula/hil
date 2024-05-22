@@ -137,9 +137,14 @@ func (m *Mcap) writeCanMessage(timestampedFrame *TimestampedFrame) error {
 	msg := frame.Descriptor()
 	signals := msg.Signals
 	msgData := frame.Frame().Data
+	println("frame id: ", timestampedFrame.Frame.ID, frame.String(), m.nextChannelId)
+	for key, value := range m.signalChannelIds {
+		fmt.Printf("Key: %s, Value: %d\n", key, value)
+	}
 
 	for _, sig := range signals {
 		sigValue := sig.UnmarshalPhysical(msgData)
+		println(sigValue)
 
 		err = m.writeCanSignal(msg.Name, sig.Name, sigValue, timestampedFrame.Time)
 		if err != nil {
@@ -188,9 +193,10 @@ func (m *Mcap) writeCanSignal(msgName, sigName string, signalValue float64, rece
 
 func (m *Mcap) getChannelId(msgName, sigName string) (channelId, error) {
 	chanId, ok := m.signalChannelIds[msgName+sigName]
+	println(ok)
 	if !ok {
 		chanId = m.nextChannelId
-		m.signalChannelIds[sigName] = chanId
+		m.signalChannelIds[msgName+sigName] = chanId
 		// Increment channel id for next added signal.
 		m.nextChannelId++
 
@@ -213,7 +219,7 @@ func (m *Mcap) getChannelId(msgName, sigName string) (channelId, error) {
 func (m *Mcap) createChannel(msgName, sigName string, chanId channelId) error {
 	mcapChannel := mcap.Channel{
 		ID:              chanId,
-		Topic:           fmt.Sprintf("%s.%s", msgName, sigName),
+		Topic:           fmt.Sprintf("%s+%s", msgName, sigName),
 		MessageEncoding: _json,
 		SchemaID:        _schemaId,
 	}
