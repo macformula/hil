@@ -19,7 +19,7 @@ var (
 
 var _ecuToStlinkSerialNumber = map[fwutils.Ecu]string{
 	fwutils.FrontController: "000F00205632500A20313236",
-	fwutils.LvController:    "0006002A5632500920313236",
+	fwutils.LvController:    "001B003B5632500A20313236",
 	fwutils.DashController:  "0671FF363931594E43062231",
 }
 
