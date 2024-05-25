@@ -3,10 +3,11 @@ package results
 import (
 	"context"
 	"fmt"
-	"go.uber.org/zap"
 	"os/exec"
 	"runtime"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/google/uuid"
 	proto "github.com/macformula/hil/results/client/generated"
@@ -107,7 +108,7 @@ func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) 
 	if !reply.Success {
 		return false, errors.New(reply.Error)
 	}
-	fmt.Printf("SubmitTag: Tag: %s, Value: %v\n", request.Tag, request.Data)
+	fmt.Printf("SubmitTags: Tag: %s, Value: %v\n", request.Tag, request.Data)
 
 	return reply.IsPassing, nil
 }
