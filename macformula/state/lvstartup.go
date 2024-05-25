@@ -2,13 +2,14 @@ package state
 
 import (
 	"context"
-	"github.com/macformula/hil/macformula/ecu/frontcontroller"
 	"time"
 
 	"go.uber.org/zap"
 
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/macformula"
+	"github.com/macformula/hil/macformula/config"
+	"github.com/macformula/hil/macformula/ecu/frontcontroller"
 	"github.com/macformula/hil/macformula/ecu/lvcontroller"
 	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
@@ -20,11 +21,12 @@ const (
 	_lvStartupContinueOnFail = true
 	_lvStartupTimeout        = 1 * time.Minute
 
-	_hvPositiveOn  = true
-	_hvPositiveOff = false
-	_hvNegativeOn  = true
-	_hvNegativeOff = true
-	_prechargeOff  = true
+	_hvPositiveOn   = true
+	_hvPositiveOff  = false
+	_hvNegativeOn   = true
+	_hvNegativeOff  = true
+	_prechargeOff   = true
+	_inverterEnable = true
 )
 
 type lvStartup struct {
@@ -39,6 +41,12 @@ type lvStartup struct {
 	successfulPowerCycle                  bool
 	tsalEnabled                           bool
 	tsalEnableDuration                    time.Duration
+	raspiEnabled                          bool
+	raspiEnableDuration                   time.Duration
+	frontControllerEnabled                bool
+	frontControllerEnableDuration         time.Duration
+	speedgoatEnabled                      bool
+	speedgoatEnableDuration               time.Duration
 	accumulatorEnabled                    bool
 	accumulatorEnableDuration             time.Duration
 	motorPrechargeEnabled                 bool
@@ -50,7 +58,7 @@ type lvStartup struct {
 	shutdownEnabledBeforeHvContactorsCan  bool
 	shutdownEnabledBeforeHvContactorsOpen bool
 	shutdownCircuitEnabled                bool
-	shutdownCircuitEnsableDuration        time.Duration
+	shutdownCircuitEnableDuration         time.Duration
 	inverterSwitchEnabled                 bool
 	inverterSwitchEnabledDuration         time.Duration
 	inverterEnabledBeforeHvContactorsCan  bool
@@ -87,7 +95,24 @@ func (l *lvStartup) Run(ctx context.Context) error {
 
 	l.tsalEnabled, l.tsalEnableDuration, err = utils.Poll(ctx, l.lv.ReadTsalEn, _lvStartupPollTimeout)
 	if err != nil {
-		return errors.Wrap(err, "poll read tsal en")
+		return errors.Wrap(err, "poll read tsal on")
+	}
+
+	l.raspiEnabled, l.raspiEnableDuration, err = utils.Poll(ctx, l.lv.ReadRaspiOn, _lvStartupPollTimeout)
+	if err != nil {
+		return errors.Wrap(err, "poll read raspi on")
+	}
+
+	l.frontControllerEnabled, l.frontControllerEnableDuration, err =
+		utils.Poll(ctx, l.lv.ReadFrontControllerOn, _lvStartupPollTimeout)
+	if err != nil {
+		return errors.Wrap(err, "poll read front controller on")
+	}
+
+	l.speedgoatEnabled, l.speedgoatEnableDuration, err =
+		utils.Poll(ctx, l.lv.ReadSpeedgoatOn, _lvStartupPollTimeout)
+	if err != nil {
+		return errors.Wrap(err, "poll read speedgoat on")
 	}
 
 	l.accumulatorEnabled, l.accumulatorEnableDuration, err =
@@ -160,9 +185,9 @@ func (l *lvStartup) Run(ctx context.Context) error {
 		l.inverterEnabledBeforeHvContactorsOpen = true
 	}
 
-	err = l.fc.CommandInverter(ctx, true)
+	err = l.fc.CommandInverter(ctx, _inverterEnable)
 	if err != nil {
-		return errors.Wrap(err, "command inverter on")
+		return errors.Wrap(err, "command inverter")
 	}
 
 	l.inverterSwitchEnabled, l.inverterSwitchEnabledDuration, err = utils.Poll(
@@ -171,11 +196,36 @@ func (l *lvStartup) Run(ctx context.Context) error {
 		return errors.Wrap(err, "poll read inverter switch on")
 	}
 
+	return nil
 }
 
 func (l *lvStartup) GetResults() map[flow.Tag]any {
-	//TODO implement me
-	panic("implement me")
+	return map[flow.Tag]any{
+		config.LvStartupTags.PowerCycledTestBench:                              l.successfulPowerCycle,
+		config.LvStartupTags.TsalEnabled:                                       l.tsalEnabled,
+		config.LvStartupTags.TsalTimeToEnableMs:                                int(l.tsalEnableDuration.Milliseconds()),
+		config.LvStartupTags.RaspiEnabled:                                      l.raspiEnabled,
+		config.LvStartupTags.RaspiTimeToEnableMs:                               l.raspiEnableDuration,
+		config.LvStartupTags.FrontControllerEnabled:                            l.frontControllerEnabled,
+		config.LvStartupTags.FrontControllerTimeToEnableMs:                     int(l.frontControllerEnableDuration.Milliseconds()),
+		config.LvStartupTags.SpeedgoatEnabled:                                  l.speedgoatEnabled,
+		config.LvStartupTags.SpeedgoatTimeToEnableMs:                           int(l.speedgoatEnableDuration.Milliseconds()),
+		config.LvStartupTags.AccumulatorEnabled:                                l.accumulatorEnabled,
+		config.LvStartupTags.AccumulatorTimeToEnableMs:                         int(l.accumulatorEnableDuration.Milliseconds()),
+		config.LvStartupTags.MotorPrechageEnabled:                              l.motorPrechargeEnabled,
+		config.LvStartupTags.MotorPrechargeTimeToEnableMs:                      int(l.motorPrechargeEnableDuration.Milliseconds()),
+		config.LvStartupTags.MotorControllerEnabled:                            l.motorControllerEnabled,
+		config.LvStartupTags.MotorControllerTimeToEnable:                       int(l.motorControllerEnableDuration.Milliseconds()),
+		config.LvStartupTags.ShutdownCircuitEnabledBeforeCan:                   l.shutdownEnabledBeforeHvContactorsCan,
+		config.LvStartupTags.ShutdownCircuitEnabledBeforeOpenContactors:        l.shutdownEnabledBeforeHvContactorsOpen,
+		config.LvStartupTags.ShutdownCircuitEnabled:                            l.shutdownCircuitEnabled,
+		config.LvStartupTags.ShutdownCircuitTimeToEnable:                       int(l.shutdownCircuitEnableDuration.Milliseconds()),
+		config.LvStartupTags.InverterSwitchEnabledBeforeCan:                    l.inverterEnabledBeforeHvContactorsCan,
+		config.LvStartupTags.InverterSwitchEnabledBeforeOpenContactors:         l.inverterEnabledBeforeHvContactorsOpen,
+		config.LvStartupTags.InterverSwitchEnabledBeforeFrontControllerCommand: l.inverterEnabledBeforeCommand,
+		config.LvStartupTags.InverterSwitchEnabled:                             l.inverterSwitchEnabled,
+		config.LvStartupTags.InverterSwitchTimeToEnable:                        int(l.inverterSwitchEnabledDuration.Milliseconds()),
+	}
 }
 
 func (l *lvStartup) ContinueOnFail() bool {

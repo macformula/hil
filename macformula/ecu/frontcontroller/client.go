@@ -10,10 +10,22 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	_clientName = "front_controller_client"
+)
+
 type Client struct {
 	l             *zap.Logger
 	pinController *pinout.Controller
 	vehCanClient  *canlink.CanClient
+}
+
+func NewClient(pc *pinout.Controller, veh *canlink.CanClient, l *zap.Logger) *Client {
+	return &Client{
+		l:             l.Named(_clientName),
+		pinController: pc,
+		vehCanClient:  veh,
+	}
 }
 
 func (c *Client) CommandContactors(ctx context.Context, hvPositive, hvNegative, precharge bool) error {

@@ -4,6 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/macformula/hil/iocontrol"
+	"github.com/macformula/hil/iocontrol/sil"
+	"github.com/macformula/hil/macformula/cangen/ptcan"
+	"github.com/macformula/hil/macformula/cangen/vehcan"
+	"github.com/macformula/hil/macformula/ecu/frontcontroller"
+	"github.com/macformula/hil/macformula/ecu/lvcontroller"
 	"github.com/macformula/hil/macformula/pinout"
 	"path/filepath"
 	"time"
@@ -162,8 +168,29 @@ func main() {
 		return
 	}
 
+	// Get controllers
+	var ioOpts = make([]iocontrol.IOControlOption, 0)
+
+	switch rev {
+	case pinout.Sil:
+		silController := sil.NewController(cfg.SilPort, logger)
+		ioOpts = append(ioOpts, iocontrol.WithSil(silController))
+	default:
+		panic("unconfigured revision")
+	}
+
+	// Create io controller.
+	ioController := iocontrol.NewIOControl(logger, ioOpts...)
+
+	err = ioController.Open(ctx)
+	if err != nil {
+		logger.Error("failed to open io controller",
+			zap.Error(errors.Wrap(err, "dial context")))
+		return
+	}
+
 	// Create pinout controller.
-	pinoutController := pinout.NewController(rev, logger)
+	pinoutController := pinout.NewController(rev, ioController, logger)
 
 	err = pinoutController.Open(ctx)
 	if err != nil {
@@ -172,12 +199,32 @@ func main() {
 		return
 	}
 
+	// Create testbench controller.
+	testBench := macformula.NewTestBench(pinoutController, logger)
+
+	// Create veh can client.
+	vehCanClient := canlink.NewCanClient(vehcan.Messages(), vehCanConn, logger)
+
+	// Create pt can client.
+	ptCanClient := canlink.NewCanClient(ptcan.Messages(), ptCanConn, logger)
+
+	// Create Lv Controller client.
+	lvControllerClient := lvcontroller.NewClient(pinoutController, logger)
+
+	// Create Front Controller client.
+	frontControllerClient := frontcontroller.NewClient(pinoutController, vehCanClient, logger)
+
 	// Create app object.
 	app := macformula.App{
-		Config:           cfg,
-		VehCanTracer:     vehCanTracer,
-		PtCanTracer:      ptCanTracer,
-		PinoutController: pinoutController,
+		Config:                cfg,
+		VehCanTracer:          vehCanTracer,
+		PtCanTracer:           ptCanTracer,
+		PinoutController:      pinoutController,
+		TestBench:             testBench,
+		LvControllerClient:    lvControllerClient,
+		FrontControllerClient: frontControllerClient,
+		VehCanClient:          vehCanClient,
+		PtCanClient:           ptCanClient,
 	}
 
 	// Create sequences.

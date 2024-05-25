@@ -7,11 +7,15 @@ import (
 )
 
 const (
-	_hvilOnMinVoltage  = 4
-	_hvilOffMaxVoltage = 1
+	_testbenchLoggerName     = "testbench"
+	_hvilOnMinVoltage        = 4
+	_hvilOffMaxVoltage       = 1
+	_defaultEcuOnMinVoltage  = 3
+	_defaultEcuOffMinVoltage = 1
 )
 
 type TestBench struct {
+	l             *zap.Logger
 	pinController *pinout.Controller
 
 	checkLvControllerVoltage bool
@@ -41,10 +45,13 @@ func WithCheckHvilFeedbackOnHvilControl() TestBenchOption {
 	}
 }
 
-func NewTestBench(ecuOnMinVoltage, ecuOffMaxVoltage, pc *pinout.Controller, l *zap.Logger, opts ...TestBenchOption) *TestBench {
+func NewTestBench(pc *pinout.Controller, l *zap.Logger, opts ...TestBenchOption) *TestBench {
 	tb := &TestBench{
+		l:                        l.Named(_testbenchLoggerName),
 		pinController:            pc,
 		checkLvControllerVoltage: false,
+		ecuOnMinVoltage:          _defaultEcuOnMinVoltage,
+		ecuOffMaxVoltage:         _defaultEcuOffMinVoltage,
 	}
 
 	for _, o := range opts {
@@ -55,17 +62,19 @@ func NewTestBench(ecuOnMinVoltage, ecuOffMaxVoltage, pc *pinout.Controller, l *z
 }
 
 func (tb *TestBench) PowerCycle() error {
+	var voltage float64
+
 	err := tb.pinController.SetDigitalLevel(pinout.GlvmsDisable, true)
 	if err != nil {
 		return errors.Wrap(err, "set digital level")
 	}
 
-	voltage, err := tb.pinController.ReadVoltage(pinout.LvController3v3RefVoltage)
-	if err != nil {
-		return errors.Wrap(err, "read voltage")
-	}
-
 	if tb.checkLvControllerVoltage {
+		voltage, err = tb.pinController.ReadVoltage(pinout.LvController3v3RefVoltage)
+		if err != nil {
+			return errors.Wrap(err, "read voltage")
+		}
+
 		if voltage > tb.ecuOffMaxVoltage {
 			return errors.Errorf("lv controller voltage exceeds max voltage for testbench off: max (%v), got (%v)",
 				tb.ecuOffMaxVoltage,
@@ -78,12 +87,12 @@ func (tb *TestBench) PowerCycle() error {
 		return errors.Wrap(err, "set digital level")
 	}
 
-	voltage, err = tb.pinController.ReadVoltage(pinout.LvController3v3RefVoltage)
-	if err != nil {
-		return errors.Wrap(err, "read voltage")
-	}
-
 	if tb.checkLvControllerVoltage {
+		voltage, err = tb.pinController.ReadVoltage(pinout.LvController3v3RefVoltage)
+		if err != nil {
+			return errors.Wrap(err, "read voltage")
+		}
+
 		if voltage < tb.ecuOnMinVoltage {
 			return errors.Errorf("lv controller voltage less than min voltage for testbench on: min (%v), got (%v)",
 				tb.ecuOnMinVoltage,

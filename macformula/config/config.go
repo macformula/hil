@@ -20,6 +20,7 @@ type Config struct {
 	ResultProcessorPath         string `yaml:"resultProcessorPath"`
 	ResultProcessorPushToGithub bool   `yaml:"resultProcessorPushToGithub"`
 	CanTracerTimeoutMinutes     int    `yaml:"canTracerTimeoutMinutes"`
+	SilPort                     int    `yaml:"silPort"`
 }
 
 // NewConfig returns a new Config type

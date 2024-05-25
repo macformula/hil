@@ -20,10 +20,11 @@ type Controller struct {
 	analogInputs   AnalogPinout
 }
 
-func NewController(rev Revision, l *zap.Logger) *Controller {
+func NewController(rev Revision, ioController *iocontrol.IOControl, l *zap.Logger) *Controller {
 	return &Controller{
-		l:   l.Named(_controllerName),
-		rev: rev,
+		l:            l.Named(_controllerName),
+		ioController: ioController,
+		rev:          rev,
 	}
 }
 
