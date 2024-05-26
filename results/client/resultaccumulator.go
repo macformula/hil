@@ -43,7 +43,6 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 }
 
 func validateTags(tagsFilepath, schemaFilepath string) error {
-	fmt.Println("in validate")
 	tagsData, err := loadYAML(tagsFilepath)
 	if err != nil {
 		return err
@@ -74,16 +73,17 @@ func validateTags(tagsFilepath, schemaFilepath string) error {
 }
 
 func loadYAML(filepath string) (interface{}, error) {
-	fmt.Println("in load yaml")
 	data, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, err
 	}
 	var out interface{}
 	err = yaml.Unmarshal(data, &out)
+	fmt.Println("out ", out)
 	if err != nil {
 		return nil, err
 	}
+
 	return out, nil
 }
 
