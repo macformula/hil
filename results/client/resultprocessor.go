@@ -107,7 +107,6 @@ func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) 
 	if !reply.Success {
 		return false, errors.New(reply.Error)
 	}
-	fmt.Printf("||", tag, " | ", value, " | ", r.addr, " | ", r.serverPath, " | ", r.configPath, " ||\n")
 	return reply.IsPassing, nil
 }
 
