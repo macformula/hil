@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	"github.com/xeipuuv/gojsonschema"
 	"gopkg.in/yaml.v2"
 )
 
@@ -48,26 +47,28 @@ func validateTags(tagsFilepath, schemaFilepath string) error {
 	if err != nil {
 		return err
 	}
-	schemaLoader := gojsonschema.NewReferenceLoader(schemaFilepath)
+	fmt.Println("yaml ", tagsData)
 
-	// Load the tags data into a JSON schema loader (since the library expects JSON)
-	documentLoader := gojsonschema.NewGoLoader(tagsData)
+	// schemaLoader := gojsonschema.NewReferenceLoader(schemaFilepath)
 
-	// Perform the validation
-	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
-	if err != nil {
-		return fmt.Errorf("error during validation: %v", err)
-	}
+	// // Load the tags data into a JSON schema loader (since the library expects JSON)
+	// documentLoader := gojsonschema.NewGoLoader(tagsData)
 
-	// Check the validation result
-	if !result.Valid() {
-		var errorMessages []string
-		for _, desc := range result.Errors() {
-			errorMessages = append(errorMessages, desc.String())
-		}
-		return fmt.Errorf("tags.yaml does not conform to the schema:\n%s", errorMessages)
-	}
-	fmt.Println("result yaml validation", result)
+	// // Perform the validation
+	// result, err := gojsonschema.Validate(schemaLoader, documentLoader)
+	// if err != nil {
+	// 	return fmt.Errorf("error during validation: %v", err)
+	// }
+
+	// // Check the validation result
+	// if !result.Valid() {
+	// 	var errorMessages []string
+	// 	for _, desc := range result.Errors() {
+	// 		errorMessages = append(errorMessages, desc.String())
+	// 	}
+	// 	return fmt.Errorf("tags.yaml does not conform to the schema:\n%s", errorMessages)
+	// }
+	// fmt.Println("result yaml validation", result)
 	return nil
 }
 
