@@ -3,6 +3,7 @@ package results
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v2"
@@ -72,20 +73,23 @@ func validateTags(tagsFilepath, schemaFilepath string) error {
 	return nil
 }
 
-func loadYAML(filepath string) (interface{}, error) {
-	data, err := os.ReadFile(filepath)
+func loadYAML(relativeFilepath string) (interface{}, error) {
+	// Get the absolute path of the YAML file
+	absFilepath, err := filepath.Abs(relativeFilepath)
 	if err != nil {
-		fmt.Println("err ", err)
+		return nil, fmt.Errorf("error resolving absolute path for %s: %v", relativeFilepath, err)
+	}
+
+	// Read the YAML file contents using the absolute path
+	data, err := os.ReadFile(absFilepath)
+	if err != nil {
 		return nil, err
 	}
 	var out interface{}
-
 	err = yaml.Unmarshal(data, &out)
-
 	if err != nil {
 		return nil, err
 	}
-
 	return out, nil
 }
 
