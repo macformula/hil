@@ -82,6 +82,15 @@ func (s *Sequencer) Run(
 
 	s.failedTags = []Tag{}
 	fmt.Println("Sequencer.Run: Starting sequence:", testId, " | ", seq.Name, " | ", seq.Desc, " | ", time.Now()) // Start of sequence
+	store := NewStore()
+	report := &Report{
+		ID:           testId,
+		SequenceName: seq.Name,
+		DateTime:     time.Now(),
+		Description:  seq.Desc, // Assuming seq has a Desc field
+	}
+	store.CreateReport(testId, report)
+
 	isPassing, err := s.runSequence(ctx, seq, cancelTest, testId)
 	if err != nil {
 		testErrors := append(s.testErrors, errors.Wrap(err, "run sequence"))
