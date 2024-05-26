@@ -95,6 +95,7 @@ func (r *ResultProcessor) Open(ctx context.Context) error {
 
 func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) (bool, error) {
 	request, err := createRequest(tag, value)
+	fmt.Println("request ", request, " err ", err)
 	if err != nil {
 		return false, errors.Wrap(err, "create request")
 	}
@@ -174,6 +175,19 @@ func (r *ResultProcessor) startServer(errCh chan error) {
 func createRequest(tag string, data any) (*proto.SubmitTagRequest, error) {
 	request := &proto.SubmitTagRequest{Tag: tag}
 	fmt.Println("data: ", data)
+	// sends in a tag and data, however it seems that data can either be true false, or it can be an int/float, or a string (which I assume in error)
+	// this goes into the submit_tag function
+	// before this code runs, when the code is initialized, it parses through the tags.yaml or tags_scheme.json and create a Tag dictionary.
+	// What it does is that it goes through everything in tags.yaml and checks it again tags_schema.json to see if it is in the right format
+	// then it creates a list of tags based off tags.yaml
+	// uses the logic in tag.py (ispassing) to determine if that specific test is a pass or fail case
+	// if it is a fail, all_tags_passing is set to false it is saved to another dict as a false then return false and no error
+	// else it is saved to another dict as a true then return true and no error
+	// else if you get a keyvalue error where value is not a bool, that means that it was an error case that is probably fatal meaning it returns false with an error
+	// then we go up a level into grpc, where if there was an error success=False, error=f"unknown tag id ({str(e)})", is_passing=is_passing
+	// else if there was not an error success=True, error="", is_passing=is_passing
+	// remember ispassing = false and error are not the same thing
+
 	switch data.(type) {
 	case int32:
 		request.Data = &proto.SubmitTagRequest_ValueInt{ValueInt: data.(int32)}
