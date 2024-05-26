@@ -62,7 +62,6 @@ func NewResultProcessor(l *zap.Logger, address string, opts ...Option) *ResultPr
 		pushReportsToGithub: false,
 		serverAutoStart:     false,
 	}
-
 	for _, o := range opts {
 		o(ret)
 	}
@@ -184,6 +183,5 @@ func createRequest(tag string, data any) (*proto.SubmitTagRequest, error) {
 	default:
 		return nil, errors.Errorf("unsupported data type for tag submission (%T)", data)
 	}
-
 	return request, nil
 }
