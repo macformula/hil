@@ -56,7 +56,7 @@ func loadTestsFromYAML(filepath string) error {
 		fmt.Printf("err load yaml in", err)
 		return nil
 	}
-	
+
 	// // Type assertion to ensure tagData is a map[string]interface{}
 	// tags, ok := tagData.(map[string]interface{})
 	// if !ok {
@@ -66,31 +66,31 @@ func loadTestsFromYAML(filepath string) error {
 	testMap := make(map[string]Test)
 	for tagID, tagInfo := range tags {
 		// Ensure tagInfo is map[string]interface{}
-	 	infoMap, ok := tagInfo.(map[interface{}]interface{})
-	 	if !ok {
+		infoMap, ok := tagInfo.(map[interface{}]interface{})
+		if !ok {
 			fmt.Println("ok \n\n", ok)
-	 		return nil, fmt.Errorf("invalid tag info format for tag %s", tagID)
-	 	}
-		 fmt.Println("infoMap \n\n", infoMap)
-	// 	// Create a new Test struct with defaults and override with values from tagInfo
-	// 	test := Test{
-	// 		ID:            uuid.Nil, // Generate a unique ID
-	// 		Description:   getOrDefault(infoMap, "description", "").(string),
-	// 		CompOp:        getOrDefault(infoMap, "compareOp", "").(string),
-	// 		Type:          false, // Assuming "type" is a bool, set default to false
-	// 		UpperLimit:    getOrDefault(infoMap, "upperLimit", "0").(string),
-	// 		LowerLimit:    getOrDefault(infoMap, "lowerLimit", "0").(string),
-	// 		ExpectedValue: getOrDefault(infoMap, "expectedVal", "0").(string),
-	// 		Unit:          getOrDefault(infoMap, "unit", "Unitless").(string),
-	// 	}
+			return nil, fmt.Errorf("invalid tag info format for tag %s", tagID)
+		}
+		fmt.Println("infoMap \n\n", infoMap)
+		// 	// Create a new Test struct with defaults and override with values from tagInfo
+		// 	test := Test{
+		// 		ID:            uuid.Nil, // Generate a unique ID
+		// 		Description:   getOrDefault(infoMap, "description", "").(string),
+		// 		CompOp:        getOrDefault(infoMap, "compareOp", "").(string),
+		// 		Type:          false, // Assuming "type" is a bool, set default to false
+		// 		UpperLimit:    getOrDefault(infoMap, "upperLimit", "0").(string),
+		// 		LowerLimit:    getOrDefault(infoMap, "lowerLimit", "0").(string),
+		// 		ExpectedValue: getOrDefault(infoMap, "expectedVal", "0").(string),
+		// 		Unit:          getOrDefault(infoMap, "unit", "Unitless").(string),
+		// 	}
 
-	// 	// If value type is boolean then we want the final_value as a boolean
-	// 	if test.Type == "bool" {
-	// 		test.Value = getOrDefault(infoMap, "expectedVal", "false").(bool)
-	// 	}
+		// 	// If value type is boolean then we want the final_value as a boolean
+		// 	if test.Type == "bool" {
+		// 		test.Value = getOrDefault(infoMap, "expectedVal", "false").(bool)
+		// 	}
 
-	// 	testMap[tagID] = test
-	// }
+		// 	testMap[tagID] = test
+	}
 
 	//return testMap, nil
 	return nil
