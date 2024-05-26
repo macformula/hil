@@ -66,12 +66,12 @@ func loadTestsFromYAML(filepath string) error {
 	testMap := make(map[string]Test)
 	for tagID, tagInfo := range tags {
 		// Ensure tagInfo is map[string]interface{}
-		infoMap, ok := tagInfo.(map[interface{}]interface{})
-		if !ok {
-			fmt.Println("ok \n\n", ok)
-			return nil
-		}
-		fmt.Println("||||", infoMap, "||||", testMap, "||||", tagID, "\n\n")
+		// infoMap, ok := tagInfo.(map[interface{}]interface{})
+		// if !ok {
+		// 	fmt.Println("ok", ok, "\n")
+		// 	return nil
+		// }
+		fmt.Println("||||", tagInfo, "||||", testMap, "||||", tagID, "\n\n")
 		// 	// Create a new Test struct with defaults and override with values from tagInfo
 		// 	test := Test{
 		// 		ID:            uuid.Nil, // Generate a unique ID
