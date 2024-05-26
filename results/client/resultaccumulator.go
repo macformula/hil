@@ -71,13 +71,31 @@ func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 			return nil, fmt.Errorf("nil tag info for tag %s", tagID)
 		}
 		fmt.Println("tagInfo ", tagInfo, "\n")
-		infoMap, ok := tagInfo.(map[interface{}]interface{})
-		if !ok {
-			fmt.Println("ok ", ok, "\n")
-			return nil, fmt.Errorf("invalid tag info format for tag %s: %T", tagID, tagInfo)
+		// infoMap, ok := tagInfo.(map[interface{}]interface{})
+		// if !ok {
+		// 	fmt.Println("ok ", ok, "\n")
+		// 	return nil, fmt.Errorf("invalid tag info format for tag %s: %T", tagID, tagInfo)
+		// }
+
+		// fmt.Println("infoMap ", infoMap, "\n")
+
+		if m, ok := data.(map[string]interface{}); ok {
+
+			compareOp, _ := m["compareOp"].(string)     // Extract string
+			description, _ := m["description"].(string) // Extract string
+			expectedVal, _ := m["expectedVal"].(bool)   // Extract bool
+			typeStr, _ := m["type"].(string)            // Extract string
+			unit, _ := m["unit"].(string)               // Extract string
+
+			fmt.Println("Compare Op:", compareOp)
+			fmt.Println("Description:", description)
+			fmt.Println("Expected Val:", expectedVal)
+			fmt.Println("Type:", typeStr)
+			fmt.Println("Unit:", unit)
+		} else {
+			fmt.Println("Error: Data is not in the expected map format")
 		}
 
-		fmt.Println("infoMap ", infoMap, "\n")
 		// test := Test{
 		// 	ID: uuid.New(),
 		// }
