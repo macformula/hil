@@ -52,16 +52,16 @@ func validateTags(tagsFilepath, schemaFilepath string) error {
 	}
 
 	schemaLoader := gojsonschema.NewReferenceLoader(schemaFilepath)
-	fmt.Println("schemaLoader ", schemaLoader)
+
 	// // Load the tags data into a JSON schema loader (since the library expects JSON)
 	documentLoader := gojsonschema.NewGoLoader(tagsData)
-	fmt.Println("documentLoader ", documentLoader)
-	// // Perform the validation
-	// result, err := gojsonschema.Validate(schemaLoader, documentLoader)
-	// if err != nil {
-	// 	return fmt.Errorf("error during validation: %v", err)
-	// }
 
+	// // Perform the validation
+	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
+	if err != nil {
+		return fmt.Errorf("error during validation: %v", err)
+	}
+	fmt.Println("result ", result)
 	// // Check the validation result
 	// if !result.Valid() {
 	// 	var errorMessages []string
