@@ -13,7 +13,7 @@ func SetupFirebase() (*firebase.App, context.Context, *messaging.Client) {
 
 	ctx := context.Background()
 
-	serviceAccountKeyFilePath, err := filepath.Abs("../../serviceAccountKey.json")
+	serviceAccountKeyFilePath, err := filepath.Abs("../../../serviceAccountKey.json")
 	if err != nil {
 		panic("Unable to load serviceAccountKeys.json file")
 	}
