@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/xeipuuv/gojsonschema"
@@ -23,7 +24,7 @@ type Test struct { // These are Tags, not calling this tag right now because it 
 	UpperLimit    string    `json:"upper_limit"`
 	LowerLimit    string    `json:"lower_limit"`
 	ExpectedValue string    `json:"expected_val"`
-	Type          bool      `json:"type"`
+	Type          string    `json:"type"`
 	Unit          string    `json:"unit"`
 }
 
@@ -67,30 +68,52 @@ func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 	for tagID, tagInfo := range tags {
 		infoMap, ok := tagInfo.(map[interface{}]interface{})
 		if !ok {
-			fmt.Printf("ok in \n", ok)
 			return nil, fmt.Errorf("invalid tag info format for tag %s", tagID)
 		}
-		fmt.Println("||||", infoMap, "||||", testMap, "||||", tagID, "\n\n")
-		// // Create a new Test struct with defaults and override with values from tagInfo
-		// test := Test{
-		// 	ID:            uuid.Nil, // Generate a unique ID
-		// 	Description:   getOrDefault(infoMap, "description", "").(string),
-		// 	CompOp:        getOrDefault(infoMap, "compareOp", "").(string),
-		// 	Type:          false, // Assuming "type" is a bool, set default to false
-		// 	UpperLimit:    getOrDefault(infoMap, "upperLimit", "0").(string),
-		// 	LowerLimit:    getOrDefault(infoMap, "lowerLimit", "0").(string),
-		// 	ExpectedValue: getOrDefault(infoMap, "expectedVal", "0").(string),
-		// 	Unit:          getOrDefault(infoMap, "unit", "Unitless").(string),
-		// }
 
-		// // If value type is boolean then we want the final_value as a boolean
-		// if test.Type == "bool" {
-		// 	test.Value = getOrDefault(infoMap, "expectedVal", "false").(bool)
-		// }
+		test := Test{
+			ID: uuid.New(),
+		}
 
-		// testMap[tagID] = test
+		if description, ok := infoMap["description"].(string); ok {
+			test.Description = description
+		}
+
+		if compOp, ok := infoMap["compareOp"].(string); ok {
+			test.CompOp = compOp
+		}
+
+		if unit, ok := infoMap["unit"].(string); ok {
+			test.Unit = unit
+		}
+
+		if expectedVal, ok := infoMap["expectedVal"]; ok {
+			switch v := expectedVal.(type) {
+			case bool:
+				test.Value = v
+				test.Type = "bool"
+			case string:
+				test.ExpectedValue = v
+			case int:
+				test.ExpectedValue = strconv.Itoa(v)
+			case float64:
+				test.ExpectedValue = strconv.FormatFloat(v, 'f', -1, 64) // Convert float64 to string with full precision
+			default:
+				return nil, fmt.Errorf("invalid type for expectedVal in tag %s", tagID)
+			}
+		}
+
+		if upperLimit, ok := infoMap["upperLimit"]; ok {
+			test.UpperLimit = getStringFromInterface(upperLimit)
+		}
+
+		if lowerLimit, ok := infoMap["lowerLimit"]; ok {
+			test.LowerLimit = getStringFromInterface(lowerLimit)
+		}
+
+		testMap[tagID] = test
 	}
-
+	fmt.Println("testMap", testMap)
 	return testMap, nil
 }
 
@@ -164,9 +187,19 @@ func loadYAML(relativeFilepath string) (interface{}, error) {
 	return out, nil
 }
 
-func getOrDefault(data map[interface{}]interface{}, key string, defaultValue interface{}) interface{} {
-	if val, ok := data[key]; ok {
-		return val
+func getStringFromInterface(value interface{}) string {
+	switch v := value.(type) {
+	case string:
+		return v
+	case int:
+		return strconv.Itoa(v)
+	case float64:
+		return strconv.FormatFloat(v, 'f', -1, 64) // Convert float64 to string with full precision
+	case bool:
+		return strconv.FormatBool(v) // Convert boolean to string ("true" or "false")
+	case nil:
+		return "" // Handle nil values, returning an empty string
+	default:
+		return fmt.Sprintf("%v", v) // Fallback: convert to string representation for other types
 	}
-	return defaultValue
 }
