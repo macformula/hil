@@ -143,7 +143,7 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence, cancelTest ch
 	_ = s.progressFeed.Send(s.progress)
 
 	passingTest, err := s.rp.CompleteTest(ctx, testId, seq.Name)
-	fmt.Printf("Sequence '%s' complete: Passing: %t, Progress: %.1f%%, Test ID: %s\n", seq.Name, passingTest, float64(s.progress.StateIndex+1)/float64(len(seq.States))*100.0, testId.String())
+	fmt.Printf("Sequence '%s' complete: Test ID: %s\n", seq.Name, testId.String())
 	s.l.Info("results processor CompleteTest call complete")
 	if err != nil {
 		return false, errors.Wrap(err, "complete test")
@@ -272,7 +272,8 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 	default:
 		continueSequence = false
 	}
-	fmt.Println("Sequencer.processResults: State", state.Name(), "passed:", statePassed) // State pass/fail
+
+	fmt.Println("Sequencer.processResults: State", state.Name(), "passed:", statePassed, " ", state.GetResults()) // State pass/fail
 	s.regularErr.Reset()
 
 	return continueSequence, nil
