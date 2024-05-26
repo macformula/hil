@@ -10,8 +10,8 @@ from tag_tunnel import TagTunnel
 
 RESULT_PROCESSOR_KEY = "resultProcessor"
 SERVER_ADDRESS_KEY = "serverAddress"
-TAGS_FP_KEY = "tagsFilePath"
-TAGS_SCHEMA_KEY = "tagsSchemaFilePath"
+TAGS_FP_KEY = "tagsFilePath" #tags.yaml
+TAGS_SCHEMA_KEY = "tagsSchemaFilePath" #tag.scheme.json
 TEMPLATEL_FP_KEY = "pytestTemplateFilePath"
 HISTORIC_TESTS_FP_KEY = "historicTestsFilePath"
 REPORTS_DIR_KEY = "reportsDir"
