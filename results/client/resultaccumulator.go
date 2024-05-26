@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/google/uuid"
+	"github.com/xeipuuv/gojsonschema"
 	"gopkg.in/yaml.v2"
 )
 
@@ -49,10 +50,9 @@ func validateTags(tagsFilepath, schemaFilepath string) error {
 		fmt.Println("err  ", err)
 		return err
 	}
-	fmt.Println("yaml ", tagsData)
 
-	// schemaLoader := gojsonschema.NewReferenceLoader(schemaFilepath)
-
+	schemaLoader := gojsonschema.NewReferenceLoader(schemaFilepath)
+	fmt.Println("schemaLoader ", schemaLoader)
 	// // Load the tags data into a JSON schema loader (since the library expects JSON)
 	// documentLoader := gojsonschema.NewGoLoader(tagsData)
 
