@@ -1,7 +1,6 @@
 package results
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -48,20 +47,14 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 func validateTags(tagsFilepath, schemaFilepath string) error {
 	tagsData, err := loadYAML(tagsFilepath)
 	if err != nil {
+		fmt.Println("err 2 ", err)
 		return err
 	}
-
-	// Convert tagsData from YAML to JSON compatible map[string]interface{}
-	jsonData, err := convertYAMLtoJSON(tagsData)
-	if err != nil {
-		return err
-	}
-
 	absSchemaPath, _ := filepath.Abs(schemaFilepath)
 	schemaURI := "file://" + absSchemaPath
 	schemaLoader := gojsonschema.NewReferenceLoader(schemaURI)
 
-	documentLoader := gojsonschema.NewGoLoader(jsonData)
+	documentLoader := gojsonschema.NewGoLoader(tagsData)
 
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
@@ -81,21 +74,22 @@ func validateTags(tagsFilepath, schemaFilepath string) error {
 	return nil
 }
 
-// Helper function to convert YAML data to JSON compatible format
-func convertYAMLtoJSON(yamlData interface{}) (interface{}, error) {
-	jsonData, err := json.Marshal(yamlData)
-	if err != nil {
-		return nil, fmt.Errorf("error converting YAML to JSON: %v", err)
+func convert(i interface{}) interface{} {
+	switch x := i.(type) {
+	case map[interface{}]interface{}:
+		m2 := map[string]interface{}{}
+		for k, v := range x {
+			m2[k.(string)] = convert(v)
+		}
+		return m2
+	case []interface{}:
+		for i, v := range x {
+			x[i] = convert(v)
+		}
 	}
-
-	var jsonResult interface{}
-	err = json.Unmarshal(jsonData, &jsonResult)
-	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling JSON: %v", err)
-	}
-
-	return jsonResult, nil
+	return i
 }
+
 func loadYAML(relativeFilepath string) (interface{}, error) {
 	// Get the absolute path of the YAML file
 	absFilepath, err := filepath.Abs(relativeFilepath)
@@ -108,11 +102,18 @@ func loadYAML(relativeFilepath string) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Unmarshal YAML data into a generic interface{}
 	var out interface{}
 	err = yaml.Unmarshal(data, &out)
 	if err != nil {
 		return nil, err
 	}
+
+	// Convert the potentially nested map[interface{}]interface{} to map[string]interface{}
+	out = convert(out)
+
+	// Return the unmarshalled data (not the JSON string)
 	return out, nil
 }
 
