@@ -94,12 +94,16 @@ func (r *ResultProcessor) Open(ctx context.Context) error {
 }
 
 func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) (bool, error) {
-	request, err := createRequest(tag, value)
-	fmt.Println("request ", request, " err ", err)
-	if err != nil {
+	request, err := createRequest(tag, value) //checks if the tag is correct and error free
+	// fmt.Println("request ", request, " err ", err)
+	// request  tag:"FW001" value_bool:true  err  <nil>
+
+	if err != nil { //error check if create request worked? not sure how this works with an actual error because it is not showing
 		return false, errors.Wrap(err, "create request")
 	}
-	reply, err := r.client.SubmitTag(ctx, request)
+
+	reply, err := r.client.SubmitTag(ctx, request) //actually submitting the tag
+	fmt.Println("reply ", reply, " err ", err)
 	if err != nil {
 		return reply.IsPassing, errors.Wrap(err, "submit tag")
 	}
@@ -174,7 +178,6 @@ func (r *ResultProcessor) startServer(errCh chan error) {
 
 func createRequest(tag string, data any) (*proto.SubmitTagRequest, error) {
 	request := &proto.SubmitTagRequest{Tag: tag}
-	fmt.Println("data: ", data)
 	// sends in a tag and data, however it seems that data can either be true false, or it can be an int/float, or a string (which I assume in error)
 	// this goes into the submit_tag function
 	// before this code runs, when the code is initialized, it parses through the tags.yaml or tags_scheme.json and create a Tag dictionary.
