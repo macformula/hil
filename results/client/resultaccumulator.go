@@ -42,7 +42,7 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 		return err
 	}
 	// 2. Convert tag.yaml into Test structures
-	ra.tagDb, err = loadTestsFromYAML(tagsFilepath)
+	v, err = loadTestsFromYAML(tagsFilepath)
 
 	if err != nil {
 		fmt.Println("err load yaml ", err)
@@ -54,94 +54,47 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 	tagData, err := loadYAML(filepath)
 	if err != nil {
-		fmt.Printf("err load yaml in", err)
 		return nil, fmt.Errorf("invalid tags data format in %s", filepath)
 	}
 
-	// // Type assertion to ensure tagData is a map[string]interface{}
 	tags, ok := tagData.(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("invalid tags data format in %s", filepath)
 	}
 
-	//testMap := make(map[string]Test)
+	testMap := make(map[string]Test) // Use a map to store results
 	for tagID, tagInfo := range tags {
-		// Nil Check Before Type Assertion: Check if tagInfo is not nil before trying to access it
 		if tagInfo == nil {
 			return nil, fmt.Errorf("nil tag info for tag %s", tagID)
 		}
-		fmt.Println("tagInfo ", tagInfo, "\n")
-		// infoMap, ok := tagInfo.(map[interface{}]interface{})
-		// if !ok {
-		// 	fmt.Println("ok ", ok, "\n")
-		// 	return nil, fmt.Errorf("invalid tag info format for tag %s: %T", tagID, tagInfo)
-		// }
 
-		// fmt.Println("infoMap ", infoMap, "\n")
 		test := Test{}
 		if m, ok := tagInfo.(map[string]interface{}); ok {
-
-			test.CompOp, _ = m["compareOp"].(string)          // Extract string
-			test.Description, _ = m["description"].(string)   // Extract string
-			test.ExpectedValue, _ = m["expectedVal"].(string) // Extract bool
-			test.Type, _ = m["type"].(string)                 // Extract string
-			test.Unit, _ = m["unit"].(string)                 // Extract string
+			test.CompOp = m["compareOp"].(string)        // No error checking here, assume valid
+			test.Description = m["description"].(string) // No error checking here, assume valid
+			test.Type = m["type"].(string)               // No error checking here, assume valid
+			test.Unit = m["unit"].(string)               // No error checking here, assume valid
 			test.UpperLimit, _ = m["upperLimit"].(string)
 			test.LowerLimit, _ = m["lowerLimit"].(string)
+
+			// Handle expectedVal carefully
+			expectedVal, exists := m["expectedVal"]
+			if exists {
+				// Only assign if the key exists in the map
+				test.ExpectedValue, _ = expectedVal.(string)
+			}
+
 			fmt.Println("Compare Op:", test.CompOp)
 			fmt.Println("Description:", test.Description)
-			fmt.Println("Expected Val:", test.ExpectedValue)
+			fmt.Println("Expected Val:", test.ExpectedValue) // Might be empty if not in YAML
 			fmt.Println("Type:", test.Type)
 			fmt.Println("Unit:", test.Unit)
 		} else {
 			fmt.Println("Error: Data is not in the expected map format")
 		}
-
-		// test := Test{
-		// 	ID: uuid.New(),
-		// }
-
-		// if description, ok := infoMap["description"].(string); ok {
-		// 	test.Description = description
-		// }
-
-		// if compOp, ok := infoMap["compareOp"].(string); ok {
-		// 	test.CompOp = compOp
-		// }
-
-		// if unit, ok := infoMap["unit"].(string); ok {
-		// 	test.Unit = unit
-		// }
-
-		// if expectedVal, ok := infoMap["expectedVal"]; ok {
-		// 	switch v := expectedVal.(type) {
-		// 	case bool:
-		// 		test.Value = v
-		// 		test.Type = "bool"
-		// 	case string:
-		// 		test.ExpectedValue = v
-		// 	case int:
-		// 		test.ExpectedValue = strconv.Itoa(v)
-		// 	case float64:
-		// 		test.ExpectedValue = strconv.FormatFloat(v, 'f', -1, 64) // Convert float64 to string with full precision
-		// 	default:
-		// 		return nil, fmt.Errorf("invalid type for expectedVal in tag %s", tagID)
-		// 	}
-		// }
-
-		// if upperLimit, ok := infoMap["upperLimit"]; ok {
-		// 	test.UpperLimit = getStringFromInterface(upperLimit)
-		// }
-
-		// if lowerLimit, ok := infoMap["lowerLimit"]; ok {
-		// 	test.LowerLimit = getStringFromInterface(lowerLimit)
-		// }
-
-		// testMap[tagID] = test
+		testMap[tagID] = test
 	}
-	// fmt.Println("testMap", testMap)
-	// return testMap, nil
-	return nil, nil
+	return testMap, nil
 }
 
 func validateTags(tagsFilepath, schemaFilepath string) error {
