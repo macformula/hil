@@ -30,11 +30,11 @@ type ResultProcessor struct {
 	conn                *grpc.ClientConn
 	client              proto.TagTunnelClient
 	pushReportsToGithub bool
-
-	serverAutoStart bool
-	configPath      string
-	serverPath      string
-	serverCmd       *exec.Cmd
+	ra                  *ResultAccumulator
+	serverAutoStart     bool
+	configPath          string
+	serverPath          string
+	serverCmd           *exec.Cmd
 }
 
 type Option = func(*ResultProcessor)
@@ -95,6 +95,8 @@ func (r *ResultProcessor) Open(ctx context.Context) error {
 
 func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) (bool, error) {
 	request, err := createRequest(tag, value) //checks if the tag is correct and error free
+	r.ra.NewResultAccumulator()
+
 	// fmt.Println("request ", request, " err ", err)
 	// request  tag:"FW001" value_bool:true  err  <nil>
 
@@ -103,15 +105,16 @@ func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) 
 	}
 
 	reply, err := r.client.SubmitTag(ctx, request) //actually submitting the tag
-	fmt.Println("reply ", reply, " err ", err)
+	//fmt.Println("reply ", reply, " err ", err)
+	// reply  success:true is_passing:true  err  <nil>
 	if err != nil {
 		return reply.IsPassing, errors.Wrap(err, "submit tag")
 	}
-
+	// if false means that the reply did not come through
 	if !reply.Success {
 		return false, errors.New(reply.Error)
 	}
-	return reply.IsPassing, nil
+	return reply.IsPassing, nil //returns if the tag is passing or failing
 }
 
 func (r *ResultProcessor) CompleteTest(ctx context.Context, testId uuid.UUID, sequenceName string) (bool, error) {
