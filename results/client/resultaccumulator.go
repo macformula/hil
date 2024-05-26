@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	tagsFilepath       = "../server/tags.yaml"
-	tagsSchemaFilepath = "../server/schema/tags_schema.json"
+	tagsFilepath       = "../../results/server/tags.yaml"
+	tagsSchemaFilepath = "../../results/server/schema/tags_schema.json"
 )
 
 type Test struct {
