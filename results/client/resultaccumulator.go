@@ -41,7 +41,8 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 		return err
 	}
 	// 2. Convert tag.yaml into Test structures
-	ra.tagDb, err = loadTestsFromYAML(tagsFilepath)
+	//ra.tagDb, err = loadTestsFromYAML(tagsFilepath)
+	err = loadTestsFromYAML(tagsFilepath)
 	if err != nil {
 		fmt.Println("err load yaml ", err)
 		return err
@@ -49,20 +50,20 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 	return nil
 }
 
-func loadTestsFromYAML(filepath string) (map[string]Test, error) {
+func loadTestsFromYAML(filepath string) error {
 	tagData, err := loadYAML(filepath)
 	if err != nil {
 		fmt.Printf("err load yaml in", err)
-		return nil, err
+		return nil
 	}
-	fmt.Printf("tagdata", tagData)
+	fmt.Printf("tag data", tagData)
 	// // Type assertion to ensure tagData is a map[string]interface{}
 	// tags, ok := tagData.(map[string]interface{})
 	// if !ok {
 	// 	return nil, fmt.Errorf("invalid tags data format in %s", filepath)
 	// }
 
-	testMap := make(map[string]Test)
+	// testMap := make(map[string]Test)
 	// for tagID, tagInfo := range tags {
 	// 	// Ensure tagInfo is map[string]interface{}
 	// 	infoMap, ok := tagInfo.(map[interface{}]interface{})
@@ -90,7 +91,8 @@ func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 	// 	testMap[tagID] = test
 	// }
 
-	return testMap, nil
+	//return testMap, nil
+	return nil
 }
 
 func validateTags(tagsFilepath, schemaFilepath string) error {
