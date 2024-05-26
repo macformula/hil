@@ -89,7 +89,16 @@ func (s *Sequencer) Run(
 
 		return false, s.failedTags, testErrors, errors.Wrap(err, "run sequence")
 	}
-	fmt.Println("Sequencer.Run: Starting sequence:", seq.Name) // Start of sequence
+	fmt.Printf("Sequencer.Run: Starting sequence:\n"+
+		"- Name: %s\n"+
+		"- Passing: %v\n"+
+		"- Test ID: %s\n"+
+		"- States: %v\n"+
+		"- Description: %s\n"+
+		"- Errors: %v\n"+
+		"- Progress: %v\n",
+		seq.Name, isPassing, testId, seq.States, seq.Desc, s.testErrors, s.progress)
+
 	testErrors := s.testErrors
 	s.testErrors = []error{}
 	return isPassing, s.failedTags, testErrors, nil
@@ -108,7 +117,6 @@ func (s *Sequencer) ResetFatalError() {
 
 func (s *Sequencer) Close() error {
 	s.l.Info("closing sequencer")
-	fmt.Println("Sequencer.Close: Closing sequence:")
 	err := s.rp.Close()
 	if err != nil {
 		return errors.Wrap(err, "result processor close")
@@ -247,7 +255,6 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 		if err != nil {
 			return false, errors.Wrap(err, "submit tag")
 		}
-		fmt.Println("Sequencer.processResults: Submitted tag", tag.ID, "with value:", value) // Tag submission
 		if !isPassing {
 			statePassed = false
 			s.failedTags = append(s.failedTags, tag)
