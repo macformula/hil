@@ -58,10 +58,10 @@ func loadTestsFromYAML(filepath string) error {
 	}
 
 	// // Type assertion to ensure tagData is a map[string]interface{}
-	// tags, ok := tagData.(map[string]interface{})
-	// if !ok {
-	// 	return nil, fmt.Errorf("invalid tags data format in %s", filepath)
-	// }
+	tags, ok := tagData.(map[string]interface{})
+	if !ok {
+		return nil //, fmt.Errorf("invalid tags data format in %s", filepath)
+	}
 
 	testMap := make(map[string]Test)
 	for tagID, tagInfo := range tags {
@@ -69,9 +69,9 @@ func loadTestsFromYAML(filepath string) error {
 		infoMap, ok := tagInfo.(map[interface{}]interface{})
 		if !ok {
 			fmt.Println("ok \n\n", ok)
-			return nil, fmt.Errorf("invalid tag info format for tag %s", tagID)
+			return nil
 		}
-		fmt.Println("infoMap \n\n", infoMap)
+		fmt.Println("||||", infoMap, "||||", testMap, "||||", tagID, "\n\n")
 		// 	// Create a new Test struct with defaults and override with values from tagInfo
 		// 	test := Test{
 		// 		ID:            uuid.Nil, // Generate a unique ID
