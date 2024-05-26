@@ -54,8 +54,8 @@ func validateTags(tagsFilepath, schemaFilepath string) error {
 	schemaLoader := gojsonschema.NewReferenceLoader(schemaFilepath)
 	fmt.Println("schemaLoader ", schemaLoader)
 	// // Load the tags data into a JSON schema loader (since the library expects JSON)
-	// documentLoader := gojsonschema.NewGoLoader(tagsData)
-
+	documentLoader := gojsonschema.NewGoLoader(tagsData)
+	fmt.Println("documentLoader ", documentLoader)
 	// // Perform the validation
 	// result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	// if err != nil {
