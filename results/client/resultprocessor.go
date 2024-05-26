@@ -107,7 +107,7 @@ func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) 
 	if !reply.Success {
 		return false, errors.New(reply.Error)
 	}
-	fmt.Printf(tag, " ", value, " ", r.addr, " ", r.serverPath, " ", r.configPath, "\n")
+	fmt.Printf("||", tag, " | ", value, " | ", r.addr, " | ", r.serverPath, " | ", r.configPath, " ||\n")
 	return reply.IsPassing, nil
 }
 
@@ -117,7 +117,6 @@ func (r *ResultProcessor) CompleteTest(ctx context.Context, testId uuid.UUID, se
 		SequenceName:       sequenceName,
 		PushReportToGithub: r.pushReportsToGithub,
 	})
-	fmt.Printf("Test completed:\n  - ID: %v\n  - Sequence Name: %s\n  - Push Report to GitHub: %v\n", testId, sequenceName, r.pushReportsToGithub)
 	if err != nil {
 		return false, errors.Wrap(err, "complete test")
 	}
