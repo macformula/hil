@@ -1,6 +1,7 @@
 package results
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -47,35 +48,53 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 func validateTags(tagsFilepath, schemaFilepath string) error {
 	tagsData, err := loadYAML(tagsFilepath)
 	if err != nil {
-		fmt.Println("err  ", err)
 		return err
 	}
+
+	// Convert tagsData from YAML to JSON compatible map[string]interface{}
+	jsonData, err := convertYAMLtoJSON(tagsData)
+	if err != nil {
+		return err
+	}
+
 	absSchemaPath, _ := filepath.Abs(schemaFilepath)
 	schemaURI := "file://" + absSchemaPath
 	schemaLoader := gojsonschema.NewReferenceLoader(schemaURI)
 
-	// // Load the tags data into a JSON schema loader (since the library expects JSON)
-	documentLoader := gojsonschema.NewGoLoader(tagsData)
+	documentLoader := gojsonschema.NewGoLoader(jsonData)
 
-	// // Perform the validation
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
-		fmt.Println("err ", err)
-		return err
+		return fmt.Errorf("error during validation: %v", err)
 	}
 	fmt.Println("result ", result)
-	// // Check the validation result
-	// if !result.Valid() {
-	// 	var errorMessages []string
-	// 	for _, desc := range result.Errors() {
-	// 		errorMessages = append(errorMessages, desc.String())
-	// 	}
-	// 	return fmt.Errorf("tags.yaml does not conform to the schema:\n%s", errorMessages)
-	// }
-	// fmt.Println("result yaml validation", result)
+
+	if !result.Valid() {
+		var errorMessages []string
+		for _, desc := range result.Errors() {
+			errorMessages = append(errorMessages, desc.String())
+		}
+		return fmt.Errorf("tags.yaml does not conform to the schema:\n%s", errorMessages)
+	}
+
 	return nil
 }
 
+// Helper function to convert YAML data to JSON compatible format
+func convertYAMLtoJSON(yamlData interface{}) (interface{}, error) {
+	jsonData, err := json.Marshal(yamlData)
+	if err != nil {
+		return nil, fmt.Errorf("error converting YAML to JSON: %v", err)
+	}
+
+	var jsonResult interface{}
+	err = json.Unmarshal(jsonData, &jsonResult)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling JSON: %v", err)
+	}
+
+	return jsonResult, nil
+}
 func loadYAML(relativeFilepath string) (interface{}, error) {
 	// Get the absolute path of the YAML file
 	absFilepath, err := filepath.Abs(relativeFilepath)
