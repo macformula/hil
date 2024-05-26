@@ -62,7 +62,6 @@ func NewResultProcessor(l *zap.Logger, address string, opts ...Option) *ResultPr
 		pushReportsToGithub: false,
 		serverAutoStart:     false,
 	}
-
 	for _, o := range opts {
 		o(ret)
 	}
@@ -108,7 +107,6 @@ func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) 
 	if !reply.Success {
 		return false, errors.New(reply.Error)
 	}
-	fmt.Printf("SubmitTags: Tag: %s, Value: %v\n", request.Tag, request.Data)
 
 	return reply.IsPassing, nil
 }
@@ -123,7 +121,6 @@ func (r *ResultProcessor) CompleteTest(ctx context.Context, testId uuid.UUID, se
 	if err != nil {
 		return false, errors.Wrap(err, "complete test")
 	}
-	fmt.Printf("CompleteTest: TestId: %s, SequenceName: %s, PushReportToGithub: %t\n", testId.String(), sequenceName, r.pushReportsToGithub)
 	return reply.TestPassed, nil
 }
 
@@ -132,7 +129,6 @@ func (r *ResultProcessor) SubmitError(ctx context.Context, err error) error {
 	if submitErr != nil {
 		return errors.Wrap(err, "submit error")
 	}
-	fmt.Printf("SubmitError: %s\n", err.Error())
 	return nil
 }
 
@@ -184,6 +180,5 @@ func createRequest(tag string, data any) (*proto.SubmitTagRequest, error) {
 	default:
 		return nil, errors.Errorf("unsupported data type for tag submission (%T)", data)
 	}
-
 	return request, nil
 }

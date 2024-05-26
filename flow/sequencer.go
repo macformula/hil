@@ -2,10 +2,11 @@ package flow
 
 import (
 	"context"
-	"github.com/google/uuid"
+	"fmt" //delete later !!!
 	"time"
 
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/google/uuid"
 	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -80,7 +81,7 @@ func (s *Sequencer) Run(
 	}
 
 	s.failedTags = []Tag{}
-
+	fmt.Println("Sequencer.Run: Starting sequence:", seq.Name) // Start of sequence
 	isPassing, err := s.runSequence(ctx, seq, cancelTest, testId)
 	if err != nil {
 		testErrors := append(s.testErrors, errors.Wrap(err, "run sequence"))
@@ -91,7 +92,7 @@ func (s *Sequencer) Run(
 
 	testErrors := s.testErrors
 	s.testErrors = []error{}
-
+	fmt.Println("Sequencer.Run: Sequence complete")
 	return isPassing, s.failedTags, testErrors, nil
 }
 
@@ -125,9 +126,9 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence, cancelTest ch
 		_ = s.progressFeed.Send(s.progress)
 
 		s.l.Info("starting next state", zap.String("state", state.Name()))
-
+		fmt.Println("Sequencer.runSequence: Starting state:", state.Name()) // Start of state
 		s.runState(ctx, cancelTest, state)
-
+		fmt.Println("Sequencer.runSequence: Processing results for state:", state.Name()) // Processing state results
 		s.l.Info("processing results", zap.String("state", state.Name()))
 
 		continueSequence, err := s.processResults(ctx, state)
@@ -168,7 +169,7 @@ func (s *Sequencer) runState(ctx context.Context, cancelTest chan struct{}, stat
 	go s.monitorCancelSignal(ctx, cancelTest)
 
 	s.l.Info("setting up state", zap.String("state", state.Name()))
-
+	fmt.Println("Sequencer.runState: Setting up state:", state.Name()) // State setup start
 	// Set up the state for execution
 	err := state.Setup(timeoutCtx)
 	if err != nil {
@@ -190,7 +191,8 @@ func (s *Sequencer) runState(ctx context.Context, cancelTest chan struct{}, stat
 	// If we encounter an error during setup, return early and do not call run.
 	if s.regularErr.Err() != nil || s.fatalErr.Err() != nil {
 		s.progress.StateDuration = append(s.progress.StateDuration, time.Since(startTime))
-
+		fmt.Println("Sequencer.runState: Setup failed for state:", state.Name(),
+			"with error:", s.regularErr.Err(), s.fatalErr.Err()) // State setup failed
 		return
 	}
 
@@ -198,7 +200,7 @@ func (s *Sequencer) runState(ctx context.Context, cancelTest chan struct{}, stat
 	defer s.cancelCurrentTest()
 
 	s.l.Info("running state", zap.String("state", state.Name()))
-
+	fmt.Println("Sequencer.runState: Running state:", state.Name()) // State execution start
 	// Run the state logic
 	err = state.Run(timeoutCtx)
 	if err != nil {
@@ -251,7 +253,7 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 		if err != nil {
 			return false, errors.Wrap(err, "submit tag")
 		}
-
+		fmt.Println("Sequencer.processResults: Submitted tag", tag.ID, "with value:", value) // Tag submission
 		if !isPassing {
 			statePassed = false
 			s.failedTags = append(s.failedTags, tag)
@@ -277,7 +279,7 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 	default:
 		continueSequence = false
 	}
-
+	fmt.Println("Sequencer.processResults: State", state.Name(), "passed:", statePassed) // State pass/fail
 	s.regularErr.Reset()
 
 	return continueSequence, nil
