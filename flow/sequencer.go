@@ -143,7 +143,6 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence, cancelTest ch
 	_ = s.progressFeed.Send(s.progress)
 
 	passingTest, err := s.rp.CompleteTest(ctx, testId, seq.Name)
-	fmt.Printf("Sequence '%s' complete: Test ID: %s\n", seq.Name, testId.String())
 	s.l.Info("results processor CompleteTest call complete")
 	if err != nil {
 		return false, errors.Wrap(err, "complete test")
@@ -187,7 +186,7 @@ func (s *Sequencer) runState(ctx context.Context, cancelTest chan struct{}, stat
 	// If we encounter an error during setup, return early and do not call run.
 	if s.regularErr.Err() != nil || s.fatalErr.Err() != nil {
 		s.progress.StateDuration = append(s.progress.StateDuration, time.Since(startTime))
-		//fmt.Println("Sequencer.runState: Setup failed for state:", state.Name(),"with error:", s.regularErr.Err(), s.fatalErr.Err()) // State setup failed
+		fmt.Println("Sequencer.runState: Setup failed for state:", state.Name(), "with error:", s.regularErr.Err(), s.fatalErr.Err()) // State setup failed
 		return
 	}
 
