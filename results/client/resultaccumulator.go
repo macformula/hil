@@ -70,7 +70,7 @@ func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 		if tagInfo == nil {
 			return nil, fmt.Errorf("nil tag info for tag %s", tagID)
 		}
-
+		fmt.Println("tagInfo ", tagInfo, "\n")
 		infoMap, ok := tagInfo.(map[interface{}]interface{})
 		if !ok {
 			fmt.Println("ok ", ok, "\n")
