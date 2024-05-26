@@ -281,7 +281,7 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 		continueSequence = false
 	}
 
-	fmt.Println("Sequencer.processResults: State", state.Name(), "passed:", statePassed, " ", state.GetResults()) // State pass/fail
+	//fmt.Println("Sequencer.processResults: State", state.Name(), "passed:", statePassed, " ", state.GetResults()) // State pass/fail
 	s.regularErr.Reset()
 
 	return continueSequence, nil
