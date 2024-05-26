@@ -66,11 +66,17 @@ func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 
 	testMap := make(map[string]Test)
 	for tagID, tagInfo := range tags {
+		// Nil Check Before Type Assertion: Check if tagInfo is not nil before trying to access it
+		if tagInfo == nil {
+			return nil, fmt.Errorf("nil tag info for tag %s", tagID)
+		}
+
 		infoMap, ok := tagInfo.(map[interface{}]interface{})
 		if !ok {
 			fmt.Println("ok ", ok, "\n")
-			return nil, fmt.Errorf("invalid tag info format for tag %s", tagID)
+			return nil, fmt.Errorf("invalid tag info format for tag %s: %T", tagID, tagInfo)
 		}
+
 		fmt.Println("infoMap ", infoMap, "\n")
 		// test := Test{
 		// 	ID: uuid.New(),
