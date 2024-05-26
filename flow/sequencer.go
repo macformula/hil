@@ -81,7 +81,7 @@ func (s *Sequencer) Run(
 	}
 
 	s.failedTags = []Tag{}
-	//fmt.Println("Sequencer.Run: Starting sequence:", seq.Name) // Start of sequence
+	fmt.Println("Sequencer.Run: Starting sequence:", seq.Name) // Start of sequence
 	isPassing, err := s.runSequence(ctx, seq, cancelTest, testId)
 	if err != nil {
 		testErrors := append(s.testErrors, errors.Wrap(err, "run sequence"))
@@ -89,16 +89,6 @@ func (s *Sequencer) Run(
 
 		return false, s.failedTags, testErrors, errors.Wrap(err, "run sequence")
 	}
-
-	fmt.Printf("Sequencer.Run: Starting sequence:\n"+
-		"- Name: %s\n"+
-		"- Passing: %v\n"+
-		"- Test ID: %s\n"+
-		"- States: %v\n"+
-		"- Description: %s\n"+
-		"- Errors: %v\n"+
-		"- Progress: %v\n",
-		seq.Name, isPassing, testId, seq.States, seq.Desc, s.testErrors, s.progress)
 
 	testErrors := s.testErrors
 	s.testErrors = []error{}
@@ -157,7 +147,16 @@ func (s *Sequencer) runSequence(ctx context.Context, seq Sequence, cancelTest ch
 	if err != nil {
 		return false, errors.Wrap(err, "complete test")
 	}
-
+	fmt.Printf(
+		"Sequence '%s' complete:\n"+
+			"  - Passing: %t\n"+
+			"  - Progress: %.1f%%\n"+
+			"  - Test ID: %s\n",
+		seq.Name,
+		passingTest,
+		float64(s.progress.StateIndex+1)/float64(len(seq.States))*100.0,
+		testId.String(),
+	)
 	return passingTest, nil
 }
 
