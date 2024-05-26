@@ -41,8 +41,8 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 		return err
 	}
 	// 2. Convert tag.yaml into Test structures
-	//ra.tagDb, err = loadTestsFromYAML(tagsFilepath)
-	err = loadTestsFromYAML(tagsFilepath)
+	ra.tagDb, err = loadTestsFromYAML(tagsFilepath)
+
 	if err != nil {
 		fmt.Println("err load yaml ", err)
 		return err
