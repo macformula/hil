@@ -64,7 +64,7 @@ func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 		return nil, fmt.Errorf("invalid tags data format in %s", filepath)
 	}
 
-	testMap := make(map[string]Test)
+	//testMap := make(map[string]Test)
 	for tagID, tagInfo := range tags {
 		// Nil Check Before Type Assertion: Check if tagInfo is not nil before trying to access it
 		if tagInfo == nil {
@@ -86,7 +86,8 @@ func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 			test.ExpectedValue, _ = m["expectedVal"].(string) // Extract bool
 			test.Type, _ = m["type"].(string)                 // Extract string
 			test.Unit, _ = m["unit"].(string)                 // Extract string
-
+			test.UpperLimit, _ = m["upperLimit"].(string)
+			test.LowerLimit, _ = m["lowerLimit"].(string)
 			fmt.Println("Compare Op:", test.CompOp)
 			fmt.Println("Description:", test.Description)
 			fmt.Println("Expected Val:", test.ExpectedValue)
@@ -138,8 +139,9 @@ func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 
 		// testMap[tagID] = test
 	}
-	fmt.Println("testMap", testMap)
-	return testMap, nil
+	// fmt.Println("testMap", testMap)
+	// return testMap, nil
+	return nil, nil
 }
 
 func validateTags(tagsFilepath, schemaFilepath string) error {
