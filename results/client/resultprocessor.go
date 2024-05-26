@@ -98,7 +98,7 @@ func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) 
 	if err != nil {
 		return false, errors.Wrap(err, "create request")
 	}
-
+	fmt.Println("value: ", value)
 	reply, err := r.client.SubmitTag(ctx, request)
 	if err != nil {
 		return reply.IsPassing, errors.Wrap(err, "submit tag")
@@ -116,6 +116,10 @@ func (r *ResultProcessor) CompleteTest(ctx context.Context, testId uuid.UUID, se
 		SequenceName:       sequenceName,
 		PushReportToGithub: r.pushReportsToGithub,
 	})
+	// runs ra.generate_and_run_tests and returns test passed
+	// ra.generate_and_run_tests
+	//
+
 	if err != nil {
 		return false, errors.Wrap(err, "complete test")
 	}
