@@ -2,12 +2,9 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
-	firebase "firebase.google.com/go"
-	//"firebase.google.com/go/storage"
-
+	"github.com/google/uuid"
 	"github.com/macformula/hil/config"
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/httpdispatcher"
@@ -35,16 +32,21 @@ func main() {
 	defer logger.Sync()
 
 	//firebase setup code
-	app, _, _ := config.SetupFirebase()
-	type Data struct {
-		Message string `json:"message"`
-		Value   int    `json:"value"`
-	}
-	data := Data{Message: "Hello from Go!", Value: 42}
-	jsonData, _ := json.Marshal(data) // Convert to JSON bytes
-	err = sendToStorage(app, jsonData)
+	err = config.FirebaseDB().Connect()
 	if err != nil {
-		panic(errors.Wrap(err, "failed to send to storage"))
+		fmt.Errorf("error connecting to firebase db: %v", err)
+		return
+	}
+	// Initiate our store
+	store := flow.NewStore()
+	testID := uuid.NewString()
+	err = store.Create(&flow.Tag{
+		ID:          testID,
+		Description: "value: true",
+	})
+	tag, err := store.GetByID(testID)
+	fmt.Println("Tag: %v\n", tag)
+	if err != nil {
 	}
 
 	//rp := test.NewSimpleResultProcessor(logger)
@@ -87,37 +89,4 @@ func main() {
 	}
 
 	logger.Info("shutdown main program")
-}
-
-func sendToStorage(app *firebase.App, jsonData []byte) error {
-	ctx := context.Background()
-
-	// Get a Storage Client
-	client, err := app.Storage(ctx)
-	if err != nil {
-		return fmt.Errorf("error getting Storage client: %v", err)
-	}
-
-	// Specify Bucket and Object Name
-	//bucketName := "your-bucket-name" // Replace with your actual bucket name
-	objectName := "data.json" // Or a dynamically generated name
-
-	// Get a Bucket Handle
-	bucket, err := client.DefaultBucket()
-	if err != nil {
-		return fmt.Errorf("error getting default bucket: %v", err)
-	}
-
-	// Create a Writer to Upload
-	wc := bucket.Object(objectName).NewWriter(ctx)
-	wc.ContentType = "application/json"
-	if _, err := wc.Write(jsonData); err != nil {
-		return fmt.Errorf("error writing to bucket: %v", err)
-	}
-	if err := wc.Close(); err != nil {
-		return fmt.Errorf("error closing writer: %v", err)
-	}
-
-	fmt.Println("JSON data successfully written to Firebase Storage:", objectName)
-	return nil
 }

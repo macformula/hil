@@ -2,32 +2,40 @@ package config
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 
 	firebase "firebase.google.com/go"
-	"firebase.google.com/go/messaging"
+	"firebase.google.com/go/db" // Import Realtime Database package
 	"google.golang.org/api/option"
 )
 
-func SetupFirebase() (*firebase.App, context.Context, *messaging.Client) {
+type FireDB struct {
+	*db.Client
+}
 
+var fireDB FireDB
+
+func FirebaseDB() *FireDB {
+	return &fireDB
+}
+
+func (db *FireDB) Connect() error {
 	ctx := context.Background()
-
 	serviceAccountKeyFilePath, err := filepath.Abs("../../../serviceAccountKey.json")
 	if err != nil {
-		panic("Unable to load serviceAccountKeys.json file")
+		return fmt.Errorf("error loading service account key: %v", err)
 	}
-
 	opt := option.WithCredentialsFile(serviceAccountKeyFilePath)
-
-	//Firebase admin SDK initialization
-	app, err := firebase.NewApp(context.Background(), nil, opt)
+	config := &firebase.Config{DatabaseURL: "https://macformula-ui-testing-default-rtdb.firebaseio.com/"}
+	app, err := firebase.NewApp(ctx, config, opt)
 	if err != nil {
-		panic("Firebase load error")
+		return fmt.Errorf("error initializing app: %v", err)
 	}
-
-	//Messaging client
-	client, _ := app.Messaging(ctx)
-
-	return app, ctx, client
+	client, err := app.Database(ctx)
+	if err != nil {
+		return fmt.Errorf("error initializing database: %v", err)
+	}
+	db.Client = client
+	return nil
 }
