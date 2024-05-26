@@ -75,10 +75,11 @@ func validateTags(tagsFilepath, schemaFilepath string) error {
 func loadYAML(filepath string) (interface{}, error) {
 	data, err := os.ReadFile(filepath)
 	if err != nil {
+		fmt.Println("err ", err)
 		return nil, err
 	}
 	var out interface{}
-	fmt.Println("out ", out)
+
 	err = yaml.Unmarshal(data, &out)
 
 	if err != nil {
