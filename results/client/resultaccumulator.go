@@ -54,10 +54,11 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 	tagData, err := loadYAML(filepath)
 	if err != nil {
-		fmt.Printf("err load yaml in: %v", err)
+		fmt.Printf("err load yaml in", err)
 		return nil, fmt.Errorf("invalid tags data format in %s", filepath)
 	}
 
+	// // Type assertion to ensure tagData is a map[string]interface{}
 	tags, ok := tagData.(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("invalid tags data format in %s", filepath)
@@ -71,30 +72,48 @@ func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 		}
 
 		test := Test{
-			ID:          uuid.New(),
-			Description: getOrDefault(infoMap, "description", "").(string),
-			CompOp:      getOrDefault(infoMap, "compareOp", "").(string),
-			Unit:        getOrDefault(infoMap, "unit", "Unitless").(string),
+			ID: uuid.New(),
 		}
 
-		// Correctly handle boolean values (convert interface{} to bool)
+		if description, ok := infoMap["description"].(string); ok {
+			test.Description = description
+		}
+
+		if compOp, ok := infoMap["compareOp"].(string); ok {
+			test.CompOp = compOp
+		}
+
+		if unit, ok := infoMap["unit"].(string); ok {
+			test.Unit = unit
+		}
+
 		if expectedVal, ok := infoMap["expectedVal"]; ok {
-			if expectedValBool, ok := expectedVal.(bool); ok {
-				test.Value = expectedValBool // Set Value to the boolean value
-				test.Type = "bool"           // Set Type to the string "bool" (if needed for your logic)
-			} else {
-				// Handle the case where expectedVal is not a boolean
-				test.ExpectedValue = getStringFromInterface(expectedVal) // Use the existing helper function
+			switch v := expectedVal.(type) {
+			case bool:
+				test.Value = v
+				test.Type = "bool"
+			case string:
+				test.ExpectedValue = v
+			case int:
+				test.ExpectedValue = strconv.Itoa(v)
+			case float64:
+				test.ExpectedValue = strconv.FormatFloat(v, 'f', -1, 64) // Convert float64 to string with full precision
+			default:
+				return nil, fmt.Errorf("invalid type for expectedVal in tag %s", tagID)
 			}
 		}
 
-		// Handle optional numeric fields with type conversion (unchanged)
-		test.UpperLimit = getStringFromInterface(getOrDefault(infoMap, "upperLimit", "0"))
-		test.LowerLimit = getStringFromInterface(getOrDefault(infoMap, "lowerLimit", "0"))
+		if upperLimit, ok := infoMap["upperLimit"]; ok {
+			test.UpperLimit = getStringFromInterface(upperLimit)
+		}
+
+		if lowerLimit, ok := infoMap["lowerLimit"]; ok {
+			test.LowerLimit = getStringFromInterface(lowerLimit)
+		}
 
 		testMap[tagID] = test
 	}
-	fmt.Println("testmap: ", testMap)
+	fmt.Println("testMap", testMap)
 	return testMap, nil
 }
 
@@ -166,13 +185,6 @@ func loadYAML(relativeFilepath string) (interface{}, error) {
 
 	// Return the unmarshalled data (not the JSON string)
 	return out, nil
-}
-
-func getOrDefault(data map[interface{}]interface{}, key string, defaultValue interface{}) interface{} {
-	if val, ok := data[key]; ok {
-		return val
-	}
-	return defaultValue
 }
 
 func getStringFromInterface(value interface{}) string {
