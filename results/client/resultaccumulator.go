@@ -1,0 +1,92 @@
+package results
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/google/uuid"
+	"github.com/xeipuuv/gojsonschema"
+	"gopkg.in/yaml.v2"
+)
+
+const (
+	tagsFilepath       = "../server/tags.yaml"
+	tagsSchemaFilepath = "../server/schema/tags_schema.json"
+)
+
+type Test struct {
+	ID            uuid.UUID `json:"id"`
+	Description   string    `json:"description"`
+	Value         bool      `json:"final_value"`
+	CompOp        string    `json:"comp_op"`
+	UpperLimit    string    `json:"upper_limit"`
+	LowerLimit    string    `json:"lower_limit"`
+	ExpectedValue string    `json:"expected_val"`
+	Type          bool      `json:"type"`
+	Unit          string    `json:"unit"`
+}
+
+type ResultAccumulator struct {
+	tagDb            map[string]Test        // tag_id -> Tag
+	tagSubmissions   map[string]interface{} // tag_id -> value cache
+	errorSubmissions []string               // list of cached errors
+	allTagsPassing   bool
+}
+
+func (ra *ResultAccumulator) NewResultAccumulator() error {
+	// 1. Validate tags.yaml against tags_scheme.json
+	err := validateTags(tagsFilepath, tagsSchemaFilepath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func validateTags(tagsFilepath, schemaFilepath string) error {
+	tagsData, err := loadYAML(tagsFilepath)
+	if err != nil {
+		return err
+	}
+	schemaLoader := gojsonschema.NewReferenceLoader(schemaFilepath)
+
+	// Load the tags data into a JSON schema loader (since the library expects JSON)
+	documentLoader := gojsonschema.NewGoLoader(tagsData)
+
+	// Perform the validation
+	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
+	if err != nil {
+		return fmt.Errorf("error during validation: %v", err)
+	}
+
+	// Check the validation result
+	if !result.Valid() {
+		var errorMessages []string
+		for _, desc := range result.Errors() {
+			errorMessages = append(errorMessages, desc.String())
+		}
+		return fmt.Errorf("tags.yaml does not conform to the schema:\n%s", errorMessages)
+	}
+	fmt.Println("result yaml validation", result)
+	return nil
+}
+
+func loadYAML(filepath string) (interface{}, error) {
+	data, err := os.ReadFile(filepath)
+	if err != nil {
+		return nil, err
+	}
+	var out interface{}
+	err = yaml.Unmarshal(data, &out)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// func getOrDefault(data map[interface{}]interface{}, key string, defaultValue interface{}) interface{} {
+// 	if val, ok := data[key]; ok {
+// 		return val
+// 	}
+// 	return defaultValue
+// }
