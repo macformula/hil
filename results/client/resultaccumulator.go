@@ -62,7 +62,7 @@ func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 	// 	return nil, fmt.Errorf("invalid tags data format in %s", filepath)
 	// }
 
-	// testMap := make(map[string]Test)
+	testMap := make(map[string]Test)
 	// for tagID, tagInfo := range tags {
 	// 	// Ensure tagInfo is map[string]interface{}
 	// 	infoMap, ok := tagInfo.(map[interface{}]interface{})
@@ -90,8 +90,7 @@ func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 	// 	testMap[tagID] = test
 	// }
 
-	// return testMap, nil
-	return nil
+	return testMap, nil
 }
 
 func validateTags(tagsFilepath, schemaFilepath string) error {
