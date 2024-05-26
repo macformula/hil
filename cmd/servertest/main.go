@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/macformula/hil/config"
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/httpdispatcher"
@@ -37,17 +36,17 @@ func main() {
 		fmt.Errorf("error connecting to firebase db: %v", err)
 		return
 	}
-	// Initiate our store
-	store := flow.NewStore()
-	testID := uuid.NewString()
-	err = store.Create(&flow.Tag{
-		ID:          testID,
-		Description: "value: true",
-	})
-	tag, err := store.GetByID(testID)
-	fmt.Println("Tag: %v\n", tag)
-	if err != nil {
-	}
+	// // Initiate our store
+	// store := flow.NewStore()
+	// testID := uuid.NewString()
+	// err = store.Create(&flow.Tag{
+	// 	ID:          testID,
+	// 	Description: "value: true",
+	// })
+	// tag, err := store.GetByID(testID)
+	// fmt.Println("Tag: %v\n", tag)
+	// if err != nil {
+	// }
 
 	//rp := test.NewSimpleResultProcessor(logger)
 	resultProcessor := results.NewResultProcessor(logger,

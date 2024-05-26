@@ -107,7 +107,6 @@ func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) 
 	if !reply.Success {
 		return false, errors.New(reply.Error)
 	}
-
 	return reply.IsPassing, nil
 }
 
@@ -117,10 +116,10 @@ func (r *ResultProcessor) CompleteTest(ctx context.Context, testId uuid.UUID, se
 		SequenceName:       sequenceName,
 		PushReportToGithub: r.pushReportsToGithub,
 	})
-
 	if err != nil {
 		return false, errors.Wrap(err, "complete test")
 	}
+
 	return reply.TestPassed, nil
 }
 

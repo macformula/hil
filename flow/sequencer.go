@@ -108,7 +108,6 @@ func (s *Sequencer) ResetFatalError() {
 
 func (s *Sequencer) Close() error {
 	s.l.Info("closing sequencer")
-
 	err := s.rp.Close()
 	if err != nil {
 		return errors.Wrap(err, "result processor close")
@@ -187,7 +186,7 @@ func (s *Sequencer) runState(ctx context.Context, cancelTest chan struct{}, stat
 	// If we encounter an error during setup, return early and do not call run.
 	if s.regularErr.Err() != nil || s.fatalErr.Err() != nil {
 		s.progress.StateDuration = append(s.progress.StateDuration, time.Since(startTime))
-		//fmt.Println("Sequencer.runState: Setup failed for state:", state.Name(),"with error:", s.regularErr.Err(), s.fatalErr.Err()) // State setup failed
+		fmt.Println("Sequencer.runState: Setup failed for state:", state.Name(), "with error:", s.regularErr.Err(), s.fatalErr.Err()) // State setup failed
 		return
 	}
 
@@ -247,7 +246,6 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 		if err != nil {
 			return false, errors.Wrap(err, "submit tag")
 		}
-		fmt.Println("Sequencer.processResults: Submitted tag", tag.ID, "with value:", value) // Tag submission
 		if !isPassing {
 			statePassed = false
 			s.failedTags = append(s.failedTags, tag)
@@ -273,7 +271,8 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 	default:
 		continueSequence = false
 	}
-	fmt.Println("Sequencer.processResults: State", state.Name(), "passed:", statePassed) // State pass/fail
+
+	fmt.Println("Sequencer.processResults: State", state.Name(), "passed:", statePassed, " ", state.GetResults()) // State pass/fail
 	s.regularErr.Reset()
 
 	return continueSequence, nil
