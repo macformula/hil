@@ -81,7 +81,7 @@ func (s *Sequencer) Run(
 	}
 
 	s.failedTags = []Tag{}
-	fmt.Println("Sequencer.Run: Starting sequence:", seq.Name) // Start of sequence
+	//fmt.Println("Sequencer.Run: Starting sequence:", seq.Name) // Start of sequence
 	isPassing, err := s.runSequence(ctx, seq, cancelTest, testId)
 	if err != nil {
 		testErrors := append(s.testErrors, errors.Wrap(err, "run sequence"))
@@ -89,6 +89,7 @@ func (s *Sequencer) Run(
 
 		return false, s.failedTags, testErrors, errors.Wrap(err, "run sequence")
 	}
+
 	fmt.Printf("Sequencer.Run: Starting sequence:\n"+
 		"- Name: %s\n"+
 		"- Passing: %v\n"+

@@ -121,6 +121,7 @@ func (r *ResultProcessor) CompleteTest(ctx context.Context, testId uuid.UUID, se
 	if err != nil {
 		return false, errors.Wrap(err, "complete test")
 	}
+	fmt.Println("testID: %v, sequenceName: %s, PushReportToGithub: %v", testId, sequenceName, r.pushReportsToGithub)
 	return reply.TestPassed, nil
 }
 
