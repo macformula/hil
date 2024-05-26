@@ -98,7 +98,6 @@ func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) 
 	if err != nil {
 		return false, errors.Wrap(err, "create request")
 	}
-	fmt.Println("value: ", value)
 	reply, err := r.client.SubmitTag(ctx, request)
 	if err != nil {
 		return reply.IsPassing, errors.Wrap(err, "submit tag")
@@ -118,8 +117,12 @@ func (r *ResultProcessor) CompleteTest(ctx context.Context, testId uuid.UUID, se
 	})
 	// runs ra.generate_and_run_tests and returns test passed
 	// ra.generate_and_run_tests
-	//
-
+	// returns a list of all of the tag ids that were run for a specific test (tag_ids = list(self.tag_submissions.keys())) but self.tag_submissions is a dict so no repeats
+	// retuns the datetime for all of the tests that were performed (date_time = self.__generate_test_file(tag_ids)) all the tags have slightly different times as to when they were run
+	// checks if the tag list has any errors (has_errors = len(self.error_submissions) > 0) as errors are caught they are counted in the error_submissions variable
+	// (overall_pass_fail = self.all_tags_passing and (not has_errors)) redundancy check to see if all tags are true and error_submissions = 0
+	// in the code, they add the report to the json here
+	// then tag_submissions, error_submissions, and all_tags_passing are reset to defaul values
 	if err != nil {
 		return false, errors.Wrap(err, "complete test")
 	}
@@ -132,6 +135,7 @@ func (r *ResultProcessor) SubmitError(ctx context.Context, err error) error {
 	if submitErr != nil {
 		return errors.Wrap(err, "submit error")
 	}
+	// the err is appended to self.error_submissions variable then the length of the error list is returned (which should be one) then error checked
 	return nil
 }
 
@@ -147,7 +151,6 @@ func (r *ResultProcessor) Close() error {
 			return errors.Wrap(err, "kill server process")
 		}
 	}
-
 	return nil
 }
 
@@ -170,7 +173,7 @@ func (r *ResultProcessor) startServer(errCh chan error) {
 
 func createRequest(tag string, data any) (*proto.SubmitTagRequest, error) {
 	request := &proto.SubmitTagRequest{Tag: tag}
-
+	fmt.Println("tag: ", tag)
 	switch data.(type) {
 	case int32:
 		request.Data = &proto.SubmitTagRequest_ValueInt{ValueInt: data.(int32)}
