@@ -173,7 +173,7 @@ func (r *ResultProcessor) startServer(errCh chan error) {
 
 func createRequest(tag string, data any) (*proto.SubmitTagRequest, error) {
 	request := &proto.SubmitTagRequest{Tag: tag}
-	fmt.Println("tag: ", tag)
+	fmt.Println("data: ", data)
 	switch data.(type) {
 	case int32:
 		request.Data = &proto.SubmitTagRequest_ValueInt{ValueInt: data.(int32)}
