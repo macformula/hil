@@ -98,7 +98,7 @@ func loadTestsFromYAML(filepath string) error {
 func validateTags(tagsFilepath, schemaFilepath string) error {
 	tagsData, err := loadYAML(tagsFilepath)
 	if err != nil {
-		fmt.Println("err 2 ", err)
+		fmt.Println("err 2 \n\n", err)
 		return err
 	}
 	absSchemaPath, _ := filepath.Abs(schemaFilepath)
