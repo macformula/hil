@@ -51,8 +51,8 @@ func validateTags(tagsFilepath, schemaFilepath string) error {
 		return err
 	}
 	absSchemaPath, _ := filepath.Abs(schemaFilepath)
-	//schemaURI := "file://" + absSchemaPath
-	schemaLoader := gojsonschema.NewReferenceLoader(absSchemaPath)
+	schemaURI := "file://" + absSchemaPath
+	schemaLoader := gojsonschema.NewReferenceLoader(schemaURI)
 
 	// // Load the tags data into a JSON schema loader (since the library expects JSON)
 	documentLoader := gojsonschema.NewGoLoader(tagsData)
