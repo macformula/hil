@@ -68,50 +68,51 @@ func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 	for tagID, tagInfo := range tags {
 		infoMap, ok := tagInfo.(map[interface{}]interface{})
 		if !ok {
+			fmt.Println("ok ", ok, "\n")
 			return nil, fmt.Errorf("invalid tag info format for tag %s", tagID)
 		}
+		fmt.Println("infoMap ", infoMap, "\n")
+		// test := Test{
+		// 	ID: uuid.New(),
+		// }
 
-		test := Test{
-			ID: uuid.New(),
-		}
+		// if description, ok := infoMap["description"].(string); ok {
+		// 	test.Description = description
+		// }
 
-		if description, ok := infoMap["description"].(string); ok {
-			test.Description = description
-		}
+		// if compOp, ok := infoMap["compareOp"].(string); ok {
+		// 	test.CompOp = compOp
+		// }
 
-		if compOp, ok := infoMap["compareOp"].(string); ok {
-			test.CompOp = compOp
-		}
+		// if unit, ok := infoMap["unit"].(string); ok {
+		// 	test.Unit = unit
+		// }
 
-		if unit, ok := infoMap["unit"].(string); ok {
-			test.Unit = unit
-		}
+		// if expectedVal, ok := infoMap["expectedVal"]; ok {
+		// 	switch v := expectedVal.(type) {
+		// 	case bool:
+		// 		test.Value = v
+		// 		test.Type = "bool"
+		// 	case string:
+		// 		test.ExpectedValue = v
+		// 	case int:
+		// 		test.ExpectedValue = strconv.Itoa(v)
+		// 	case float64:
+		// 		test.ExpectedValue = strconv.FormatFloat(v, 'f', -1, 64) // Convert float64 to string with full precision
+		// 	default:
+		// 		return nil, fmt.Errorf("invalid type for expectedVal in tag %s", tagID)
+		// 	}
+		// }
 
-		if expectedVal, ok := infoMap["expectedVal"]; ok {
-			switch v := expectedVal.(type) {
-			case bool:
-				test.Value = v
-				test.Type = "bool"
-			case string:
-				test.ExpectedValue = v
-			case int:
-				test.ExpectedValue = strconv.Itoa(v)
-			case float64:
-				test.ExpectedValue = strconv.FormatFloat(v, 'f', -1, 64) // Convert float64 to string with full precision
-			default:
-				return nil, fmt.Errorf("invalid type for expectedVal in tag %s", tagID)
-			}
-		}
+		// if upperLimit, ok := infoMap["upperLimit"]; ok {
+		// 	test.UpperLimit = getStringFromInterface(upperLimit)
+		// }
 
-		if upperLimit, ok := infoMap["upperLimit"]; ok {
-			test.UpperLimit = getStringFromInterface(upperLimit)
-		}
+		// if lowerLimit, ok := infoMap["lowerLimit"]; ok {
+		// 	test.LowerLimit = getStringFromInterface(lowerLimit)
+		// }
 
-		if lowerLimit, ok := infoMap["lowerLimit"]; ok {
-			test.LowerLimit = getStringFromInterface(lowerLimit)
-		}
-
-		testMap[tagID] = test
+		// testMap[tagID] = test
 	}
 	fmt.Println("testMap", testMap)
 	return testMap, nil
