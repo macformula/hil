@@ -7,7 +7,7 @@ FW001:
 FW002:
   description: "Pre startup pack voltage"
   compareOp: "LT"
-  upperLimit: 400
+  upperLimit: "400"
   type: float
   unit: "V"
 FW003:
