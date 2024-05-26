@@ -89,7 +89,7 @@ func (s *Sequencer) Run(
 
 		return false, s.failedTags, testErrors, errors.Wrap(err, "run sequence")
 	}
-
+	fmt.Println("Sequencer.Run: Starting sequence:", seq.Name) // Start of sequence
 	testErrors := s.testErrors
 	s.testErrors = []error{}
 	return isPassing, s.failedTags, testErrors, nil
@@ -108,7 +108,7 @@ func (s *Sequencer) ResetFatalError() {
 
 func (s *Sequencer) Close() error {
 	s.l.Info("closing sequencer")
-
+	fmt.Println("Sequencer.Close: Closing sequence:")
 	err := s.rp.Close()
 	if err != nil {
 		return errors.Wrap(err, "result processor close")
