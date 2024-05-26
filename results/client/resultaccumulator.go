@@ -74,6 +74,7 @@ func validateTags(tagsFilepath, schemaFilepath string) error {
 }
 
 func loadYAML(filepath string) (interface{}, error) {
+	fmt.Println("in load yaml")
 	data, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, err
