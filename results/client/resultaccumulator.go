@@ -59,7 +59,8 @@ func validateTags(tagsFilepath, schemaFilepath string) error {
 	// // Perform the validation
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
-		return fmt.Errorf("error during validation: %v", err)
+		fmt.Println("err ", err)
+		return err
 	}
 	fmt.Println("result ", result)
 	// // Check the validation result
