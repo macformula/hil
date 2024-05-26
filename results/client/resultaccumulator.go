@@ -56,7 +56,7 @@ func loadTestsFromYAML(filepath string) error {
 		fmt.Printf("err load yaml in", err)
 		return nil
 	}
-	fmt.Printf("tag data", tagData)
+	fmt.Println("tag data  \n\n", tagData)
 	// // Type assertion to ensure tagData is a map[string]interface{}
 	// tags, ok := tagData.(map[string]interface{})
 	// if !ok {
@@ -98,7 +98,7 @@ func loadTestsFromYAML(filepath string) error {
 func validateTags(tagsFilepath, schemaFilepath string) error {
 	tagsData, err := loadYAML(tagsFilepath)
 	if err != nil {
-		fmt.Println("err 2 \n\n", err)
+		fmt.Println("err 2", err)
 		return err
 	}
 	absSchemaPath, _ := filepath.Abs(schemaFilepath)
