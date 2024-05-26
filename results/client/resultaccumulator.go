@@ -78,8 +78,9 @@ func loadYAML(filepath string) (interface{}, error) {
 		return nil, err
 	}
 	var out interface{}
-	err = yaml.Unmarshal(data, &out)
 	fmt.Println("out ", out)
+	err = yaml.Unmarshal(data, &out)
+
 	if err != nil {
 		return nil, err
 	}
