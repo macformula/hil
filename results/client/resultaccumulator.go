@@ -78,20 +78,20 @@ func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 		// }
 
 		// fmt.Println("infoMap ", infoMap, "\n")
+		test := Test{}
+		if m, ok := tagInfo.(map[string]interface{}); ok {
 
-		if m, ok := data.(map[string]interface{}); ok {
+			test.CompOp, _ = m["compareOp"].(string)          // Extract string
+			test.Description, _ = m["description"].(string)   // Extract string
+			test.ExpectedValue, _ = m["expectedVal"].(string) // Extract bool
+			test.Type, _ = m["type"].(string)                 // Extract string
+			test.Unit, _ = m["unit"].(string)                 // Extract string
 
-			compareOp, _ := m["compareOp"].(string)     // Extract string
-			description, _ := m["description"].(string) // Extract string
-			expectedVal, _ := m["expectedVal"].(bool)   // Extract bool
-			typeStr, _ := m["type"].(string)            // Extract string
-			unit, _ := m["unit"].(string)               // Extract string
-
-			fmt.Println("Compare Op:", compareOp)
-			fmt.Println("Description:", description)
-			fmt.Println("Expected Val:", expectedVal)
-			fmt.Println("Type:", typeStr)
-			fmt.Println("Unit:", unit)
+			fmt.Println("Compare Op:", test.CompOp)
+			fmt.Println("Description:", test.Description)
+			fmt.Println("Expected Val:", test.ExpectedValue)
+			fmt.Println("Type:", test.Type)
+			fmt.Println("Unit:", test.Unit)
 		} else {
 			fmt.Println("Error: Data is not in the expected map format")
 		}
