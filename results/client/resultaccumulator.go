@@ -50,50 +50,48 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 	return nil
 }
 
-func loadTestsFromYAML(filepath string) error {
+func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 	tagData, err := loadYAML(filepath)
 	if err != nil {
 		fmt.Printf("err load yaml in", err)
-		return nil
+		return nil, fmt.Errorf("invalid tags data format in %s", filepath)
 	}
 
 	// // Type assertion to ensure tagData is a map[string]interface{}
 	tags, ok := tagData.(map[string]interface{})
 	if !ok {
-		return nil //, fmt.Errorf("invalid tags data format in %s", filepath)
+		return nil, fmt.Errorf("invalid tags data format in %s", filepath)
 	}
 
 	testMap := make(map[string]Test)
 	for tagID, tagInfo := range tags {
-		// Ensure tagInfo is map[string]interface{}
 		infoMap, ok := tagInfo.(map[interface{}]interface{})
 		if !ok {
-			fmt.Println("ok \n\n", ok)
-			return nil
+			fmt.Printf("ok in \n", ok)
+			return nil, fmt.Errorf("invalid tag info format for tag %s", tagID)
 		}
 		fmt.Println("||||", infoMap, "||||", testMap, "||||", tagID, "\n\n")
-		// 	// Create a new Test struct with defaults and override with values from tagInfo
-		// 	test := Test{
-		// 		ID:            uuid.Nil, // Generate a unique ID
-		// 		Description:   getOrDefault(infoMap, "description", "").(string),
-		// 		CompOp:        getOrDefault(infoMap, "compareOp", "").(string),
-		// 		Type:          false, // Assuming "type" is a bool, set default to false
-		// 		UpperLimit:    getOrDefault(infoMap, "upperLimit", "0").(string),
-		// 		LowerLimit:    getOrDefault(infoMap, "lowerLimit", "0").(string),
-		// 		ExpectedValue: getOrDefault(infoMap, "expectedVal", "0").(string),
-		// 		Unit:          getOrDefault(infoMap, "unit", "Unitless").(string),
-		// 	}
+		// // Create a new Test struct with defaults and override with values from tagInfo
+		// test := Test{
+		// 	ID:            uuid.Nil, // Generate a unique ID
+		// 	Description:   getOrDefault(infoMap, "description", "").(string),
+		// 	CompOp:        getOrDefault(infoMap, "compareOp", "").(string),
+		// 	Type:          false, // Assuming "type" is a bool, set default to false
+		// 	UpperLimit:    getOrDefault(infoMap, "upperLimit", "0").(string),
+		// 	LowerLimit:    getOrDefault(infoMap, "lowerLimit", "0").(string),
+		// 	ExpectedValue: getOrDefault(infoMap, "expectedVal", "0").(string),
+		// 	Unit:          getOrDefault(infoMap, "unit", "Unitless").(string),
+		// }
 
-		// 	// If value type is boolean then we want the final_value as a boolean
-		// 	if test.Type == "bool" {
-		// 		test.Value = getOrDefault(infoMap, "expectedVal", "false").(bool)
-		// 	}
+		// // If value type is boolean then we want the final_value as a boolean
+		// if test.Type == "bool" {
+		// 	test.Value = getOrDefault(infoMap, "expectedVal", "false").(bool)
+		// }
 
-		// 	testMap[tagID] = test
+		// testMap[tagID] = test
 	}
 
-	//return testMap, nil
-	return nil
+	return testMap, nil
 }
 
 func validateTags(tagsFilepath, schemaFilepath string) error {
@@ -166,9 +164,9 @@ func loadYAML(relativeFilepath string) (interface{}, error) {
 	return out, nil
 }
 
-// func getOrDefault(data map[interface{}]interface{}, key string, defaultValue interface{}) interface{} {
-// 	if val, ok := data[key]; ok {
-// 		return val
-// 	}
-// 	return defaultValue
-// }
+func getOrDefault(data map[interface{}]interface{}, key string, defaultValue interface{}) interface{} {
+	if val, ok := data[key]; ok {
+		return val
+	}
+	return defaultValue
+}
