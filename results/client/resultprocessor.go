@@ -89,7 +89,7 @@ func (r *ResultProcessor) Open(ctx context.Context) error {
 
 	r.conn = conn
 	r.client = proto.NewTagTunnelClient(conn)
-	r.ra.NewResultAccumulator()
+	//r.ra.NewResultAccumulator()
 	fmt.Println("in open")
 	return nil
 }
@@ -114,6 +114,7 @@ func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) 
 	if !reply.Success {
 		return false, errors.New(reply.Error)
 	}
+	fmt.Println("in submit tag")
 	return reply.IsPassing, nil //returns if the tag is passing or failing
 }
 
@@ -159,6 +160,7 @@ func (r *ResultProcessor) Close() error {
 			return errors.Wrap(err, "kill server process")
 		}
 	}
+	fmt.Println("in close")
 	return nil
 }
 
@@ -177,6 +179,7 @@ func (r *ResultProcessor) startServer(errCh chan error) {
 	if err != nil {
 		errCh <- errors.Wrap(err, "run output: "+string(out))
 	}
+	fmt.Println("in start server")
 }
 
 func createRequest(tag string, data any) (*proto.SubmitTagRequest, error) {
@@ -193,7 +196,6 @@ func createRequest(tag string, data any) (*proto.SubmitTagRequest, error) {
 	// then we go up a level into grpc, where if there was an error success=False, error=f"unknown tag id ({str(e)})", is_passing=is_passing
 	// else if there was not an error success=True, error="", is_passing=is_passing
 	// remember ispassing = false and error are not the same thing
-
 	switch data.(type) {
 	case int32:
 		request.Data = &proto.SubmitTagRequest_ValueInt{ValueInt: data.(int32)}
@@ -206,5 +208,6 @@ func createRequest(tag string, data any) (*proto.SubmitTagRequest, error) {
 	default:
 		return nil, errors.Errorf("unsupported data type for tag submission (%T)", data)
 	}
+	fmt.Println("in createRequest")
 	return request, nil
 }
