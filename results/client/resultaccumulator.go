@@ -54,6 +54,7 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 			return fmt.Errorf("missing expectedVal for test: %+v", test)
 		}
 	}
+	fmt.Println("ra.tabDb: ", ra.tagDb)
 	return nil
 }
 

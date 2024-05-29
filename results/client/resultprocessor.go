@@ -89,7 +89,7 @@ func (r *ResultProcessor) Open(ctx context.Context) error {
 
 	r.conn = conn
 	r.client = proto.NewTagTunnelClient(conn)
-	// r.ra.NewResultAccumulator()
+	r.ra.NewResultAccumulator()
 	fmt.Println("in open")
 	return nil
 }
