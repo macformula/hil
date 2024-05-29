@@ -42,17 +42,11 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 		return err
 	}
 	// 2. Convert tag.yaml into Test structures
-	testMap, err := loadTestsFromYAML(tagsFilepath) // Use the returned map
+	ra.tagDb, err = loadTestsFromYAML(tagsFilepath)
+
 	if err != nil {
 		fmt.Println("err load yaml ", err)
 		return err
-	}
-
-	// Iterate over the testMap and check for nil ExpectedValue
-	for _, test := range testMap {
-		if test.ExpectedValue == "" { // Or use nil if it's a pointer
-			return fmt.Errorf("missing expectedVal for test: %+v", test) // Provide more context in error
-		}
 	}
 	return nil
 }
