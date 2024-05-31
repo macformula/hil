@@ -96,7 +96,7 @@ func (r *ResultProcessor) Open(ctx context.Context) error {
 func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) (bool, error) {
 	request, err := createRequest(tag, value) //checks if the tag is correct and error free
 	r.ra.NewResultAccumulator()
-
+	fmt.Println("past init")
 	// fmt.Println("request ", request, " err ", err)
 	// request  tag:"FW001" value_bool:true  err  <nil>
 
@@ -106,6 +106,7 @@ func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) 
 
 	reply, err := r.client.SubmitTag(ctx, request) //actually submitting the tag
 	//fmt.Println("reply ", reply, " err ", err)
+	fmt.Println("past submit tag proto")
 	// reply  success:true is_passing:true  err  <nil>
 	if err != nil {
 		return reply.IsPassing, errors.Wrap(err, "submit tag")
@@ -114,6 +115,7 @@ func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) 
 	if !reply.Success {
 		return false, errors.New(reply.Error)
 	}
+	fmt.Println("end of submit tag")
 	return reply.IsPassing, nil //returns if the tag is passing or failing
 }
 
