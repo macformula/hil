@@ -106,6 +106,7 @@ func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) 
 
 	reply, err := r.client.SubmitTag(ctx, request) //actually submitting the tag
 	//fmt.Println("reply ", reply, " err ", err)
+	fmt.Println("past submit tag proto")
 	// reply  success:true is_passing:true  err  <nil>
 	if err != nil {
 		return reply.IsPassing, errors.Wrap(err, "submit tag")
