@@ -42,8 +42,8 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 		return err
 	}
 	// 2. Convert tag.yaml into Test structures
-	ra.tagDb, err = loadTestsFromYAML(tagsFilepath)
-
+	value, err := loadTestsFromYAML(tagsFilepath)
+	fmt.Println("value: ", value)
 	if err != nil {
 		fmt.Println("err load yaml ", err)
 		return err
@@ -84,16 +84,17 @@ func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 				test.ExpectedValue, _ = expectedVal.(string)
 			}
 
-			fmt.Println("Compare Op:", test.CompOp)
-			fmt.Println("Description:", test.Description)
-			fmt.Println("Expected Val:", test.ExpectedValue) // Might be empty if not in YAML
-			fmt.Println("Type:", test.Type)
-			fmt.Println("Unit:", test.Unit)
+			// fmt.Println("Compare Op:", test.CompOp)
+			// fmt.Println("Description:", test.Description)
+			// fmt.Println("Expected Val:", test.ExpectedValue) // Might be empty if not in YAML
+			// fmt.Println("Type:", test.Type)
+			// fmt.Println("Unit:", test.Unit)
 		} else {
 			fmt.Println("Error: Data is not in the expected map format")
 		}
 		testMap[tagID] = test
 	}
+	fmt.Println("end of load")
 	return testMap, nil
 }
 
