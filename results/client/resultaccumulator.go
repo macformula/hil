@@ -43,7 +43,7 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 	}
 	// 2. Convert tag.yaml into Test structures
 	value, err := loadTestsFromYAML(tagsFilepath)
-	fmt.Println("value: ", value)
+	fmt.Println(value)
 	if err != nil {
 		fmt.Println("err load yaml ", err)
 		return err
@@ -83,18 +83,11 @@ func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 				// Only assign if the key exists in the map
 				test.ExpectedValue, _ = expectedVal.(string)
 			}
-
-			// fmt.Println("Compare Op:", test.CompOp)
-			// fmt.Println("Description:", test.Description)
-			// fmt.Println("Expected Val:", test.ExpectedValue) // Might be empty if not in YAML
-			// fmt.Println("Type:", test.Type)
-			// fmt.Println("Unit:", test.Unit)
 		} else {
 			fmt.Println("Error: Data is not in the expected map format")
 		}
 		testMap[tagID] = test
 	}
-	fmt.Println("end of load")
 	return testMap, nil
 }
 

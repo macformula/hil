@@ -252,7 +252,6 @@ func (s *Sequencer) processResults(ctx context.Context, state State) (bool, erro
 
 	for tag, value := range results {
 		isPassing, err := s.rp.SubmitTag(ctx, tag.ID, value)
-		fmt.Println("past process results")
 		if err != nil {
 			return false, errors.Wrap(err, "submit tag")
 		}
