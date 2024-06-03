@@ -19,13 +19,13 @@ const (
 	_lvStartupName           = "lv_startup"
 	_lvStartupPollTimeout    = 10 * time.Second
 	_lvStartupContinueOnFail = true
-	_lvStartupTimeout        = 1 * time.Minute
+	_lvStartupTimeout        = 2 * time.Minute
 
 	_hvPositiveOn   = true
 	_hvPositiveOff  = false
 	_hvNegativeOn   = true
-	_hvNegativeOff  = true
-	_prechargeOff   = true
+	_hvNegativeOff  = false
+	_prechargeOff   = false
 	_inverterEnable = true
 )
 
@@ -38,32 +38,34 @@ type lvStartup struct {
 
 	fatalErr utils.ResettableError
 
-	successfulPowerCycle                  bool
-	tsalEnabled                           bool
-	tsalEnableDuration                    time.Duration
-	raspiEnabled                          bool
-	raspiEnableDuration                   time.Duration
-	frontControllerEnabled                bool
-	frontControllerEnableDuration         time.Duration
-	speedgoatEnabled                      bool
-	speedgoatEnableDuration               time.Duration
-	accumulatorEnabled                    bool
-	accumulatorEnableDuration             time.Duration
-	motorPrechargeEnabled                 bool
-	motorPrechargeEnableDuration          time.Duration
-	motorControllerEnabled                bool
-	motorControllerEnableDuration         time.Duration
-	motorPrechageDisabled                 bool
-	motorPrechageDisabledDuration         time.Duration
-	shutdownEnabledBeforeHvContactorsCan  bool
-	shutdownEnabledBeforeHvContactorsOpen bool
-	shutdownCircuitEnabled                bool
-	shutdownCircuitEnableDuration         time.Duration
-	inverterSwitchEnabled                 bool
-	inverterSwitchEnabledDuration         time.Duration
-	inverterEnabledBeforeHvContactorsCan  bool
-	inverterEnabledBeforeHvContactorsOpen bool
-	inverterEnabledBeforeCommand          bool
+	successfulPowerCycle                    bool
+	tsalEnabled                             bool
+	tsalEnableDuration                      time.Duration
+	raspiEnabled                            bool
+	raspiEnableDuration                     time.Duration
+	frontControllerEnabled                  bool
+	frontControllerEnableDuration           time.Duration
+	speedgoatEnabled                        bool
+	speedgoatEnableDuration                 time.Duration
+	accumulatorEnabled                      bool
+	accumulatorEnableDuration               time.Duration
+	motorPrechargeEnabled                   bool
+	motorPrechargeEnableDuration            time.Duration
+	motorControllerEnabled                  bool
+	motorControllerEnableDuration           time.Duration
+	motorPrechageDisabled                   bool
+	motorPrechageDisabledDuration           time.Duration
+	shutdownEnabledBeforeHvContactorsCan    bool
+	shutdownEnabledBeforeHvContactorsOpen   bool
+	shutdownCircuitEnabled                  bool
+	dcdcEnabledBeforeClosedContactors       bool
+	dcdcEnabledAfterClosedContactors        bool
+	shutdownCircuitEnableDuration           time.Duration
+	inverterSwitchEnabled                   bool
+	inverterSwitchEnabledDuration           time.Duration
+	inverterEnabledBeforeHvContactorsCan    bool
+	inverterEnabledBeforeHvContactorsClosed bool
+	inverterEnabledBeforeCommand            bool
 }
 
 func newLvStartup(a *macformula.App, l *zap.Logger) *lvStartup {
@@ -72,6 +74,7 @@ func newLvStartup(a *macformula.App, l *zap.Logger) *lvStartup {
 		a:  a,
 		tb: a.TestBench,
 		lv: a.LvControllerClient,
+		fc: a.FrontControllerClient,
 	}
 }
 
@@ -151,6 +154,15 @@ func (l *lvStartup) Run(ctx context.Context) error {
 		l.shutdownEnabledBeforeHvContactorsCan = true
 	}
 
+	inverterOn, err := l.lv.ReadInverterSwitchOn()
+	if err != nil {
+		return errors.Wrap(err, "read inverter switch on")
+	}
+
+	if inverterOn {
+		l.inverterEnabledBeforeHvContactorsCan = true
+	}
+
 	shutdownOn, err = l.sendContactorCommandCheckShutdownOn(
 		ctx, _hvPositiveOn, _hvNegativeOn, _prechargeOff, 2*time.Second, 100*time.Millisecond)
 	if err != nil {
@@ -159,15 +171,6 @@ func (l *lvStartup) Run(ctx context.Context) error {
 
 	if shutdownOn {
 		l.shutdownEnabledBeforeHvContactorsOpen = true
-	}
-
-	inverterOn, err := l.lv.ReadInverterSwitchOn()
-	if err != nil {
-		return errors.Wrap(err, "read inverter switch on")
-	}
-
-	if inverterOn {
-		l.inverterEnabledBeforeHvContactorsCan = true
 	}
 
 	l.shutdownCircuitEnabled, err = l.sendContactorCommandCheckShutdownOn(
@@ -182,7 +185,42 @@ func (l *lvStartup) Run(ctx context.Context) error {
 	}
 
 	if inverterOn {
-		l.inverterEnabledBeforeHvContactorsOpen = true
+		l.inverterEnabledBeforeHvContactorsClosed = true
+	}
+
+	dcdcEnabled, err := l.lv.ReadDcdcOn()
+	if err != nil {
+		return errors.Wrap(err, "read dcdc on")
+	}
+
+	if dcdcEnabled {
+		l.dcdcEnabledBeforeClosedContactors = true
+	}
+
+	err = l.fc.CommandContactors(ctx, _hvPositiveOn, _hvNegativeOn, _prechargeOff)
+	if err != nil {
+		return errors.Wrap(err, "command contactors")
+	}
+
+	time.Sleep(1 * time.Second)
+
+	l.dcdcEnabledAfterClosedContactors, err = l.lv.ReadDcdcOn()
+	if err != nil {
+		return errors.Wrap(err, "read dcdc on")
+	}
+
+	err = l.lv.SetDcdcValid(true)
+	if err != nil {
+		return errors.Wrap(err, "set dcdc valid")
+	}
+
+	inverterOn, err = l.lv.ReadInverterSwitchOn()
+	if err != nil {
+		return errors.Wrap(err, "read inverter switch on")
+	}
+
+	if inverterOn {
+		l.inverterEnabledBeforeCommand = true
 	}
 
 	err = l.fc.CommandInverter(ctx, _inverterEnable)
@@ -205,7 +243,7 @@ func (l *lvStartup) GetResults() map[flow.Tag]any {
 		config.LvStartupTags.TsalEnabled:                                       l.tsalEnabled,
 		config.LvStartupTags.TsalTimeToEnableMs:                                int(l.tsalEnableDuration.Milliseconds()),
 		config.LvStartupTags.RaspiEnabled:                                      l.raspiEnabled,
-		config.LvStartupTags.RaspiTimeToEnableMs:                               l.raspiEnableDuration,
+		config.LvStartupTags.RaspiTimeToEnableMs:                               int(l.raspiEnableDuration.Milliseconds()),
 		config.LvStartupTags.FrontControllerEnabled:                            l.frontControllerEnabled,
 		config.LvStartupTags.FrontControllerTimeToEnableMs:                     int(l.frontControllerEnableDuration.Milliseconds()),
 		config.LvStartupTags.SpeedgoatEnabled:                                  l.speedgoatEnabled,
@@ -220,9 +258,11 @@ func (l *lvStartup) GetResults() map[flow.Tag]any {
 		config.LvStartupTags.ShutdownCircuitEnabledBeforeOpenContactors:        l.shutdownEnabledBeforeHvContactorsOpen,
 		config.LvStartupTags.ShutdownCircuitEnabled:                            l.shutdownCircuitEnabled,
 		config.LvStartupTags.ShutdownCircuitTimeToEnable:                       int(l.shutdownCircuitEnableDuration.Milliseconds()),
+		config.LvStartupTags.DcdcEnabledBeforeContactorsClosed:                 l.dcdcEnabledBeforeClosedContactors,
+		config.LvStartupTags.DcdcEnabledAfterContactorsClosed:                  l.dcdcEnabledAfterClosedContactors,
 		config.LvStartupTags.InverterSwitchEnabledBeforeCan:                    l.inverterEnabledBeforeHvContactorsCan,
-		config.LvStartupTags.InverterSwitchEnabledBeforeOpenContactors:         l.inverterEnabledBeforeHvContactorsOpen,
-		config.LvStartupTags.InterverSwitchEnabledBeforeFrontControllerCommand: l.inverterEnabledBeforeCommand,
+		config.LvStartupTags.InverterSwitchEnabledBeforeClosedContactors:       l.inverterEnabledBeforeHvContactorsClosed,
+		config.LvStartupTags.InverterSwitchEnabledBeforeFrontControllerCommand: l.inverterEnabledBeforeCommand,
 		config.LvStartupTags.InverterSwitchEnabled:                             l.inverterSwitchEnabled,
 		config.LvStartupTags.InverterSwitchTimeToEnable:                        int(l.inverterSwitchEnabledDuration.Milliseconds()),
 	}
@@ -241,7 +281,7 @@ func (l *lvStartup) FatalError() error {
 }
 
 func (l *lvStartup) sendContactorCommandCheckShutdownOn(ctx context.Context,
-	hvpositive, hvNegative, precharge bool, timeout time.Duration, period time.Duration) (bool, error) {
+	hvPositive, hvNegative, precharge bool, timeout time.Duration, period time.Duration) (bool, error) {
 	timeoutChan := time.After(timeout)
 	ticker := time.NewTicker(period)
 	defer ticker.Stop()
@@ -253,7 +293,7 @@ func (l *lvStartup) sendContactorCommandCheckShutdownOn(ctx context.Context,
 		case <-timeoutChan:
 			return false, nil
 		case <-ticker.C:
-			err := l.fc.CommandContactors(ctx, hvpositive, hvNegative, precharge)
+			err := l.fc.CommandContactors(ctx, hvPositive, hvNegative, precharge)
 			if err != nil {
 				return false, errors.Wrap(err, "command contactors")
 			}

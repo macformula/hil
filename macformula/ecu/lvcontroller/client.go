@@ -108,10 +108,28 @@ func (c *Client) ReadShutdownCircuitOn() (bool, error) {
 }
 
 func (c *Client) ReadInverterSwitchOn() (bool, error) {
-	lvl, err := c.pinController.ReadDigitalLevel(pinout.InverterEn)
+	lvl, err := c.pinController.ReadDigitalLevel(pinout.InverterSwitchEn)
 	if err != nil {
 		return false, errors.Wrap(err, "read digital level")
 	}
 
 	return lvl, nil
+}
+
+func (c *Client) ReadDcdcOn() (bool, error) {
+	lvl, err := c.pinController.ReadDigitalLevel(pinout.DcdcEn)
+	if err != nil {
+		return false, errors.Wrap(err, "read digital level")
+	}
+
+	return lvl, nil
+}
+
+func (c *Client) SetDcdcValid(b bool) error {
+	err := c.pinController.SetDigitalLevel(pinout.DcdcValid, b)
+	if err != nil {
+		return errors.Wrap(err, "set digital level")
+	}
+
+	return nil
 }

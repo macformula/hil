@@ -4,6 +4,7 @@ import (
 	"github.com/macformula/hil/macformula/pinout"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"time"
 )
 
 const (
@@ -68,6 +69,8 @@ func (tb *TestBench) PowerCycle() error {
 	if err != nil {
 		return errors.Wrap(err, "set digital level")
 	}
+
+	time.Sleep(1 * time.Second)
 
 	if tb.checkLvControllerVoltage {
 		voltage, err = tb.pinController.ReadVoltage(pinout.LvController3v3RefVoltage)

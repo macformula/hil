@@ -29,11 +29,11 @@ func NewClient(pc *pinout.Controller, veh *canlink.CanClient, l *zap.Logger) *Cl
 }
 
 func (c *Client) CommandContactors(ctx context.Context, hvPositive, hvNegative, precharge bool) error {
-	var contactorCommand = vehcan.NewContactor_States()
+	var contactorCommand = vehcan.NewContactorStates()
 
-	contactorCommand.SetPack_Positive(utils.BoolToNumeric(hvPositive))
-	contactorCommand.SetPack_Negative(utils.BoolToNumeric(hvNegative))
-	contactorCommand.SetPack_Precharge(utils.BoolToNumeric(precharge))
+	contactorCommand.SetPackPositive(utils.BoolToNumeric(hvPositive))
+	contactorCommand.SetPackNegative(utils.BoolToNumeric(hvNegative))
+	contactorCommand.SetPackPrecharge(utils.BoolToNumeric(precharge))
 
 	err := c.vehCanClient.Send(ctx, contactorCommand)
 	if err != nil {
@@ -44,5 +44,14 @@ func (c *Client) CommandContactors(ctx context.Context, hvPositive, hvNegative, 
 }
 
 func (c *Client) CommandInverter(ctx context.Context, enable bool) error {
-	panic("implement me")
+	var inverterCommand = vehcan.NewInverterCommand()
+
+	inverterCommand.SetEnableInverter(enable)
+
+	err := c.vehCanClient.Send(ctx, inverterCommand)
+	if err != nil {
+		return errors.Wrap(err, "veh can client send")
+	}
+
+	return nil
 }

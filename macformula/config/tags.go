@@ -42,9 +42,11 @@ type LvStartupTagCollection struct {
 	ShutdownCircuitEnabledBeforeOpenContactors        flow.Tag
 	ShutdownCircuitEnabled                            flow.Tag
 	ShutdownCircuitTimeToEnable                       flow.Tag
+	DcdcEnabledBeforeContactorsClosed                 flow.Tag
+	DcdcEnabledAfterContactorsClosed                  flow.Tag
 	InverterSwitchEnabledBeforeCan                    flow.Tag
-	InverterSwitchEnabledBeforeOpenContactors         flow.Tag
-	InterverSwitchEnabledBeforeFrontControllerCommand flow.Tag
+	InverterSwitchEnabledBeforeClosedContactors       flow.Tag
+	InverterSwitchEnabledBeforeFrontControllerCommand flow.Tag
 	InverterSwitchEnabled                             flow.Tag
 	InverterSwitchTimeToEnable                        flow.Tag
 }
@@ -126,24 +128,32 @@ var LvStartupTags = LvStartupTagCollection{
 		ID:          "LVSTART019",
 		Description: " Shutdown circuit time to enable after contactos commanded open (ms).",
 	},
-	InverterSwitchEnabledBeforeCan: flow.Tag{
+	DcdcEnabledBeforeContactorsClosed: flow.Tag{
 		ID:          "LVSTART020",
+		Description: "Dcdc enabled before contactors commanded closed (ms).",
+	},
+	DcdcEnabledAfterContactorsClosed: flow.Tag{
+		ID:          "LVSTART021",
+		Description: "Dcdc enabled after contactors commanded closed (ms).",
+	},
+	InverterSwitchEnabledBeforeCan: flow.Tag{
+		ID:          "LVSTART022",
 		Description: "Inverter switch enabled before can contactors command sent.",
 	},
-	InverterSwitchEnabledBeforeOpenContactors: flow.Tag{
-		ID:          "LVSTART021",
-		Description: "Inverter switch enabled before contactors commanded open.",
+	InverterSwitchEnabledBeforeClosedContactors: flow.Tag{
+		ID:          "LVSTART023",
+		Description: "Inverter switch enabled before contactors commanded closed.",
 	},
-	InterverSwitchEnabledBeforeFrontControllerCommand: flow.Tag{
-		ID:          "LVSTART022",
+	InverterSwitchEnabledBeforeFrontControllerCommand: flow.Tag{
+		ID:          "LVSTART024",
 		Description: "Inverter switch enabled before commanded to enable by the front controller.",
 	},
 	InverterSwitchEnabled: flow.Tag{
-		ID:          "LVSTART023",
+		ID:          "LVSTART025",
 		Description: "Inverter switch enabled after commanded to enable by the front controller.",
 	},
 	InverterSwitchTimeToEnable: flow.Tag{
-		ID:          "LVSTART024",
+		ID:          "LVSTART026",
 		Description: "Inverter switch time to enable after commanded to enable by the front controller (ms).",
 	},
 }

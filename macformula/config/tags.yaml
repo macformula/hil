@@ -130,30 +130,42 @@ LVSTART019:
   type: int
   unit: ms
 LVSTART020:
-  description: Inverter switch enabled before can contactors command sent.
+  description: Dcdc enabled before contactors commanded closed (ms).
   compareOp: EQ
   expectedVal: false
   type: bool
   unit: N/A
 LVSTART021:
-  description: Inverter switch enabled before contactors commanded open.
+  description: Dcdc enabled after contactors commanded closed (ms).
   compareOp: EQ
-  expectedVal: false
+  expectedVal: true
   type: bool
   unit: N/A
 LVSTART022:
-  description: Inverter switch enabled before commanded to enable by the front controller.
+  description: Inverter switch enabled before can contactors command sent.
   compareOp: EQ
   expectedVal: false
   type: bool
   unit: N/A
 LVSTART023:
+  description: Inverter switch enabled before contactors commanded closed.
+  compareOp: EQ
+  expectedVal: false
+  type: bool
+  unit: N/A
+LVSTART024:
+  description: Inverter switch enabled before commanded to enable by the front controller.
+  compareOp: EQ
+  expectedVal: false
+  type: bool
+  unit: N/A
+LVSTART025:
   description: Inverter switch enabled after commanded to enable by the front controller.
   compareOp: EQ
   expectedVal: true
   type: bool
   unit: N/A
-LVSTART024:
+LVSTART026:
   description: Inverter switch time to enable after commanded to enable by the front controller (ms).
   compareOp: LOG
   type: int

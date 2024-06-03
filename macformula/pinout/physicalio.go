@@ -36,7 +36,7 @@ const (
 	MotorControllerPrechargeEn
 	// InverterEn is a digital output coming from the lv controller. It is read into our system as a digital input. It
 	// enables power to the motor inverters.
-	InverterEn
+	InverterSwitchEn
 	// AccumulatorEn is a digital output coming from the lv controller. It is read into our system as a digital input.
 	// This line enables power to the accumulator.
 	AccumulatorEn
