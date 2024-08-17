@@ -28,6 +28,18 @@ var _sequenceConstructors = []sequenceConstructor{
 	newDoNothingSequence,
 }
 
+func newFrontControllerSequence(a *macformula.App, l *zap.Logger) flow.Sequence {
+	return flow.Sequence{
+		Name: "Front Controller Sequence 🏎️",
+		Desc: "Tests the front controller startup sequence."
+		States: []flow.State {
+			newSetup(a, l),
+
+		}
+	}
+}
+
+
 func newLvControllerSequence(a *macformula.App, l *zap.Logger) flow.Sequence {
 	return flow.Sequence{
 		Name: "Lv Controller Sequence ⚡",

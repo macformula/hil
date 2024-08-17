@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	_canIface = "vcan0"
+	_canIface = "can0"
 )
 
 func main() {
@@ -29,6 +29,8 @@ func main() {
 		panic(errors.Wrap(err, "build logger config"))
 	}
 	defer logger.Sync()
+
+	fmt.Println("Using can interface: ", _canIface)
 
 	conn, err := socketcan.DialContext(ctx, "can", _canIface)
 	if err != nil {
@@ -80,11 +82,11 @@ func main() {
 	packNegative := readInt("Enter value for Pack_Negative: ")
 	packPrecharge := readInt("Enter value for Pack_Precharge: ")
 
-	contactors := vehcan.NewContactor_States()
+	contactors := vehcan.NewContactorStates()
 
-	contactors.SetPack_Negative(packNegative)
-	contactors.SetPack_Positive(packPositive)
-	contactors.SetPack_Precharge(packPrecharge)
+	contactors.SetPackNegative(packNegative)
+	contactors.SetPackPositive(packPositive)
+	contactors.SetPackPrecharge(packPrecharge)
 
 	err = canClient.Send(ctx, contactors)
 	if err != nil {

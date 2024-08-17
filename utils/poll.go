@@ -30,3 +30,12 @@ func Poll(ctx context.Context, checkFunc CheckFunc, timeout time.Duration) (bool
 		}
 	}
 }
+
+func Sleep(ctx context.Context, duration time.Duration) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(duration):
+		return nil
+	}
+}

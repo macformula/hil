@@ -18,8 +18,6 @@ const (
 	RtdsEn
 	AccelPedalPosition1
 	AccelPedalPosition2
-	BrakePedalPosition1
-	BrakePedalPosition2
 	SuspensionTravel1
 	SuspensionTravel2
 	SteeringAngle
@@ -34,7 +32,7 @@ const (
 	// MotorControllerPrechargeEn is a digital output coming from the lv controller. It is read into our system as a
 	// digital input. It enables precharge of the motor controller.
 	MotorControllerPrechargeEn
-	// InverterEn is a digital output coming from the lv controller. It is read into our system as a digital input. It
+	// InverterSwitchEn is a digital output coming from the lv controller. It is read into our system as a digital input. It
 	// enables power to the motor inverters.
 	InverterSwitchEn
 	// AccumulatorEn is a digital output coming from the lv controller. It is read into our system as a digital input.
