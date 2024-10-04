@@ -1,0 +1,66 @@
+# Test tags for resultsaccumulator_test.go
+numericGt:
+  description: "Numeric greater than test"
+  compOp: "gt"
+  lowerLimit: 10
+  unit: "units"
+
+numericLt:
+  description: "Numeric less than test"
+  compOp: "lt"
+  upperLimit: 10
+  unit: "units"
+
+numericGe:
+  description: "Numeric greater than or equal to test"
+  compOp: "ge"
+  lowerLimit: 20
+  unit: "units"
+
+numericLe:
+  description: "Numeric less than or equal to test"
+  compOp: "le"
+  upperLimit: 20
+  unit: "units"
+
+numericEq:
+  description: "Numeric equality test"
+  compOp: "eq"
+  expectedValue: 15
+  unit: "units"
+
+numericGele:
+  description: "Numeric range test (inclusive)"
+  compOp: "gele"
+  lowerLimit: 10
+  upperLimit: 20
+  unit: "units"
+
+numericGtlt:
+  description: "Numeric range test (exclusive)"
+  compOp: "gtlt"
+  lowerLimit: 10
+  upperLimit: 20
+  unit: "units"
+
+stringEq:
+  description: "String equality test"
+  compOp: "eq"
+  expectedValue: "expected"
+  unit: "string"
+
+boolEq:
+  description: "Boolean equality test"
+  compOp: "eq"
+  expectedValue: true
+  unit: "boolean"
+
+logTag:
+  description: "Logging tag"
+  compOp: "log"
+  unit: "log"
+
+logNumber:
+    description: "Logging number"
+    compOp: "log"
+    unit: "Num"
