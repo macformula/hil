@@ -8,7 +8,7 @@ import (
 // Tag is a single test tag
 type Tag struct {
 	Description   string `yaml:"description"`
-	CompOpString  string `yaml:"compOp"`
+	CompOpString  string `yaml:"compareOp"`
 	CompOp        ComparisonOperator
 	UpperLimit    any    `yaml:"upperLimit,omitempty"`
 	LowerLimit    any    `yaml:"lowerLimit,omitempty"`
@@ -43,7 +43,7 @@ func isPassingBool(value bool, compOp ComparisonOperator, expectedValue any) (bo
 
 	expected, ok := expectedValue.(bool)
 	if !ok {
-		return false, errors.New("expectedValue must be boolean for boolean comparison")
+		return false, errors.Errorf("expected value must be boolean for equality comparison (ev: %T)", expectedValue)
 	}
 
 	return value == expected, nil

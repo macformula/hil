@@ -76,7 +76,7 @@ func ComparisonOperatorString(s string) (ComparisonOperator, error) {
 	if val, ok := _ComparisonOperatorNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
-	return 0, fmt.Errorf("%s does not belong to ComparisonOperator values", s)
+	return 0, fmt.Errorf("(%s) does not belong to ComparisonOperator values", s)
 }
 
 // ComparisonOperatorValues returns all values of the enum

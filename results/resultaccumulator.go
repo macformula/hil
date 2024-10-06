@@ -3,6 +3,7 @@ package results
 import (
 	"context"
 	"encoding/json"
+	"go.uber.org/zap"
 	"os"
 	"strings"
 	"time"
@@ -12,7 +13,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+const (
+	_loggerName = "result_accumulator"
+)
+
 type ResultAccumulator struct {
+	l                *zap.Logger
 	tagDB            map[string]Tag
 	tagSubmissions   map[string]TagSubmission
 	errorSubmissions []error
@@ -29,8 +35,9 @@ type TagSubmission struct {
 	IsPassing bool
 }
 
-func NewResultAccumulator(tagsFP, historicTestsFP, reportsDir string, generators ...Generator) *ResultAccumulator {
+func NewResultAccumulator(l *zap.Logger, tagsFP, historicTestsFP, reportsDir string, generators ...Generator) *ResultAccumulator {
 	return &ResultAccumulator{
+		l:                l.Named(_loggerName),
 		tagSubmissions:   make(map[string]TagSubmission),
 		errorSubmissions: []error{},
 		historicTestsFP:  historicTestsFP,
@@ -57,7 +64,7 @@ func (r *ResultAccumulator) loadTags(_ context.Context) error {
 
 	data, err := os.ReadFile(r.tagsFP)
 	if err != nil {
-		return errors.Wrap(err, "failed to read tags file")
+		return errors.Wrapf(err, "failed to read tags file (%v)", r.tagsFP)
 	}
 
 	var tagsMap map[string]Tag
@@ -68,7 +75,7 @@ func (r *ResultAccumulator) loadTags(_ context.Context) error {
 
 	for key, tag := range tagsMap {
 		// Convert CompOpString to ComparisonOperator
-		compOp, err := ComparisonOperatorString(tag.CompOpString)
+		compOp, err := ComparisonOperatorString(strings.ToLower(tag.CompOpString))
 		if err != nil {
 			return errors.Wrapf(err, "invalid comparison operator for tag %s", key)
 		}

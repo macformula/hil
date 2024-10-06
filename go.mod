@@ -17,6 +17,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	go.einride.tech/can v0.7.0
 	go.uber.org/zap v1.26.0
+	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
 	google.golang.org/grpc v1.60.1
 	google.golang.org/protobuf v1.32.0
 	gopkg.in/yaml.v3 v3.0.1

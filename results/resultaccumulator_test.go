@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"go.uber.org/zap"
 	"os"
 	"path/filepath"
 	"testing"
@@ -49,7 +50,7 @@ func setupTest(t *testing.T) testSetup {
 	require.NoError(t, err)
 
 	htmlGenerator := NewHtmlReportGenerator()
-	ra := NewResultAccumulator(tagsFile, historicTestsFP, reportsDir, htmlGenerator)
+	ra := NewResultAccumulator(zap.NewNop(), tagsFile, historicTestsFP, reportsDir, htmlGenerator)
 
 	return testSetup{
 		tempDir:         tempDir,
@@ -193,7 +194,7 @@ func TestResultAccumulatorCompleteTest(t *testing.T) {
 func TestResultAccumulatorEdgeCases(t *testing.T) {
 	t.Run("NonExistentTagsFile", func(t *testing.T) {
 		setup := setupTest(t)
-		ra := NewResultAccumulator("non_existent_file.yaml", setup.historicTestsFP, setup.reportsDir)
+		ra := NewResultAccumulator(zap.NewNop(), "non_existent_file.yaml", setup.historicTestsFP, setup.reportsDir)
 		err := ra.Open(context.Background())
 		assert.Error(t, err)
 	})
@@ -206,7 +207,7 @@ func TestResultAccumulatorEdgeCases(t *testing.T) {
 		err := os.WriteFile(invalidTagsFile, []byte("invalid yaml"), 0644)
 		require.NoError(t, err)
 
-		ra := NewResultAccumulator(invalidTagsFile, setup.historicTestsFP, setup.reportsDir)
+		ra := NewResultAccumulator(zap.NewNop(), invalidTagsFile, setup.historicTestsFP, setup.reportsDir)
 		err = ra.Open(context.Background())
 		assert.Error(t, err)
 	})
