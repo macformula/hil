@@ -1,0 +1,53 @@
+{
+  "type": "object",
+  "patternProperties": {
+    ".*": {
+      "type": "object",
+      "properties": {
+        "description": {"type": "string"},
+        "compareOp": {
+          "type": "string",
+          "enum": ["GELE", "GTLT", "EQ", "GT", "LT", "GE", "LE", "LOG"]
+        },
+        "type": {"type": "string"},
+        "unit": {"type": "string"},
+        "upperLimit": {"type": "number"},
+        "lowerLimit": {"type": "number"},
+        "expectedVal": {
+          "anyOf": [
+            {"type": "string"},
+            {"type": "boolean"},
+            {"type": "integer"},
+            {"type": "number"}
+          ]
+        }
+      },
+      "required": ["description", "compareOp", "type", "unit"],
+      "if": {
+        "properties": {"compareOp": {"enum": ["GELE", "GTLT"]}}
+      },
+      "then": {
+        "required": ["upperLimit", "lowerLimit"]
+      },
+      "if": {
+        "properties": {"compareOp": {"enum": ["GT", "GE"]}}
+      },
+      "then": {
+        "required": ["lowerLimit"]
+      },
+      "if": {
+        "properties": {"compareOp": {"enum": ["LT", "LE"]}}
+      },
+      "then": {
+        "required": ["upperLimit"]
+      },
+      "if": {
+        "properties": {"compareOp": {"const": "EQ"}}
+      },
+      "then": {
+        "required": ["expectedVal"]
+      },
+      "additionalProperties": false
+    }
+  }
+}

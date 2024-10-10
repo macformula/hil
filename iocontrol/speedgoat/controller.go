@@ -27,8 +27,8 @@ const (
 	_loggerName              = "speedgoat_controller"
 	_tickTime                = time.Millisecond * 10
 	_readDeadline            = time.Second * 5
-	_startScript             = "iocontrol/speedgoat/scripts/startModel.sh"
-	_stopScript              = "iocontrol/speedgoat/scripts/stopModel.sh"
+	_startCommand            = "start"
+	_stopCommand             = "stop"
 )
 
 // Controller provides control for various Speedgoat pins
@@ -45,6 +45,7 @@ type Controller struct {
 	muAnalog  sync.Mutex
 
 	autoloadModel bool
+	scriptPath    string
 	sgSSH         string
 	sgPassword    string
 	modelName     string
@@ -54,9 +55,14 @@ type SpeedgoatOption func(*Controller)
 
 // WithModelAutoload will automatically load the given model into Simulink realtime remotely from the Pi. sgPassword is
 // Speedgoat password, sgSSH is the "user@ip" format for SSH, modelName is the name for the simulink model.
-func WithModelAutoload(sgPassword, sgSSH, modelName string) SpeedgoatOption {
+func WithModelAutoload(
+	scriptPath,
+	sgPassword,
+	sgSSH,
+	modelName string) SpeedgoatOption {
 	return func(c *Controller) {
 		c.autoloadModel = true
+		c.scriptPath = scriptPath
 		c.sgSSH = sgSSH
 		c.sgPassword = sgPassword
 		c.modelName = modelName
@@ -81,6 +87,13 @@ func NewController(l *zap.Logger, address string, opts ...SpeedgoatOption) *Cont
 func (c *Controller) Open(_ context.Context) error {
 	c.l.Info("opening speedgoat controller")
 
+	if c.autoloadModel {
+		err := c.runSpeedgoatScript(c.scriptPath, c.sgPassword, c.sgSSH, c.modelName, _startCommand)
+		if err != nil {
+			return errors.Wrap(err, "run speedgoat script")
+		}
+	}
+
 	conn, err := net.Dial("tcp", c.addr)
 	if err != nil {
 		return errors.Wrap(err, "dial speedgoat")
@@ -92,13 +105,6 @@ func (c *Controller) Open(_ context.Context) error {
 	go c.tickOutputs()
 	go c.tickInputs()
 
-	if c.autoloadModel {
-		err = c.runSpeedgoatScript(_startScript, c.sgPassword, c.sgSSH, c.modelName)
-		if err != nil {
-			return errors.Wrap(err, "run speedgoat script")
-		}
-	}
-
 	return nil
 }
 
@@ -108,16 +114,16 @@ func (c *Controller) Close() error {
 
 	c.opened = false
 
-	err := c.conn.Close()
-	if err != nil {
-		return errors.Wrap(err, "close speedgoat connection")
-	}
-
 	if c.autoloadModel {
-		err = c.runSpeedgoatScript(_stopScript, c.sgPassword, c.sgSSH)
+		err := c.runSpeedgoatScript(c.scriptPath, c.sgPassword, c.sgSSH, _stopCommand)
 		if err != nil {
 			return errors.Wrap(err, "run speedgoat script")
 		}
+	}
+
+	err := c.conn.Close()
+	if err != nil {
+		return errors.Wrap(err, "close speedgoat connection")
 	}
 
 	return nil
