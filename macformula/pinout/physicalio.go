@@ -29,6 +29,14 @@ const (
 	InverterSwitchEn           // Digital output from LV controller, read as digital input
 	AccumulatorEn              // Digital output from LV controller, read as digital input
 	ShutdownCircuitEn          // Digital output from LV controller, read as digital input
+	TsalEn
+	RaspiEn
+	FrontControllerEn
+	SpeedgoatEn
+	MotorControllerEn
+	ImuGpsEn
+	DcdcEn
+	DcdcValid
 
 	// Test bench control IOs
 	HvCurrentSense               // Current through the accumulator (electrical signal only)
