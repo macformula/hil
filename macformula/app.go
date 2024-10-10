@@ -8,6 +8,7 @@ import (
 	"github.com/macformula/hil/macformula/pinout"
 )
 
+// App represents the main application, it persists accross multiple sequence runs.
 type App struct {
 	Config                *config.Config
 	VehCanTracer          *canlink.Tracer

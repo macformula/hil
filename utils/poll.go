@@ -7,11 +7,28 @@ import (
 	"github.com/pkg/errors"
 )
 
+type pollOptions struct {
+	checkForFalse bool
+}
+
+type PollOption func(*pollOptions)
+
+func CheckForFalse() PollOption {
+	return func(o *pollOptions) {
+		o.checkForFalse = true
+	}
+}
+
 type CheckFunc func() (bool, error)
 
-func Poll(ctx context.Context, checkFunc CheckFunc, timeout time.Duration) (bool, time.Duration, error) {
+func Poll(ctx context.Context, checkFunc CheckFunc, timeout time.Duration, opts ...PollOption) (bool, time.Duration, error) {
 	start := time.Now()
 	timeoutChan := time.After(timeout)
+
+	options := pollOptions{}
+	for _, opt := range opts {
+		opt(&options)
+	}
 
 	for {
 		select {
@@ -23,6 +40,10 @@ func Poll(ctx context.Context, checkFunc CheckFunc, timeout time.Duration) (bool
 			checkValid, err := checkFunc()
 			if err != nil {
 				return false, time.Since(start), errors.Wrap(err, "check func")
+			}
+
+			if options.checkForFalse {
+				checkValid = !checkValid
 			}
 
 			if checkValid {

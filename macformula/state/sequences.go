@@ -9,6 +9,7 @@ import (
 	"github.com/macformula/hil/macformula"
 )
 
+// GetSequences returns all the sequences that can be run.
 func GetSequences(a *macformula.App, l *zap.Logger) []flow.Sequence {
 	ret := make([]flow.Sequence, len(_sequenceConstructors))
 

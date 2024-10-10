@@ -2,13 +2,14 @@ package flow
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/google/uuid"
 	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
 )
 
 const (
@@ -109,6 +110,7 @@ func (s *Sequencer) ResetFatalError() {
 	s.fatalErr.Reset()
 }
 
+// Close will be called at the end of the app.
 func (s *Sequencer) Close() error {
 	s.l.Info("closing sequencer")
 

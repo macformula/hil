@@ -116,7 +116,7 @@ func (l *lvStartup) Run(ctx context.Context) error {
 	}
 
 	r[tags.MotorPrechargeDisabled], r[tags.MotorPrechargeTimeToDisableMs], err =
-		pollMs(ctx, l.lv.ReadMotorControllerPrechargeOff, _lvStartupPollTimeout)
+		pollMs(ctx, l.lv.ReadMotorControllerPrechargeOn, _lvStartupPollTimeout, utils.CheckForFalse())
 	if err != nil {
 		return errors.Wrap(err, "poll read motor controller precharge on")
 	}
@@ -275,7 +275,10 @@ func (l *lvStartup) sendContactorCommandCheckShutdownOn(ctx context.Context,
 
 // pollMs polls the checkFunc until it returns true or the timeout is reached. It wraps the utils.Poll function
 // as the results cannot be time.Duration values (so it converts these to int.
-func pollMs(ctx context.Context, checkFunc utils.CheckFunc, timeout time.Duration) (bool, int, error) {
-	valid, duration, err := utils.Poll(ctx, checkFunc, timeout)
+func pollMs(ctx context.Context,
+	checkFunc utils.CheckFunc,
+	timeout time.Duration,
+	opts ...utils.PollOption) (bool, int, error) {
+	valid, duration, err := utils.Poll(ctx, checkFunc, timeout, opts...)
 	return valid, int(duration.Milliseconds()), errors.Wrap(err, "poll")
 }

@@ -11,6 +11,7 @@ import (
 
 const _controllerName = "pinout_controller"
 
+// Controller allows for easy control of the I/O's given the current pinout Revision.
 type Controller struct {
 	l            *zap.Logger
 	ioController *iocontrol.IOControl
@@ -22,6 +23,7 @@ type Controller struct {
 	analogInputs   AnalogPinout
 }
 
+// NewController creates a new pinout controller.
 func NewController(rev Revision, ioController *iocontrol.IOControl, l *zap.Logger) *Controller {
 	return &Controller{
 		l:            l.Named(_controllerName),
@@ -30,6 +32,7 @@ func NewController(rev Revision, ioController *iocontrol.IOControl, l *zap.Logge
 	}
 }
 
+// Open opens the controller and initializes the digital and analog I/O's.
 func (c *Controller) Open(_ context.Context) error {
 	var err error
 
@@ -56,6 +59,7 @@ func (c *Controller) Open(_ context.Context) error {
 	return nil
 }
 
+// SetDigitalLevel sets the digital level of the given output.
 func (c *Controller) SetDigitalLevel(out PhysicalIo, level bool) error {
 	digitalOutput, ok := c.digitalOutputs[out]
 	if !ok {
@@ -71,6 +75,7 @@ func (c *Controller) SetDigitalLevel(out PhysicalIo, level bool) error {
 	return nil
 }
 
+// ReadDigitalLevel reads the digital level of the given input.
 func (c *Controller) ReadDigitalLevel(in PhysicalIo) (bool, error) {
 	digitalInput, ok := c.digitalInputs[in]
 	if !ok {
@@ -86,6 +91,7 @@ func (c *Controller) ReadDigitalLevel(in PhysicalIo) (bool, error) {
 	return level, nil
 }
 
+// SetVoltage sets the voltage of the given output.
 func (c *Controller) SetVoltage(out PhysicalIo, voltage float64) error {
 	analogOutput, ok := c.analogOutputs[out]
 	if !ok {
@@ -101,6 +107,7 @@ func (c *Controller) SetVoltage(out PhysicalIo, voltage float64) error {
 	return nil
 }
 
+// ReadVoltage reads the voltage of the given input.
 func (c *Controller) ReadVoltage(in PhysicalIo) (float64, error) {
 	analogInput, ok := c.analogInputs[in]
 	if !ok {

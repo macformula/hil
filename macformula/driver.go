@@ -19,11 +19,13 @@ const (
 	_driverButtonPressDuration = 200 * time.Millisecond
 )
 
+// Driver represents the driver of the car.
 type Driver struct {
 	l             *zap.Logger
 	pinController *pinout.Controller
 }
 
+// NewDriver creates a new driver instance.
 func NewDriver(pc *pinout.Controller, l *zap.Logger) *Driver {
 	return &Driver{
 		l:             l,
@@ -57,6 +59,7 @@ func (d *Driver) SetAcceleratorPosition(pedalPercentage float64) error {
 	return nil
 }
 
+// SetAcceleratorPositionsOverride takes two percentages [0.0, 100.0] and sets the pedal positions correctly.
 func (d *Driver) SetAcceleratorPositionsOverride(pedalPercentage1, pedalPercentage2 float64) error {
 	if !checkInclusiveBounds(pedalPercentage1, _minimumPercentage, _maximumPercentage) {
 		return errors.Errorf("pedal position1 not in bounds (value: %v, bounds: [%v <= X <= %v])",
@@ -87,13 +90,9 @@ func (d *Driver) SetAcceleratorPositionsOverride(pedalPercentage1, pedalPercenta
 	return nil
 }
 
+// PressStartButton presses the start button for a short duration.
 func (d *Driver) PressStartButton(ctx context.Context) error {
 	err := d.pinController.SetDigitalLevel(pinout.StartButtonN, false)
-	if err != nil {
-		return errors.Wrap(err, "set digital level (start button n)")
-	}
-
-	err = d.pinController.SetDigitalLevel(pinout.StartButtonN, false)
 	if err != nil {
 		return errors.Wrap(err, "set digital level (start button n)")
 	}

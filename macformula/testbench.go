@@ -17,6 +17,7 @@ const (
 	_defaultEcuOffMinVoltage = 1
 )
 
+// TestBench allows control of the test bench in hatch.
 type TestBench struct {
 	l             *zap.Logger
 	pinController *pinout.Controller
