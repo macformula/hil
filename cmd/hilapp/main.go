@@ -15,8 +15,15 @@ import (
 	"github.com/macformula/hil/canlink"
 	"github.com/macformula/hil/cli"
 	"github.com/macformula/hil/flow"
+	"github.com/macformula/hil/iocontrol"
+	"github.com/macformula/hil/iocontrol/sil"
 	"github.com/macformula/hil/macformula"
+	"github.com/macformula/hil/macformula/cangen/ptcan"
+	"github.com/macformula/hil/macformula/cangen/vehcan"
 	"github.com/macformula/hil/macformula/config"
+	"github.com/macformula/hil/macformula/ecu/frontcontroller"
+	"github.com/macformula/hil/macformula/ecu/lvcontroller"
+	"github.com/macformula/hil/macformula/pinout"
 	"github.com/macformula/hil/macformula/state"
 	"github.com/macformula/hil/orchestrator"
 	results "github.com/macformula/hil/results/client"
@@ -29,7 +36,7 @@ const (
 	_canNetwork      = "can"
 	_vehCan          = "veh"
 	_ptCan           = "pt"
-	_defaultLogLevel = zap.DebugLevel
+	_defaultLogLevel = zap.InfoLevel
 )
 
 // These are set by the build.sh
@@ -50,16 +57,19 @@ func main() {
 	// Parse command-line flags before accessing them.
 	flag.Parse()
 
+	// Print version and exit.
 	if *version {
 		fmt.Printf("Git Commit: %v (%s)\n", GitCommit, DirtyVsCleanCommit)
 		fmt.Printf("Date Built: %v\n", Date)
 		return
 	}
 
+	// Config path is required.
 	if *configPath == "" {
 		fmt.Println("Missing required flag: --config")
 	}
 
+	// Set log level.
 	logLevel, err := zapcore.ParseLevel(*logLevelStr)
 	if err != nil {
 		fmt.Printf("Invalid log level (%s)", *logLevelStr)
@@ -71,13 +81,19 @@ func main() {
 		panic(errors.Errorf("new config (%s)", *configPath))
 	}
 
+	// Get pinout revision.
+	rev, err := pinout.RevisionString(cfg.Revision)
+	if err != nil {
+		panic(errors.Errorf("invalid revision (%s) valid options (%v)",
+			cfg.Revision, pinout.RevisionStrings()))
+	}
+
 	// Create Logger.
 	logFileName := fmt.Sprintf(_logFileFormat, time.Now().Format(_timeFormat))
 	logFilePath := filepath.Join(cfg.LogsDir, logFileName)
 
 	loggerConfig := zap.NewDevelopmentConfig()
 	loggerConfig.OutputPaths = []string{logFilePath}
-
 	loggerConfig.Level = zap.NewAtomicLevelAt(logLevel)
 
 	logger, err := loggerConfig.Build()
@@ -152,15 +168,67 @@ func main() {
 		return
 	}
 
-	// Create AppState.
-	appState := macformula.App{
-		Config:       cfg,
-		VehCanTracer: vehCanTracer,
-		PtCanTracer:  ptCanTracer,
+	// Get controllers
+	var ioOpts = make([]iocontrol.IOControlOption, 0)
+
+	switch rev {
+	case pinout.Sil:
+		silController := sil.NewController(cfg.SilPort, logger)
+		ioOpts = append(ioOpts, iocontrol.WithSil(silController))
+	default:
+		panic("unconfigured revision")
+	}
+
+	// Create io controller.
+	ioController := iocontrol.NewIOControl(logger, ioOpts...)
+
+	err = ioController.Open(ctx)
+	if err != nil {
+		logger.Error("failed to open io controller",
+			zap.Error(errors.Wrap(err, "dial context")))
+		return
+	}
+
+	// Create pinout controller.
+	pinoutController := pinout.NewController(rev, ioController, logger)
+
+	err = pinoutController.Open(ctx)
+	if err != nil {
+		logger.Error("failed to open pinout controller",
+			zap.Error(errors.Wrap(err, "dial context")))
+		return
+	}
+
+	// Create testbench controller.
+	testBench := macformula.NewTestBench(pinoutController, logger)
+
+	// Create veh can client.
+	vehCanClient := canlink.NewCanClient(vehcan.Messages(), vehCanConn, logger)
+
+	// Create pt can client.
+	ptCanClient := canlink.NewCanClient(ptcan.Messages(), ptCanConn, logger)
+
+	// Create Lv Controller client.
+	lvControllerClient := lvcontroller.NewClient(pinoutController, logger)
+
+	// Create Front Controller client.
+	frontControllerClient := frontcontroller.NewClient(pinoutController, vehCanClient, logger)
+
+	// Create app object.
+	app := macformula.App{
+		Config:                cfg,
+		VehCanTracer:          vehCanTracer,
+		PtCanTracer:           ptCanTracer,
+		PinoutController:      pinoutController,
+		TestBench:             testBench,
+		LvControllerClient:    lvControllerClient,
+		FrontControllerClient: frontControllerClient,
+		VehCanClient:          vehCanClient,
+		PtCanClient:           ptCanClient,
 	}
 
 	// Create sequences.
-	sequences := state.GetSequences(&appState, logger)
+	sequences := state.GetSequences(&app, logger)
 
 	// Create command line dispatcher.
 	cliDispatcher := cli.NewCliDispatcher(sequences, logger)

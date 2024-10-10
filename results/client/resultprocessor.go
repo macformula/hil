@@ -170,15 +170,17 @@ func (r *ResultProcessor) startServer(errCh chan error) {
 func createRequest(tag string, data any) (*proto.SubmitTagRequest, error) {
 	request := &proto.SubmitTagRequest{Tag: tag}
 
-	switch data.(type) {
+	switch val := data.(type) {
 	case int32:
-		request.Data = &proto.SubmitTagRequest_ValueInt{ValueInt: data.(int32)}
+		request.Data = &proto.SubmitTagRequest_ValueInt{ValueInt: val}
+	case int:
+		request.Data = &proto.SubmitTagRequest_ValueInt{ValueInt: int32(val)}
 	case float32:
-		request.Data = &proto.SubmitTagRequest_ValueFloat{ValueFloat: data.(float32)}
+		request.Data = &proto.SubmitTagRequest_ValueFloat{ValueFloat: val}
 	case string:
-		request.Data = &proto.SubmitTagRequest_ValueStr{ValueStr: data.(string)}
+		request.Data = &proto.SubmitTagRequest_ValueStr{ValueStr: val}
 	case bool:
-		request.Data = &proto.SubmitTagRequest_ValueBool{ValueBool: data.(bool)}
+		request.Data = &proto.SubmitTagRequest_ValueBool{ValueBool: val}
 	default:
 		return nil, errors.Errorf("unsupported data type for tag submission (%T)", data)
 	}

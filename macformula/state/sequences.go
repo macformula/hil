@@ -7,7 +7,6 @@ import (
 
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/macformula"
-	"github.com/macformula/hil/test"
 )
 
 func GetSequences(a *macformula.App, l *zap.Logger) []flow.Sequence {
@@ -23,12 +22,22 @@ func GetSequences(a *macformula.App, l *zap.Logger) []flow.Sequence {
 type sequenceConstructor = func(a *macformula.App, l *zap.Logger) flow.Sequence
 
 var _sequenceConstructors = []sequenceConstructor{
+	newLvControllerSequence,
 	newTracerSequence,
-	newDoNothingSequence,
 	newSleepSequence,
-	newFatalErrorSequence,
-	newPanicSequence,
-	newErrorSequence,
+	newDoNothingSequence,
+}
+
+func newLvControllerSequence(a *macformula.App, l *zap.Logger) flow.Sequence {
+	return flow.Sequence{
+		Name: "Lv Controller Sequence ⚡",
+		Desc: "Tests the lv controller.",
+		States: []flow.State{
+			newSetup(a, l),
+			newLvStartup(a, l),
+			newCleanup(a, l),
+		},
+	}
 }
 
 func newTracerSequence(a *macformula.App, l *zap.Logger) flow.Sequence {
@@ -48,18 +57,13 @@ func newDoNothingSequence(_ *macformula.App, _ *zap.Logger) flow.Sequence {
 		Name: "Do Nothing 🥱",
 		Desc: "Wow... it does nothing",
 		States: []flow.State{
-			&test.DoNothingState{},
-			&test.DoNothingState{},
-			&test.DoNothingState{},
-			&test.DoNothingState{},
-			&test.DoNothingState{},
-			&test.DoNothingState{},
-			&test.DoNothingState{},
-			&test.DoNothingState{},
-			&test.DoNothingState{},
-			&test.DoNothingState{},
-			&test.DoNothingState{},
-			&test.DoNothingState{},
+			newNothing(),
+			newNothing(),
+			newNothing(),
+			newNothing(),
+			newNothing(),
+			newNothing(),
+			newNothing(),
 		},
 	}
 }
@@ -68,52 +72,10 @@ func newSleepSequence(_ *macformula.App, _ *zap.Logger) flow.Sequence {
 		Name: "Sleeper 💤",
 		Desc: "zzz",
 		States: []flow.State{
-			&test.SleepState{SleepTime: 1 * time.Second},
-			&test.SleepState{SleepTime: 5 * time.Second},
-			&test.SleepState{SleepTime: 1 * time.Second},
-			&test.SleepState{SleepTime: 2 * time.Second},
-		},
-	}
-}
-func newFatalErrorSequence(_ *macformula.App, _ *zap.Logger) flow.Sequence {
-	return flow.Sequence{
-		Name: "Fatal Error 💀",
-		Desc: "This will fatal... duh",
-		States: []flow.State{
-			&test.SleepState{SleepTime: 2 * time.Second},
-			&test.SleepState{SleepTime: 3 * time.Second},
-			&test.SleepState{SleepTime: 1 * time.Second},
-			&test.RunFatalErrorState{},
-			&test.SleepState{SleepTime: 2 * time.Second},
-			&test.SleepState{SleepTime: 3 * time.Second},
-		},
-	}
-}
-
-func newPanicSequence(_ *macformula.App, _ *zap.Logger) flow.Sequence {
-	return flow.Sequence{
-		Name: "Panic 😨",
-		Desc: "This will panic the hil app.",
-		States: []flow.State{
-			&test.SleepState{SleepTime: 1 * time.Second},
-			&test.SleepState{SleepTime: 1 * time.Second},
-			&test.SleepState{SleepTime: 1 * time.Second},
-			&test.PanicState{},
-			&test.SleepState{SleepTime: 2 * time.Second},
-			&test.SleepState{SleepTime: 3 * time.Second},
-		},
-	}
-}
-func newErrorSequence(_ *macformula.App, _ *zap.Logger) flow.Sequence {
-	return flow.Sequence{
-		Name: "Normal Error",
-		Desc: "ERROR ERROR ERROR",
-		States: []flow.State{
-			&test.SleepState{SleepTime: 2 * time.Second},
-			&test.SleepState{SleepTime: 3 * time.Second},
-			&test.RunErrorState{},
-			&test.SleepState{SleepTime: 2 * time.Second},
-			&test.SleepState{SleepTime: 3 * time.Second},
+			newSleep(1 * time.Second),
+			newSleep(5 * time.Second),
+			newSleep(2 * time.Second),
+			newSleep(1 * time.Second),
 		},
 	}
 }

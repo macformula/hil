@@ -2,11 +2,12 @@ package state
 
 import (
 	"context"
+	"time"
+
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/macformula"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"time"
 )
 
 const (

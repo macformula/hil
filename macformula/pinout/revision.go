@@ -9,4 +9,5 @@ const (
 	Ev5 Revision = iota
 	MockTest
 	Sil
+	SgTest
 )
