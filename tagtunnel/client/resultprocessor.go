@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	proto "github.com/macformula/hil/pyresults/client/generated"
+	proto "github.com/macformula/hil/tagtunnel/client/generated"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
