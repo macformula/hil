@@ -49,14 +49,4 @@ const (
 	// Demo Project IOs
 	IndicatorLed
 	IndicatorButton
-
-	// New constants
-	TsalEn
-	RaspiEn
-	FrontControllerEn
-	SpeedgoatEn
-	MotorControllerEn
-	ImuGpsEn
-	DcdcEn
-	DcdcValid
 )

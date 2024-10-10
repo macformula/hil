@@ -7,7 +7,7 @@ import (
 	"github.com/macformula/hil/cli"
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/orchestrator"
-	"github.com/macformula/hil/results/client"
+	"github.com/macformula/hil/results"
 	"github.com/macformula/hil/test"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -16,8 +16,10 @@ import (
 const (
 	_loggerName          = "main.log"
 	_resultProcessorAddr = "localhost:31763"
-	_configPath          = "./config/hil-config/config.yaml"
 	_resultServerPath    = "./results/server/main.py"
+	_tagsPath            = "./results/tags.yaml"
+	_historicTestsPath   = "./results/historic_tests.yaml"
+	_reportsDir          = "./results/reports"
 )
 
 func main() {
@@ -29,11 +31,8 @@ func main() {
 	}
 	defer logger.Sync()
 
-	resultProcessor := results.NewResultProcessor(logger,
-		_resultProcessorAddr,
-		results.WithPushReportsToGithub(),
-		results.WithServerAutoStart(_configPath, _resultServerPath),
-	)
+	resultProcessor := results.NewResultAccumulator(logger,
+		_tagsPath, _historicTestsPath, _reportsDir, results.NewHtmlReportGenerator())
 	sequencer := flow.NewSequencer(resultProcessor, logger)
 	cliDispatcher := cli.NewCliDispatcher(test.Sequences, logger)
 	simpleDispatcher := test.NewSimpleDispatcher(logger, 5*time.Second, 10*time.Second)

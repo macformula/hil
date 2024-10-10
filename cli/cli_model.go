@@ -369,7 +369,7 @@ func (c *cliModel) currentRunningTestView() string {
 		s += fmt.Sprintf("%s currently running...\n", state.Name())
 	}
 
-	s += helpStyle(fmt.Sprintf("\nCurrent test running: %s\n", "Unknown name for now"))
+	s += helpStyle(fmt.Sprintf("\nCurrent test running: %s\n", c.currentRunningTestId.String()))
 	s += helpStyle(fmt.Sprintf("\nTest_ID: %s\n", c.currentRunningTestId.String()))
 	s += helpStyle(fmt.Sprintf("\nQueue length: %d\n", c.statusSignal.QueueLength))
 
