@@ -3,17 +3,19 @@ package results
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/google/uuid"
+	"github.com/xeipuuv/gojsonschema"
 	"gopkg.in/yaml.v2"
 )
 
 const (
-	tagsFilepath       = "../server/tags.yaml"
-	tagsSchemaFilepath = "../server/schema/tags_schema.json"
+	tagsFilepath       = "../../results/server/tags.yaml"
+	tagsSchemaFilepath = "../../results/server/schema/tags_schema.json"
 )
 
-type Test struct {
+type Test struct { // These are Tags, not calling this tag right now because it might cause confusion
 	ID            uuid.UUID `json:"id"`
 	Description   string    `json:"description"`
 	Value         bool      `json:"final_value"`
@@ -38,50 +40,129 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 	if err != nil {
 		return err
 	}
+	// 2. Convert tag.yaml into Test structures
+	//ra.tagDb, err = loadTestsFromYAML(tagsFilepath)
+	err = loadTestsFromYAML(tagsFilepath)
+	if err != nil {
+		fmt.Println("err load yaml ", err)
+		return err
+	}
+	return nil
+}
 
+func loadTestsFromYAML(filepath string) error {
+	tagData, err := loadYAML(filepath)
+	if err != nil {
+		fmt.Printf("err load yaml in", err)
+		return nil
+	}
+
+	// // Type assertion to ensure tagData is a map[string]interface{}
+	tags, ok := tagData.(map[string]interface{})
+	if !ok {
+		return nil //, fmt.Errorf("invalid tags data format in %s", filepath)
+	}
+
+	testMap := make(map[string]Test)
+	for tagID, tagInfo := range tags {
+		// Ensure tagInfo is map[string]interface{}
+		infoMap, ok := tagInfo.(map[interface{}]interface{})
+		if !ok {
+			fmt.Println("ok \n\n", ok)
+			return nil
+		}
+		fmt.Println("||||", infoMap, "||||", testMap, "||||", tagID, "\n\n")
+		// 	// Create a new Test struct with defaults and override with values from tagInfo
+		// 	test := Test{
+		// 		ID:            uuid.Nil, // Generate a unique ID
+		// 		Description:   getOrDefault(infoMap, "description", "").(string),
+		// 		CompOp:        getOrDefault(infoMap, "compareOp", "").(string),
+		// 		Type:          false, // Assuming "type" is a bool, set default to false
+		// 		UpperLimit:    getOrDefault(infoMap, "upperLimit", "0").(string),
+		// 		LowerLimit:    getOrDefault(infoMap, "lowerLimit", "0").(string),
+		// 		ExpectedValue: getOrDefault(infoMap, "expectedVal", "0").(string),
+		// 		Unit:          getOrDefault(infoMap, "unit", "Unitless").(string),
+		// 	}
+
+		// 	// If value type is boolean then we want the final_value as a boolean
+		// 	if test.Type == "bool" {
+		// 		test.Value = getOrDefault(infoMap, "expectedVal", "false").(bool)
+		// 	}
+
+		// 	testMap[tagID] = test
+	}
+
+	//return testMap, nil
 	return nil
 }
 
 func validateTags(tagsFilepath, schemaFilepath string) error {
 	tagsData, err := loadYAML(tagsFilepath)
 	if err != nil {
+		fmt.Println("err 2", err)
 		return err
 	}
-	fmt.Println("yaml ", tagsData)
+	absSchemaPath, _ := filepath.Abs(schemaFilepath)
+	schemaURI := "file://" + absSchemaPath
+	schemaLoader := gojsonschema.NewReferenceLoader(schemaURI)
+	documentLoader := gojsonschema.NewGoLoader(tagsData)
+	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
+	if err != nil {
+		fmt.Println("err ", err)
+		return nil
+	}
 
-	// schemaLoader := gojsonschema.NewReferenceLoader(schemaFilepath)
-
-	// // Load the tags data into a JSON schema loader (since the library expects JSON)
-	// documentLoader := gojsonschema.NewGoLoader(tagsData)
-
-	// // Perform the validation
-	// result, err := gojsonschema.Validate(schemaLoader, documentLoader)
-	// if err != nil {
-	// 	return fmt.Errorf("error during validation: %v", err)
-	// }
-
-	// // Check the validation result
-	// if !result.Valid() {
-	// 	var errorMessages []string
-	// 	for _, desc := range result.Errors() {
-	// 		errorMessages = append(errorMessages, desc.String())
-	// 	}
-	// 	return fmt.Errorf("tags.yaml does not conform to the schema:\n%s", errorMessages)
-	// }
-	// fmt.Println("result yaml validation", result)
+	if !result.Valid() {
+		var errorMessages []string
+		for _, desc := range result.Errors() {
+			errorMessages = append(errorMessages, desc.String())
+		}
+		fmt.Println("errorMessages ", errorMessages)
+		return nil
+	}
 	return nil
 }
 
-func loadYAML(filepath string) (interface{}, error) {
-	data, err := os.ReadFile(filepath)
+func convert(i interface{}) interface{} {
+	switch x := i.(type) {
+	case map[interface{}]interface{}:
+		m2 := map[string]interface{}{}
+		for k, v := range x {
+			m2[k.(string)] = convert(v)
+		}
+		return m2
+	case []interface{}:
+		for i, v := range x {
+			x[i] = convert(v)
+		}
+	}
+	return i
+}
+
+func loadYAML(relativeFilepath string) (interface{}, error) {
+	// Get the absolute path of the YAML file
+	absFilepath, err := filepath.Abs(relativeFilepath)
+	if err != nil {
+		return nil, fmt.Errorf("error resolving absolute path for %s: %v", relativeFilepath, err)
+	}
+
+	// Read the YAML file contents using the absolute path
+	data, err := os.ReadFile(absFilepath)
 	if err != nil {
 		return nil, err
 	}
+
+	// Unmarshal YAML data into a generic interface{}
 	var out interface{}
 	err = yaml.Unmarshal(data, &out)
 	if err != nil {
 		return nil, err
 	}
+
+	// Convert the potentially nested map[interface{}]interface{} to map[string]interface{}
+	out = convert(out)
+
+	// Return the unmarshalled data (not the JSON string)
 	return out, nil
 }
 
