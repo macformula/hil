@@ -42,11 +42,17 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 		return err
 	}
 	// 2. Convert tag.yaml into Test structures
-	ra.tagDb, err = loadTestsFromYAML(tagsFilepath)
-
+	testMap, err := loadTestsFromYAML(tagsFilepath) // Use the returned map
 	if err != nil {
 		fmt.Println("err load yaml ", err)
 		return err
+	}
+
+	// Iterate over the testMap and check for nil ExpectedValue
+	for _, test := range testMap {
+		if test.ExpectedValue == "" { // Or use nil if it's a pointer
+			return fmt.Errorf("missing expectedVal for test: %+v", test) // Provide more context in error
+		}
 	}
 	return nil
 }
@@ -54,66 +60,46 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 	tagData, err := loadYAML(filepath)
 	if err != nil {
-		fmt.Printf("err load yaml in", err)
 		return nil, fmt.Errorf("invalid tags data format in %s", filepath)
 	}
 
-	// // Type assertion to ensure tagData is a map[string]interface{}
 	tags, ok := tagData.(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("invalid tags data format in %s", filepath)
 	}
 
-	testMap := make(map[string]Test)
+	testMap := make(map[string]Test) // Use a map to store results
 	for tagID, tagInfo := range tags {
-		infoMap, ok := tagInfo.(map[interface{}]interface{})
-		if !ok {
-			return nil, fmt.Errorf("invalid tag info format for tag %s", tagID)
+		if tagInfo == nil {
+			return nil, fmt.Errorf("nil tag info for tag %s", tagID)
 		}
 
-		test := Test{
-			ID: uuid.New(),
-		}
+		test := Test{}
+		if m, ok := tagInfo.(map[string]interface{}); ok {
+			test.CompOp = m["compareOp"].(string)        // No error checking here, assume valid
+			test.Description = m["description"].(string) // No error checking here, assume valid
+			test.Type = m["type"].(string)               // No error checking here, assume valid
+			test.Unit = m["unit"].(string)               // No error checking here, assume valid
+			test.UpperLimit, _ = m["upperLimit"].(string)
+			test.LowerLimit, _ = m["lowerLimit"].(string)
 
-		if description, ok := infoMap["description"].(string); ok {
-			test.Description = description
-		}
-
-		if compOp, ok := infoMap["compareOp"].(string); ok {
-			test.CompOp = compOp
-		}
-
-		if unit, ok := infoMap["unit"].(string); ok {
-			test.Unit = unit
-		}
-
-		if expectedVal, ok := infoMap["expectedVal"]; ok {
-			switch v := expectedVal.(type) {
-			case bool:
-				test.Value = v
-				test.Type = "bool"
-			case string:
-				test.ExpectedValue = v
-			case int:
-				test.ExpectedValue = strconv.Itoa(v)
-			case float64:
-				test.ExpectedValue = strconv.FormatFloat(v, 'f', -1, 64) // Convert float64 to string with full precision
-			default:
-				return nil, fmt.Errorf("invalid type for expectedVal in tag %s", tagID)
+			// Handle expectedVal carefully
+			expectedVal, exists := m["expectedVal"]
+			if exists {
+				// Only assign if the key exists in the map
+				test.ExpectedValue, _ = expectedVal.(string)
 			}
-		}
 
-		if upperLimit, ok := infoMap["upperLimit"]; ok {
-			test.UpperLimit = getStringFromInterface(upperLimit)
+			fmt.Println("Compare Op:", test.CompOp)
+			fmt.Println("Description:", test.Description)
+			fmt.Println("Expected Val:", test.ExpectedValue) // Might be empty if not in YAML
+			fmt.Println("Type:", test.Type)
+			fmt.Println("Unit:", test.Unit)
+		} else {
+			fmt.Println("Error: Data is not in the expected map format")
 		}
-
-		if lowerLimit, ok := infoMap["lowerLimit"]; ok {
-			test.LowerLimit = getStringFromInterface(lowerLimit)
-		}
-
 		testMap[tagID] = test
 	}
-	fmt.Println("testMap", testMap)
 	return testMap, nil
 }
 
