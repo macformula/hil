@@ -89,13 +89,13 @@ func (r *ResultProcessor) Open(ctx context.Context) error {
 
 	r.conn = conn
 	r.client = proto.NewTagTunnelClient(conn)
-	r.ra.NewResultAccumulator()
-	fmt.Println("in open")
+
 	return nil
 }
 
 func (r *ResultProcessor) SubmitTag(ctx context.Context, tag string, value any) (bool, error) {
 	request, err := createRequest(tag, value) //checks if the tag is correct and error free
+	r.ra.NewResultAccumulator()
 
 	// fmt.Println("request ", request, " err ", err)
 	// request  tag:"FW001" value_bool:true  err  <nil>
@@ -134,7 +134,7 @@ func (r *ResultProcessor) CompleteTest(ctx context.Context, testId uuid.UUID, se
 	if err != nil {
 		return false, errors.Wrap(err, "complete test")
 	}
-	fmt.Println("Test: ", testId.String(), "complete, tabDB is: ")
+
 	return reply.TestPassed, nil
 }
 
