@@ -42,18 +42,19 @@ func (ra *ResultAccumulator) NewResultAccumulator() error {
 		return err
 	}
 	// 2. Convert tag.yaml into Test structures
-	testMap, err := loadTestsFromYAML(tagsFilepath) // Use the returned map
+	ra.tagDb, err = loadTestsFromYAML(tagsFilepath) // Use the returned map
 	if err != nil {
 		fmt.Println("err load yaml ", err)
 		return err
 	}
 
 	// Iterate over the testMap and check for nil ExpectedValue
-	for _, test := range testMap {
+	for _, test := range ra.tagDb {
 		if test.ExpectedValue == "" { // Or use nil if it's a pointer
-			return fmt.Errorf("missing expectedVal for test: %+v", test) // Provide more context in error
+			return fmt.Errorf("missing expectedVal for test: %+v", test)
 		}
 	}
+	fmt.Println("ra.tabDb: ", ra.tagDb)
 	return nil
 }
 
@@ -68,7 +69,7 @@ func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 		return nil, fmt.Errorf("invalid tags data format in %s", filepath)
 	}
 
-	testMap := make(map[string]Test) // Use a map to store results
+	testMap := make(map[string]Test)
 	for tagID, tagInfo := range tags {
 		if tagInfo == nil {
 			return nil, fmt.Errorf("nil tag info for tag %s", tagID)
@@ -76,25 +77,17 @@ func loadTestsFromYAML(filepath string) (map[string]Test, error) {
 
 		test := Test{}
 		if m, ok := tagInfo.(map[string]interface{}); ok {
-			test.CompOp = m["compareOp"].(string)        // No error checking here, assume valid
-			test.Description = m["description"].(string) // No error checking here, assume valid
-			test.Type = m["type"].(string)               // No error checking here, assume valid
-			test.Unit = m["unit"].(string)               // No error checking here, assume valid
+			test.CompOp = m["compareOp"].(string)
+			test.Description = m["description"].(string)
+			test.Type = m["type"].(string)
+			test.Unit = m["unit"].(string)
 			test.UpperLimit, _ = m["upperLimit"].(string)
 			test.LowerLimit, _ = m["lowerLimit"].(string)
 
-			// Handle expectedVal carefully
 			expectedVal, exists := m["expectedVal"]
 			if exists {
-				// Only assign if the key exists in the map
 				test.ExpectedValue, _ = expectedVal.(string)
 			}
-
-			fmt.Println("Compare Op:", test.CompOp)
-			fmt.Println("Description:", test.Description)
-			fmt.Println("Expected Val:", test.ExpectedValue) // Might be empty if not in YAML
-			fmt.Println("Type:", test.Type)
-			fmt.Println("Unit:", test.Unit)
 		} else {
 			fmt.Println("Error: Data is not in the expected map format")
 		}
