@@ -10,17 +10,16 @@ import (
 
 // Config holds configuration variables for the HIL setup
 type Config struct {
-	Revision                    string `yaml:"revision"`
-	VehCanInterface             string `yaml:"vehCanInterface"`
-	PtCanInterface              string `yaml:"ptCanInterface"`
-	TraceDir                    string `yaml:"traceDir"`
-	LogsDir                     string `yaml:"logsDir"`
-	ResultProcessorAutoStart    bool   `yaml:"resultProcessorAutoStart"`
-	ResultProcessorAddr         string `yaml:"resultProcessorAddr"`
-	ResultProcessorPath         string `yaml:"resultProcessorPath"`
-	ResultProcessorPushToGithub bool   `yaml:"resultProcessorPushToGithub"`
-	CanTracerTimeoutMinutes     int    `yaml:"canTracerTimeoutMinutes"`
-	SilPort                     int    `yaml:"silPort"`
+	Revision                string `yaml:"revision"`
+	VehCanInterface         string `yaml:"vehCanInterface"`
+	PtCanInterface          string `yaml:"ptCanInterface"`
+	TraceDir                string `yaml:"traceDir"`
+	LogsDir                 string `yaml:"logsDir"`
+	ResultsDir              string `yaml:"resultsDir"`
+	TagsFilePath            string `yaml:"tagsFilePath"`
+	HistoricTestsFilePath   string `yaml:"historicTestsFilePath"`
+	CanTracerTimeoutMinutes int    `yaml:"canTracerTimeoutMinutes"`
+	SilPort                 int    `yaml:"silPort"`
 }
 
 // NewConfig returns a new Config type

@@ -26,7 +26,7 @@ import (
 	"github.com/macformula/hil/macformula/pinout"
 	"github.com/macformula/hil/macformula/state"
 	"github.com/macformula/hil/orchestrator"
-	results "github.com/macformula/hil/results/client"
+	"github.com/macformula/hil/results"
 	"github.com/pkg/errors"
 )
 
@@ -101,20 +101,11 @@ func main() {
 		panic(errors.Wrap(err, "build logger"))
 	}
 
-	// Create results processor.
-	var rpOptions []results.Option
-	if cfg.ResultProcessorAutoStart {
-		rpOptions = append(rpOptions, results.WithServerAutoStart(*configPath, cfg.ResultProcessorPath))
-	}
+	logger.Info("hil app starting", zap.Any("config", cfg))
 
-	if cfg.ResultProcessorPushToGithub {
-		rpOptions = append(rpOptions, results.WithPushReportsToGithub())
-	}
-
-	resultProcessor := results.NewResultProcessor(logger,
-		cfg.ResultProcessorAddr,
-		rpOptions...,
-	)
+	// Create result processor.
+	resultProcessor := results.NewResultAccumulator(logger, cfg.TagsFilePath, cfg.HistoricTestsFilePath, cfg.ResultsDir,
+		results.NewHtmlReportGenerator())
 
 	// Create sequencer.
 	sequencer := flow.NewSequencer(resultProcessor, logger)
