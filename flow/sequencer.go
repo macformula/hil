@@ -2,13 +2,14 @@ package flow
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/google/uuid"
 	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
 )
 
 const (
@@ -41,6 +42,8 @@ func NewSequencer(rp ResultProcessorIface, l *zap.Logger) *Sequencer {
 		progressFeed: event.Feed{},
 		fatalErr:     utils.NewResettaleError(),
 		regularErr:   utils.NewResettaleError(),
+		failedTags:   make([]Tag, 0),
+		testErrors:   make([]error, 0),
 		rp:           rp,
 	}
 }
@@ -71,6 +74,15 @@ func (s *Sequencer) Run(
 		return false, nil, []error{errors.New("sequence cannot be empty")}, errors.New("sequence cannot be empty")
 	}
 
+	s.testErrors = []error{}
+	s.failedTags = []Tag{}
+
+	// Reset failed tags and test errors at the end of run.
+	defer func() {
+		s.testErrors = []error{}
+		s.failedTags = []Tag{}
+	}()
+
 	s.progress = Progress{
 		CurrentState:  nil,
 		StateDuration: make([]time.Duration, 0),
@@ -79,20 +91,12 @@ func (s *Sequencer) Run(
 		Sequence:      seq,
 	}
 
-	s.failedTags = []Tag{}
-
 	isPassing, err := s.runSequence(ctx, seq, cancelTest, testId)
 	if err != nil {
-		testErrors := append(s.testErrors, errors.Wrap(err, "run sequence"))
-		s.testErrors = []error{}
-
-		return false, s.failedTags, testErrors, errors.Wrap(err, "run sequence")
+		return false, s.failedTags, s.testErrors, errors.Wrap(err, "run sequence")
 	}
 
-	testErrors := s.testErrors
-	s.testErrors = []error{}
-
-	return isPassing, s.failedTags, testErrors, nil
+	return isPassing, s.failedTags, s.testErrors, nil
 }
 
 // FatalError indicates that there is an error that requires intervention.
@@ -106,6 +110,7 @@ func (s *Sequencer) ResetFatalError() {
 	s.fatalErr.Reset()
 }
 
+// Close will be called at the end of the app.
 func (s *Sequencer) Close() error {
 	s.l.Info("closing sequencer")
 

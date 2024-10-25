@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/macformula/hil/macformula/cangen/vehcan"
 	"os"
 	"os/signal"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/macformula/hil/canlink"
+	"github.com/macformula/hil/macformula/cangen/vehcan"
 	"github.com/pkg/errors"
 )
 
@@ -149,10 +149,10 @@ func startSendMessageRoutine(
 	packState.SetPopulated_Cells(_numCells)
 	packState.SetPack_Current(0)
 
-	ctrStates := vehcan.NewContactor_States()
-	ctrStates.SetPack_Positive(0)
-	ctrStates.SetPack_Negative(0)
-	ctrStates.SetPack_Precharge(0)
+	ctrStates := vehcan.NewContactorStates()
+	ctrStates.SetPackPositive(0)
+	ctrStates.SetPackNegative(0)
+	ctrStates.SetPackPrecharge(0)
 
 	ticker := time.NewTicker(msgPeriod)
 	closeContactors := time.After(_closeContactorDur)
@@ -164,8 +164,8 @@ func startSendMessageRoutine(
 		case <-stop:
 			return
 		case <-closeContactors:
-			ctrStates.SetPack_Positive(1)
-			ctrStates.SetPack_Negative(1)
+			ctrStates.SetPackPositive(1)
+			ctrStates.SetPackNegative(1)
 		case <-ticker.C:
 			// +cellDeviation on even, -cellDeviation on odd
 			cellVoltageDeviation := _cellVoltageAbsDeviation * float64(i%2+1) * (-1)
@@ -175,7 +175,7 @@ func startSendMessageRoutine(
 			packState.SetPack_Inst_Voltage(packVoltage)
 
 			// Set pack current if the contactors are closed
-			if ctrStates.Pack_Positive() > 0 && ctrStates.Pack_Negative() > 0 {
+			if ctrStates.PackPositive() > 0 && ctrStates.PackNegative() > 0 {
 				// +packCurrentDeviation on even i, -packCurrentDeviation on odd i
 				packCurrentDeviation := _packCurrentDeviation * float64(i%2+1) * (-1)
 				packCurrentIncr := float64(msgPeriod/time.Second) * _packCurrentIncrPerSec
