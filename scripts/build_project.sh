@@ -1,12 +1,12 @@
+#!/bin/bash
+
 # Author: Teghveer Singh Ateliey
 # Date: 2024-10-30
-
-#!/bin/bash
 
 # Check args
 if [ "$#" -ne 4 ]; then
     echo "Usage: $0 <commit-hash> <repo-path> <project> <platform>"
-    exit 1
+    exit
 fi
 
 # Assign inputs to variables
@@ -22,21 +22,17 @@ if [ ! -d "$REPO_PATH" ]; then
 fi
 
 # Navigate to the racecar/firmware directory path
-cd "$REPO_PATH" || exit
-
-# Activate the Python virtual environment
-source .env/Scripts/activate
+cd "$REPO_PATH"
 
 # Fetch latest changes and check out the specified commit
 git fetch --all
 git checkout "$COMMIT_HASH"
 
 # Build command
-if make PROJECT="$PROJECT" PLATFORM="$PLATFORM" build; then
+if make PROJECT="$PROJECT" PLATFORM="$PLATFORM" clean build; then
     echo "Build completed successfully!!"
 else
     echo "Build failed :("
-    exit
 fi
 
 # Return to the main branch
