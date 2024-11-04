@@ -6,23 +6,24 @@
 # Check args
 if [ "$#" -ne 4 ]; then
     echo "Usage: $0 <commit-hash> <repo-path> <project> <platform>"
-    exit
+    exit 2
 fi
 
 # Assign inputs to variables
 COMMIT_HASH=$1
-REPO_PATH=$2
+RACECAR_PATH=$2
 PROJECT=$3
 PLATFORM=$4
 
 # Checks if directory exists
-if [ ! -d "$REPO_PATH" ]; then
-    echo "Error: Repository path '$REPO_PATH' does not exist."
-    exit
+FW_PATH=$RACECAR_PATH/firmware
+if [ ! -d "$FW_PATH" ]; then
+    echo "Error: Firmware directory not found within repository path '$RACECAR_PATH'."
+    exit 2
 fi
 
 # Navigate to the racecar/firmware directory path
-cd "$REPO_PATH"
+cd "$FW_PATH"
 
 # Fetch latest changes and check out the specified commit
 git fetch --all
