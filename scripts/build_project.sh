@@ -30,10 +30,14 @@ git fetch --all
 git checkout "$COMMIT_HASH"
 
 # Build command
-if make PROJECT="$PROJECT" PLATFORM="$PLATFORM" clean build; then
-    echo "Build completed successfully!!"
+make PROJECT="$PROJECT" PLATFORM="$PLATFORM" clean build
+MAKE_ERR_CODE=$?
+
+# Prints error code of make if command fails
+if [ "$MAKE_ERR_CODE" -ne 0 ]; then
+    echo "Build failed with makefile error code: $MAKE_ERR_CODE"
 else
-    echo "Build failed :("
+    echo "Build completed successfully!!"
 fi
 
 # Return to the main branch
