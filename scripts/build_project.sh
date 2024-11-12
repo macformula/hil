@@ -40,5 +40,6 @@ else
     echo "Build completed successfully!!"
 fi
 
-# Return to the main branch
+# Return to the main branch and return make exit code
 git checkout main
+exit $MAKE_ERR_CODE
