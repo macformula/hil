@@ -15,19 +15,16 @@ const (
 )
 
 // createTraceFile creates an *os.File given information
-func createTraceFile(dir, busName, suffix string) (*os.File, error) {
+func createTraceFile(dir string, busName string, fileSuffix string) (*os.File, error) {
 	dateStr := time.Now().Format(_filenameDateFormat)
 	timeStr := time.Now().Format(_filenameTimeFormat)
-
-	// remove '.' if included in suffix (done in the following line).
-	suffix = strings.TrimLeft(suffix, ".")
 
 	fileName := fmt.Sprintf(
 		"%s_%s_%s.%s",
 		busName,
 		dateStr,
 		timeStr,
-		suffix,
+		fileSuffix,
 	)
 
 	filePath := filepath.Join(dir, fileName)

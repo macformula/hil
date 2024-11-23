@@ -2,8 +2,9 @@ package canlink
 
 import (
 	"context"
-	//"fmt"
+	"fmt"
 	"net"
+	"os"
 	"time"
 
 	"github.com/macformula/hil/utils"
@@ -42,10 +43,11 @@ type Tracer struct {
 	receiver   *socketcan.Receiver
 
 	traceDir     string
+	traceFile    *os.File
 	canInterface string
 	timeout      time.Duration
 	busName      string
-	types        []TraceFile
+	convertToString        ConvertToString
 	conn         net.Conn
 }
 
@@ -65,7 +67,6 @@ func NewTracer(
 		canInterface: canInterface,
 		traceDir:     traceDir,
 		busName:      canInterface,
-		types:        []TraceFile{},
 		conn:         conn,
 	}
 
@@ -91,11 +92,9 @@ func WithBusName(name string) TracerOption {
 }
 
 // WithFiles sets different filetypes the tracer can dump CAN data to
-func WithFiles(f ...TraceFile) TracerOption {
+func WithConvertToString(convertToString func(*zap.Logger, *TimestampedFrame) string) TracerOption {
 	return func(t *Tracer) {
-		for _, filetype := range f {
-			t.types = append(t.types, filetype)
-		}
+		convertToString = convertToString
 	}
 }
 
@@ -122,6 +121,14 @@ func (t *Tracer) StartTrace(ctx context.Context) error {
 
 		t.stop = make(chan struct{})
 
+		file, err := createTraceFile(t.traceDir, t.busName, ".asc")
+		if err != nil {
+			return errors.Wrap(err, "create trace file")
+		}
+		t.l.Info(fmt.Sprintf("created trace file in %s", t.traceDir))
+
+		t.traceFile = file
+
 		go t.receiveData(ctx)
 
 		t.isRunning = true
@@ -142,16 +149,6 @@ func (t *Tracer) StopTrace() error {
 
 		close(t.stop)
 
-		t.l.Debug("dumping cached data to files", zap.Int("num_frames", len(t.cachedData)))
-		for _, files := range t.types {
-			err := files.dumpToFile(t.cachedData, t.traceDir, t.busName)
-
-			if err != nil {
-				t.l.Error("failed to dump to file", zap.Error(err))
-
-			}
-		}
-
 		t.cachedData = nil
 	}
 
@@ -171,6 +168,8 @@ func (t *Tracer) Close() error {
 	if err != nil {
 		return errors.Wrap(err, "close socketcan receiver")
 	}
+
+	t.traceFile.Close()
 
 	return nil
 }
@@ -224,7 +223,20 @@ func (t *Tracer) receiveData(ctx context.Context) {
 			t.StopTrace()
 			return
 		case receivedFrame := <-t.frameCh:
-			t.cachedData = append(t.cachedData, receivedFrame)
+			t.l.Info("frame recieved")
+			t.writeFrameToFile(&receivedFrame)
 		}
 	}
+}
+
+func (t *Tracer) writeFrameToFile(frame *TimestampedFrame) error {
+	line := t.convertToString(t.l, frame)
+
+    _, err := t.traceFile.WriteString(line)
+    if err != nil {
+		t.l.Info("cannot write to file")
+        return errors.Wrap(err, "writing to trace file")
+    }
+
+	return nil
 }
