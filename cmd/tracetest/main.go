@@ -7,12 +7,12 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/pkg/errors"
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
 
 	"github.com/macformula/hil/canlink"
 	"github.com/macformula/hil/macformula/cangen/vehcan"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -144,7 +144,12 @@ func waitForSigTerm(stop chan struct{}, logger *zap.Logger) {
 }
 
 func startSendMessageRoutine(
-	ctx context.Context, stop chan struct{}, msgPeriod time.Duration, cc *canlink.CanClient, l *zap.Logger) {
+	ctx context.Context,
+	stop chan struct{},
+	msgPeriod time.Duration,
+	cc *canlink.CanClient,
+	l *zap.Logger,
+) {
 	packState := vehcan.NewPack_State()
 	packState.SetPopulated_Cells(_numCells)
 	packState.SetPack_Current(0)
@@ -179,7 +184,11 @@ func startSendMessageRoutine(
 				// +packCurrentDeviation on even i, -packCurrentDeviation on odd i
 				packCurrentDeviation := _packCurrentDeviation * float64(i%2+1) * (-1)
 				packCurrentIncr := float64(msgPeriod/time.Second) * _packCurrentIncrPerSec
-				packCurrent := clamp(packState.Pack_Current()+packCurrentIncr, _minPackCurrent, _maxPackCurrent)
+				packCurrent := clamp(
+					packState.Pack_Current()+packCurrentIncr,
+					_minPackCurrent,
+					_maxPackCurrent,
+				)
 				packCurrent += packCurrentDeviation
 				packState.SetPack_Current(packCurrent)
 			} else {
