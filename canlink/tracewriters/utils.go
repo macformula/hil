@@ -1,21 +1,17 @@
-package canlink
+package tracewriters
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
+	"go.einride.tech/can"
 	"github.com/pkg/errors"
 )
 
-const (
-	_idNotInDatabaseErrorIndicator = "ID not in database"
-)
-
-// createTraceFile creates an *os.File given information
-func createTraceFile(dir string, busName string, fileSuffix string) (*os.File, error) {
+// createEmptyTraceFile creates an *os.File given information
+func createEmptyTraceFile(dir string, busName string, fileSuffix string) (*os.File, error) {
 	dateStr := time.Now().Format(_filenameDateFormat)
 	timeStr := time.Now().Format(_filenameTimeFormat)
 
@@ -37,6 +33,7 @@ func createTraceFile(dir string, busName string, fileSuffix string) (*os.File, e
 	return file, nil
 }
 
-func isIdNotInDatabaseError(err error) bool {
-	return err != nil && strings.Contains(err.Error(), _idNotInDatabaseErrorIndicator)
+type TimestampedFrame struct {
+	Frame can.Frame
+	Time  time.Time
 }

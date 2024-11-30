@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"os"
 	"time"
 
 	"github.com/macformula/hil/utils"
+	"github.com/macformula/hil/canlink/tracewriters"
 	"github.com/pkg/errors"
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
@@ -36,18 +36,18 @@ type TracerOption func(*Tracer)
 type Tracer struct {
 	l          *zap.Logger
 	stop       chan struct{}
-	frameCh    chan TimestampedFrame
-	cachedData []TimestampedFrame
+	frameCh    chan tracewriters.TimestampedFrame
+	cachedData []tracewriters.TimestampedFrame
 	err        *utils.ResettableError
 	isRunning  bool
 	receiver   *socketcan.Receiver
 
 	traceDir     string
-	traceFile    *os.File
+	traceWriters []tracewriters.TraceWriter
+
 	canInterface string
 	timeout      time.Duration
 	busName      string
-	convertToString        ConvertToString
 	conn         net.Conn
 }
 
@@ -61,7 +61,7 @@ func NewTracer(
 
 	tracer := &Tracer{
 		l:            l.Named(_loggerName),
-		cachedData:   []TimestampedFrame{},
+		cachedData:   []tracewriters.TimestampedFrame{},
 		err:          utils.NewResettaleError(),
 		timeout:      _defaultTimeout,
 		canInterface: canInterface,
@@ -92,9 +92,9 @@ func WithBusName(name string) TracerOption {
 }
 
 // WithFiles sets different filetypes the tracer can dump CAN data to
-func WithConvertToString(convertToString func(*zap.Logger, *TimestampedFrame) string) TracerOption {
+func WithTraceWriters(traceWriters []tracewriters.TraceWriter) TracerOption {
 	return func(t *Tracer) {
-		convertToString = convertToString
+		t.traceWriters = traceWriters
 	}
 }
 
@@ -107,27 +107,27 @@ func (t *Tracer) Open(ctx context.Context) error {
 	t.l.Info("canlink receiver created")
 
 	// IMPORTANT: frameCh must be open before isRunning is set
-	t.frameCh = make(chan TimestampedFrame, _frameBufferLength)
+	t.frameCh = make(chan tracewriters.TimestampedFrame, _frameBufferLength)
 
 	go t.fetchData(ctx)
 
 	return nil
 }
 
-// StartTrace starts receiving and caching CAN frames
+// StartTrace starts receiving CAN frames
 func (t *Tracer) StartTrace(ctx context.Context) error {
 	if !t.isRunning {
 		t.l.Info("received start command")
 
 		t.stop = make(chan struct{})
 
-		file, err := createTraceFile(t.traceDir, t.busName, ".asc")
-		if err != nil {
-			return errors.Wrap(err, "create trace file")
+		for _, writer := range t.traceWriters {
+			err := writer.CreateTraceFile(t.traceDir, t.busName)
+			if err != nil {
+				return errors.Wrap(err, "create trace file")
+			}
+			t.l.Info(fmt.Sprintf("created trace file in %s", t.traceDir))
 		}
-		t.l.Info(fmt.Sprintf("created trace file in %s", t.traceDir))
-
-		t.traceFile = file
 
 		go t.receiveData(ctx)
 
@@ -169,7 +169,12 @@ func (t *Tracer) Close() error {
 		return errors.Wrap(err, "close socketcan receiver")
 	}
 
-	t.traceFile.Close()
+	for _, writer := range t.traceWriters {
+		err = writer.CloseTraceFile()
+		if err != nil {
+			return errors.Wrap(err, "close trace file")
+		}
+	}
 
 	return nil
 }
@@ -182,7 +187,7 @@ func (t *Tracer) Error() error {
 // fetchData fetches CAN frames from the socket and sends them over a buffered channel
 func (t *Tracer) fetchData(ctx context.Context) {
 
-	timeFrame := TimestampedFrame{}
+	timeFrame := tracewriters.TimestampedFrame{}
 
 	for t.receiver.Receive() {
 		select {
@@ -205,7 +210,7 @@ func (t *Tracer) fetchData(ctx context.Context) {
 	}
 }
 
-// receiveData listens on the buffered channel for incoming CAN frames, parses them, then caches them
+// receiveData listens on the buffered channel for incoming CAN frames, parses them, then writes them to the trace files.
 func (t *Tracer) receiveData(ctx context.Context) {
 
 	timeout := time.After(t.timeout)
@@ -229,14 +234,13 @@ func (t *Tracer) receiveData(ctx context.Context) {
 	}
 }
 
-func (t *Tracer) writeFrameToFile(frame *TimestampedFrame) error {
-	line := t.convertToString(t.l, frame)
-
-    _, err := t.traceFile.WriteString(line)
-    if err != nil {
-		t.l.Info("cannot write to file")
-        return errors.Wrap(err, "writing to trace file")
-    }
+func (t *Tracer) writeFrameToFile(frame *tracewriters.TimestampedFrame) error {
+	for _, writer := range t.traceWriters {
+		err := writer.WriteFrameToFile(frame)
+		if err != nil {
+			return errors.Wrap(err, "write frame to file")
+		}
+	}
 
 	return nil
 }

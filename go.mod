@@ -1,6 +1,6 @@
 module github.com/macformula/hil
 
-go 1.23
+go 1.19
 
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
