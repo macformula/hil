@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/macformula/hil/canlink"
+	"github.com/macformula/hil/canlink/tracewriters"
 	"github.com/macformula/hil/macformula/cangen/vehcan"
 	"github.com/pkg/errors"
 )
@@ -50,13 +51,17 @@ func main() {
 
 	canClient := canlink.NewCanClient(vehcan.Messages(), conn, logger)
 
+	writers := make([]canlink.TraceWriter, 0)
+	writers = append(writers, tracewriters.NewAsciiWriter(logger))
+	writers = append(writers, tracewriters.NewJsonWriter(logger))
+
 	tracer := canlink.NewTracer(
 		_canIface,
 		_traceDir,
 		logger,
 		conn,
 		canlink.WithBusName(_busName),
-		canlink.WithConvertToString(canlink.ConvertToAscii))
+		canlink.WithTraceWriters(writers))
 
 	err = canClient.Open()
 	if err != nil {
@@ -92,11 +97,6 @@ func main() {
 	err = tracer.Close()
 	if err != nil {
 		logger.Error("close tracer", zap.Error(err))
-	}
-
-	err = canClient.Close()
-	if err != nil {
-		logger.Error("close can client", zap.Error(err))
 	}
 
 	if tracer.Error() != nil {
