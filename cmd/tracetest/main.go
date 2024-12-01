@@ -51,7 +51,7 @@ func main() {
 
 	canClient := canlink.NewCanClient(vehcan.Messages(), conn, logger)
 
-	writers := make([]canlink.TraceWriter, 0)
+	writers := make([]tracewriters.TraceWriter, 0)
 	writers = append(writers, tracewriters.NewAsciiWriter(logger))
 	writers = append(writers, tracewriters.NewJsonWriter(logger))
 

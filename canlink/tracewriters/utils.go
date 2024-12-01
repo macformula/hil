@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.einride.tech/can"
 	"github.com/pkg/errors"
 )
 
@@ -33,7 +32,4 @@ func createEmptyTraceFile(dir string, busName string, fileSuffix string) (*os.Fi
 	return file, nil
 }
 
-type TimestampedFrame struct {
-	Frame can.Frame
-	Time  time.Time
-}
+
