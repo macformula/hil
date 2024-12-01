@@ -3,6 +3,7 @@ package canlink
 import (
 	"context"
 	"net"
+	"strings"
 
 	"go.einride.tech/can"
 	"go.einride.tech/can/pkg/generated"
@@ -13,7 +14,8 @@ import (
 )
 
 const (
-	_canClientLoggerName = "can_client"
+	_canClientLoggerName           = "can_client"
+	_idNotInDatabaseErrorIndicator = "ID not in database"
 )
 
 // MessagesDescriptor is an interface mirroring the MessagesDescriptor struct found in Einride DBCs.
@@ -185,4 +187,8 @@ func (c *CanClient) StopTracking() (map[uint32]int, error) {
 // IsTracking returns whether the tracker is running or not.
 func (c *CanClient) IsTracking() bool {
 	return c.tracking
+}
+
+func isIdNotInDatabaseError(err error) bool {
+	return err != nil && strings.Contains(err.Error(), _idNotInDatabaseErrorIndicator)
 }
