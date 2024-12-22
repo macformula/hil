@@ -8,7 +8,7 @@ import (
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
 
-	"github.com/macformula/hil/canlink/tracewriters"
+	"github.com/macformula/hil/canlink/writer"
 )
 
 const (
@@ -48,9 +48,17 @@ func setup(t *testing.T) (*Tracer, *zap.Logger, func(*testing.T, *Tracer, *zap.L
 		t.Fatalf("Failed to create socket can connection. Error: %v", err)
 	}
 
-	writers := make([]tracewriters.TraceWriter, 0)
-	writers = append(writers, tracewriters.NewAsciiWriter(logger))
-	writers = append(writers, tracewriters.NewJsonWriter(logger))
+	writers := make([]writer.WriterIface, 0)
+	jsonWriter := writer.NewWriter(
+		logger,
+		".jsonl",
+	)
+	asciiWriter := writer.NewWriter(
+		logger,
+		".asc",
+	)
+	writers = append(writers, jsonWriter)
+	writers = append(writers, asciiWriter)
 
 	tracer := NewTracer(
 		_canIface,
@@ -58,7 +66,7 @@ func setup(t *testing.T) (*Tracer, *zap.Logger, func(*testing.T, *Tracer, *zap.L
 		logger,
 		conn,
 		WithBusName(_busName),
-	 	WithTraceWriters(writers))
+	 	WithWriters(writers))
 
 	err = tracer.Open(ctx)
 	if err != nil {

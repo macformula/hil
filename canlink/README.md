@@ -11,18 +11,32 @@ during a test and dumps it into a file.
 
 ### Usage
 
-1) Create an instance of Tracer with the _NewTracer()_ function. 
+1) Create an instance of Tracer with the `NewTracer()` function. 
 A can interface, directory and logger must be provided as arguments. 
-Functional options are available of type _TracerOption_ if required. 
+Functional options are available of type `TracerOption` if required. 
 
     ```go
     func main() {
+        writers := make([]writer.WriterIface, 0)
+        jsonWriter := writer.NewWriter(
+            logger,
+            ".jsonl",
+        )
+        asciiWriter := writer.NewWriter(
+            logger,
+            ".asc",
+        )
+        writers = append(writers, jsonWriter)
+        writers = append(writers, asciiWriter)
+
         tracer := canlink.NewTracer(
             "can0",
             "/opt/traces",
             logger,
+            connection,
             canlink.WithBusName("PT"),
             canlink.WithTimeout(5*time.Minute))
+            canlink.WithWriters(writers)
     }
     ```
 2) Open the Tracer using _Open()_

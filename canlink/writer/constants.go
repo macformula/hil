@@ -1,4 +1,4 @@
-package tracewriters
+package writer
 
 const (
 	_decimal = 10

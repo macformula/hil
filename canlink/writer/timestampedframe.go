@@ -1,4 +1,4 @@
-package tracewriters
+package writer
 
 import (
 	"go.einride.tech/can"

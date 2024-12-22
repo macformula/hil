@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/macformula/hil/utils"
-	"github.com/macformula/hil/canlink/tracewriters"
+	"github.com/macformula/hil/canlink/writer"
 	"github.com/pkg/errors"
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
@@ -36,14 +36,14 @@ type TracerOption func(*Tracer)
 type Tracer struct {
 	l          *zap.Logger
 	stop       chan struct{}
-	frameCh    chan tracewriters.TimestampedFrame
-	cachedData []tracewriters.TimestampedFrame
+	frameCh    chan writer.TimestampedFrame
+	cachedData []writer.TimestampedFrame
 	err        *utils.ResettableError
 	isRunning  bool
 	receiver   *socketcan.Receiver
 
 	traceDir     string
-	traceWriters []tracewriters.TraceWriter
+	writers     []writer.WriterIface
 
 	canInterface string
 	timeout      time.Duration
@@ -61,7 +61,7 @@ func NewTracer(
 
 	tracer := &Tracer{
 		l:            l.Named(_loggerName),
-		cachedData:   []tracewriters.TimestampedFrame{},
+		cachedData:   []writer.TimestampedFrame{},
 		err:          utils.NewResettaleError(),
 		timeout:      _defaultTimeout,
 		canInterface: canInterface,
@@ -91,10 +91,10 @@ func WithBusName(name string) TracerOption {
 	}
 }
 
-// WithFiles sets different filetypes the tracer can dump CAN data to
-func WithTraceWriters(traceWriters []tracewriters.TraceWriter) TracerOption {
+// WithWriters sets the slice of writers which manage trace files
+func WithWriters(writer []writer.WriterIface) TracerOption {
 	return func(t *Tracer) {
-		t.traceWriters = traceWriters
+		t.writers = writer
 	}
 }
 
@@ -107,7 +107,7 @@ func (t *Tracer) Open(ctx context.Context) error {
 	t.l.Info("canlink receiver created")
 
 	// IMPORTANT: frameCh must be open before isRunning is set
-	t.frameCh = make(chan tracewriters.TimestampedFrame, _frameBufferLength)
+	t.frameCh = make(chan writer.TimestampedFrame, _frameBufferLength)
 
 	go t.fetchData(ctx)
 
@@ -121,7 +121,7 @@ func (t *Tracer) StartTrace(ctx context.Context) error {
 
 		t.stop = make(chan struct{})
 
-		for _, writer := range t.traceWriters {
+		for _, writer := range t.writers {
 			err := writer.CreateTraceFile(t.traceDir, t.busName)
 			if err != nil {
 				return errors.Wrap(err, "create trace file")
@@ -169,7 +169,7 @@ func (t *Tracer) Close() error {
 		return errors.Wrap(err, "close socketcan receiver")
 	}
 
-	for _, writer := range t.traceWriters {
+	for _, writer := range t.writers {
 		err = writer.CloseTraceFile()
 		if err != nil {
 			return errors.Wrap(err, "close trace file")
@@ -187,7 +187,7 @@ func (t *Tracer) Error() error {
 // fetchData fetches CAN frames from the socket and sends them over a buffered channel
 func (t *Tracer) fetchData(ctx context.Context) {
 
-	timeFrame := tracewriters.TimestampedFrame{}
+	timeFrame := writer.TimestampedFrame{}
 
 	for t.receiver.Receive() {
 		select {
@@ -234,8 +234,8 @@ func (t *Tracer) receiveData(ctx context.Context) {
 	}
 }
 
-func (t *Tracer) writeFrameToFile(frame *tracewriters.TimestampedFrame) error {
-	for _, writer := range t.traceWriters {
+func (t *Tracer) writeFrameToFile(frame *writer.TimestampedFrame) error {
+	for _, writer := range t.writers {
 		err := writer.WriteFrameToFile(frame)
 		if err != nil {
 			return errors.Wrap(err, "write frame to file")
