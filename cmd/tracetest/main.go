@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/macformula/hil/canlink"
-	"github.com/macformula/hil/canlink/tracewriters"
+	"github.com/macformula/hil/canlink/writer"
 	"github.com/macformula/hil/macformula/cangen/vehcan"
 	"github.com/pkg/errors"
 )
