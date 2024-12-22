@@ -31,5 +31,3 @@ func createEmptyTraceFile(dir string, busName string, fileSuffix string) (*os.Fi
 
 	return file, nil
 }
-
-

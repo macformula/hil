@@ -2,29 +2,29 @@ package writer
 
 import (
 	"os"
-	
-	"go.uber.org/zap"
+
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 // Responsible for managing the trace file
 type Writer struct {
-	traceFile *os.File
-	fileExtention string
+	traceFile       *os.File
+	fileExtention   string
 	convertToString func(*zap.Logger, *TimestampedFrame) string
-	l *zap.Logger
+	l               *zap.Logger
 }
 
 func NewWriter(l *zap.Logger, fileExtention string) *Writer {
 	convertToStringMapping := map[string]func(*zap.Logger, *TimestampedFrame) string{
-        ".jsonl": convertToJson,
-        ".asc": convertToAscii,
-    }
+		".jsonl": convertToJson,
+		".asc":   convertToAscii,
+	}
 	return &Writer{
-		l: l,
-		fileExtention: fileExtention,
+		l:               l,
+		fileExtention:   fileExtention,
 		convertToString: convertToStringMapping[fileExtention],
-		traceFile: nil,
+		traceFile:       nil,
 	}
 }
 
@@ -42,21 +42,20 @@ func (w *Writer) CreateTraceFile(traceDir string, busName string) error {
 func (w *Writer) WriteFrameToFile(frame *TimestampedFrame) error {
 	line := w.convertToString(w.l, frame)
 
-    _, err := w.traceFile.WriteString(line)
-    if err != nil {
+	_, err := w.traceFile.WriteString(line)
+	if err != nil {
 		w.l.Info("cannot write to file")
-        return errors.Wrap(err, "writing to trace file")
-    }
+		return errors.Wrap(err, "writing to trace file")
+	}
 
 	_, err = w.traceFile.WriteString("\n")
-    if err != nil {
+	if err != nil {
 		w.l.Info("cannot write to file")
-        return errors.Wrap(err, "writing to trace file")
-    }
+		return errors.Wrap(err, "writing to trace file")
+	}
 
 	return nil
 }
-
 
 func (w *Writer) CloseTraceFile() error {
 	err := w.traceFile.Close()

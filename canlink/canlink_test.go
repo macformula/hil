@@ -28,7 +28,7 @@ func TestTracer(t *testing.T) {
 	defer teardown(t, tracer, logger)
 
 	time.Sleep(5 * time.Second)
-	
+
 }
 
 func setup(t *testing.T) (*Tracer, *zap.Logger, func(*testing.T, *Tracer, *zap.Logger)) {
@@ -66,7 +66,7 @@ func setup(t *testing.T) (*Tracer, *zap.Logger, func(*testing.T, *Tracer, *zap.L
 		logger,
 		conn,
 		WithBusName(_busName),
-	 	WithWriters(writers))
+		WithWriters(writers))
 
 	err = tracer.Open(ctx)
 	if err != nil {

@@ -6,8 +6,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/macformula/hil/utils"
 	"github.com/macformula/hil/canlink/writer"
+	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
@@ -32,8 +32,8 @@ type Tracer struct {
 	isRunning  bool
 	receiver   *socketcan.Receiver
 
-	traceDir     string
-	writers     []writer.WriterIface
+	traceDir string
+	writers  []writer.WriterIface
 
 	canInterface string
 	timeout      time.Duration

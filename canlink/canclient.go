@@ -190,5 +190,3 @@ func (c *CanClient) StopTracking() (map[uint32]int, error) {
 func (c *CanClient) IsTracking() bool {
 	return c.tracking
 }
-
-

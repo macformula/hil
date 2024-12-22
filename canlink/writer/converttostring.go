@@ -1,15 +1,15 @@
 package writer
 
 import (
-	"strings"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"encoding/json"
 	"go.uber.org/zap"
 )
 
-// Converts timestamped frames into strings for file writing 
+// Converts timestamped frames into strings for file writing
 func convertToAscii(l *zap.Logger, timestampedFrame *TimestampedFrame) string {
 	var builder strings.Builder
 
@@ -43,13 +43,13 @@ func convertToAscii(l *zap.Logger, timestampedFrame *TimestampedFrame) string {
 	return builder.String()
 }
 
-// Converts timestamped frames into strings for file writing 
+// Converts timestamped frames into strings for file writing
 func convertToJson(l *zap.Logger, timestampedFrame *TimestampedFrame) string {
 	jsonObject := map[string]interface{}{
-		"time":   timestampedFrame.Time.Format(_messageTimeFormat),
-		"id":    strconv.FormatUint(uint64(timestampedFrame.Frame.ID), _decimal),
+		"time":        timestampedFrame.Time.Format(_messageTimeFormat),
+		"id":          strconv.FormatUint(uint64(timestampedFrame.Frame.ID), _decimal),
 		"frameLength": strconv.FormatUint(uint64(timestampedFrame.Frame.Length), _decimal),
-		"bytes": timestampedFrame.Frame.Data,
+		"bytes":       timestampedFrame.Frame.Data,
 	}
 
 	jsonData, err := json.Marshal(jsonObject)
@@ -57,5 +57,5 @@ func convertToJson(l *zap.Logger, timestampedFrame *TimestampedFrame) string {
 		l.Error(err.Error())
 	}
 
-	return string(jsonData) 
+	return string(jsonData)
 }

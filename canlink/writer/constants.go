@@ -2,7 +2,7 @@ package writer
 
 const (
 	_decimal = 10
-	
+
 	// format for 24-hour clock with minutes, seconds, and 4 digits
 	// of precision after decimal (period and colon delimiter)
 	_messageTimeFormat = "15:04:05.0000"

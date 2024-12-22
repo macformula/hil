@@ -25,11 +25,11 @@ func TestJsonConvertToString(t *testing.T) {
 	)
 
 	time := time.Date(2024, time.November, 27, 10, 30, 45, 0, time.Local)
-	timestampedFrame :=   TimestampedFrame{
+	timestampedFrame := TimestampedFrame{
 		Frame: can.Frame{
-			ID: 12,
+			ID:     12,
 			Length: 8,
-			Data: [8]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88},
+			Data:   [8]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88},
 		},
 		Time: time,
 	}
@@ -68,13 +68,12 @@ func TestAsciiConvertToString(t *testing.T) {
 		".asc",
 	)
 
-
 	time := time.Date(2024, time.November, 27, 10, 30, 45, 0, time.Local)
-	timestampedFrame :=   TimestampedFrame{
+	timestampedFrame := TimestampedFrame{
 		Frame: can.Frame{
-			ID: 12,
+			ID:     12,
 			Length: 8,
-			Data: [8]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88},
+			Data:   [8]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88},
 		},
 		Time: time,
 	}
