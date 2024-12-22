@@ -17,16 +17,6 @@ const (
 	_defaultTimeout    = 30 * time.Minute
 	_frameBufferLength = 10
 	_loggerName        = "can_tracer"
-
-	// format for 24-hour clock with minutes, seconds, and 4 digits
-	// of precision after decimal (period and colon delimiter)
-	_messageTimeFormat = "15:04:05.0000"
-
-	// format for 24-hour clock with minutes and seconds (period delimiter)
-	_filenameTimeFormat = "15-04-05"
-
-	// format for year, month and day with two digits each (period delimiter)
-	_filenameDateFormat = "2006-01-02"
 )
 
 // TracerOption is a type for functions operating on Tracer
