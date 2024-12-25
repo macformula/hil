@@ -66,7 +66,7 @@ func setup(t *testing.T) (*Tracer, *zap.Logger, func(*testing.T, *Tracer, *zap.L
 		logger,
 		conn,
 		WithBusName(_busName),
-		WithWriters(writers))
+		WithWriter(writer))
 
 	err = tracer.Open(ctx)
 	if err != nil {
