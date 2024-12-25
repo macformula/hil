@@ -3,8 +3,8 @@ package canlink
 import (
 	"strconv"
 
-	"go.uber.org/zap"
 	"encoding/json"
+	"go.uber.org/zap"
 )
 
 // Json object provides utilities for writing frames to trace files in json format

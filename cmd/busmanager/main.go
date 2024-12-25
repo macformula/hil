@@ -23,10 +23,10 @@ func NewHandler() *Handler {
 	return handler
 }
 
-func (h *Handler) Handle(
+func (h *Handler) Handle (
 	broadcast chan canlink.TimestampedFrame,
 	transmit chan canlink.TimestampedFrame,
-) {
+) error {
 	go func() {
 		for {
 			select {
@@ -52,6 +52,8 @@ func (h *Handler) Handle(
 			transmit <- frame
 		}
 	}()
+
+	return nil
 }
 
 func (h *Handler) Name() string {

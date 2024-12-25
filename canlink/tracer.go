@@ -1,13 +1,13 @@
 package canlink
 
 import (
+	"fmt"
 	"os"
 	"time"
-	"fmt"
 
-	"path/filepath"
 	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
+	"path/filepath"
 
 	"go.uber.org/zap"
 )
@@ -19,22 +19,21 @@ const (
 
 	_decimal = 10
 
-	_messageTimeFormat = "15:04:05.0000"
+	_messageTimeFormat  = "15:04:05.0000"
 	_filenameTimeFormat = "15-04-05"
 	_filenameDateFormat = "2006-01-02"
 )
-
 
 // TracerOption is a type for functions operating on Tracer
 type TracerOption func(*Tracer)
 
 // Tracer listens on a CAN bus and records all traffic
 type Tracer struct {
-	l          *zap.Logger
-	frameCh    chan TimestampedFrame // This channel will be provided by the bus manager
-	err        *utils.ResettableError
+	l       *zap.Logger
+	frameCh chan TimestampedFrame // This channel will be provided by the bus manager
+	err     *utils.ResettableError
 
-	traceDir string
+	traceDir  string
 	converter Converter
 	traceFile *os.File
 
@@ -58,7 +57,7 @@ func NewTracer(
 		traceDir:     traceDir,
 		busName:      canInterface,
 	}
-	
+
 	for _, o := range opts {
 		o(tracer)
 	}
