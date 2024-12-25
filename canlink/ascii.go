@@ -1,16 +1,31 @@
-package writer
+package canlink
 
 import (
 	"fmt"
 	"strconv"
 	"strings"
 
-	"encoding/json"
 	"go.uber.org/zap"
 )
 
-// Converts timestamped frames into strings for file writing
-func convertToAscii(l *zap.Logger, timestampedFrame *TimestampedFrame) string {
+// Ascii object provides utilities for writing frames to trace files in ascii format
+type Ascii struct {
+	fileExtention string
+}
+
+func NewAscii() *Ascii {
+	return &Ascii{
+		fileExtention: ".asc",
+	}
+}
+
+func (a *Ascii) GetFileExtention() string {
+	return a.fileExtention
+}
+
+
+// FrameToString converts a timestamped frame into a string, for file writing
+func (a *Ascii) FrameToString(l *zap.Logger, timestampedFrame *TimestampedFrame) string {
 	var builder strings.Builder
 
 	_, err := builder.WriteString(timestampedFrame.Time.Format(_messageTimeFormat))
@@ -41,21 +56,4 @@ func convertToAscii(l *zap.Logger, timestampedFrame *TimestampedFrame) string {
 	}
 
 	return builder.String()
-}
-
-// Converts timestamped frames into strings for file writing
-func convertToJson(l *zap.Logger, timestampedFrame *TimestampedFrame) string {
-	jsonObject := map[string]interface{}{
-		"time":        timestampedFrame.Time.Format(_messageTimeFormat),
-		"id":          strconv.FormatUint(uint64(timestampedFrame.Frame.ID), _decimal),
-		"frameLength": strconv.FormatUint(uint64(timestampedFrame.Frame.Length), _decimal),
-		"bytes":       timestampedFrame.Frame.Data,
-	}
-
-	jsonData, err := json.Marshal(jsonObject)
-	if err != nil {
-		l.Error(err.Error())
-	}
-
-	return string(jsonData)
 }

@@ -4,7 +4,6 @@ package canlink
 
 import (
 	"context"
-	"errors"
 	"net"
 	"sync"
 	"time"

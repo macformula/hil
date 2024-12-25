@@ -1,4 +1,4 @@
-package writer
+package canlink
 
 import (
 	"time"

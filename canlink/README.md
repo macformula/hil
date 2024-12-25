@@ -1,92 +1,81 @@
 canlink
 ======================
 
-`canlink` contains utilities for managing CAN traffic for the duration of a HIL test. Currently supported is a CAN Tracer object to capture traffic during a test.
+`canlink` contains utilities for managing CAN traffic for the duration of a HIL test.
 
-CAN Tracer
+BusManager and Tracer
 ---------------
+`BusManager` is a centralized node responsible for orchestrating all interactions with a CAN bus.
+It acts as a message broker supporting the transmission of bus traffic to registered handlers and receiving incoming messages from these handlers to write to the bus.
 
-The CAN Tracer captures all traffic on a CAN bus 
-during a test and dumps it into a file.
+`Tracer` captures writes traffic on a CAN bus into trace files.
+Currently supported formats are Json and Ascii.
+
 
 ### Usage
 
-1) Create an instance of Tracer with the `NewTracer()` function. 
-A can interface, directory and logger must be provided as arguments. 
+1) Create a Bus Manager using `NewBusManager()` function.
+A logger, and pointer to a socketcan connection are passed in.
+
+    ```go
+    func main() {
+        ctx := context.Background()
+
+        loggerConfig := zap.NewDevelopmentConfig()
+        logger, err := loggerConfig.Build()
+
+        // Create a network connection for vcan0
+        conn, err := socketcan.DialContext(context.Background(), "can", "vcan0")
+        if err != nil {
+        return
+        }
+
+        manager := canlink.NewBusManager(logger, &conn)
+    }
+    ```
+
+2) Create an instance of Tracer with the `NewTracer()` function. 
+A can interface, trace directory and logger must be provided as arguments. 
+The trace directory must be a folder within the current directory with the same name as the argument provided.
+
 Functional options are available of type `TracerOption` if required. 
 
     ```go
     func main() {
-        writers := make([]writer.WriterIface, 0)
-        jsonWriter := writer.NewWriter(
-            logger,
-            ".jsonl",
-        )
-        asciiWriter := writer.NewWriter(
-            logger,
-            ".asc",
-        )
-        writers = append(writers, jsonWriter)
-        writers = append(writers, asciiWriter)
-
         tracer := canlink.NewTracer(
-            "can0",
-            "/opt/traces",
+            "vcan0",
+            "traces",
             logger,
-            connection,
-            canlink.WithBusName("PT"),
-            canlink.WithTimeout(5*time.Minute))
-            canlink.WithWriters(writers)
+            canlink.WithBusName("veh"),
+            canlink.WithConverter(canlink.NewAscii()),
+	    )
     }
     ```
-2) Open the Tracer using _Open()_
+3) Register `Tracer` instance as a handler for the bus manager by calling `Register`, passing in `tracer`. The `broadcast` channel receives frames from the socket connection. The `transmit` channel can be used by handlers to transmit frames onto the CAN bus.
 
     ```go
     func main() {
-        err = tracer.Open(ctx)
+        broadcast, transmit := manager.Register(tracer)
+        go tracer.Handle(broadcast, transmit)
+	    defer tracer.Close()
     }
     ```
-3) To start the tracer and start recording traffic, call _StartTrace()_
+4) Then call `tracer.Handle` on a separate go routine with the broadcast and transmit channel as arguments. Once `tracer.Handle` is called any frames transmitted on the broadcast channel will be traced. 
 
     ```go
     func main() {
-        err = tracer.StartTrace(ctx)
+        go tracer.Handle(broadcast, transmit)
+	    defer tracer.Close()
     }
     ```
-4) To stop the Tracer and stop recording traffic, call _StopTrace()_. The Tracer will then dump the cached traffic in standard format to the filepath specified in Step 1.
 
-    __NOTE: If the timeout duration has exceeded what was specific in Step 1, the Tracer will have called _StopTrace()_ on its own, and any further stop calls will be ignored.__
+5) Call `manager.Start` to start the traffic broadcast and incoming frame listener for each of the registered handlers.
 
     ```go
     func main() {
-        err = tracer.StopTrace()
-    }
-    ```
-5) The Tracer object is reusable. If a new CAN Trace is desired, the Tracer can be started and stopped again as in Steps 3-4. A new file will be written to with this traffic.
-
-6) When tracing is no longer required, the Tracer should be closed using _Close()_
-
-    ```go
-    func main() {
-        err = tracer.Close()
+        manager.Start(ctx)
+        defer manager.Close()
     }
     ```
 
- ### High-Level Overview
-```mermaid
-sequenceDiagram
-    activate Tracer
-    Tracer->>+fetchData: Open()
-    activate fetchData
-    fetchData->>receiveData: StartTrace()
-    activate receiveData
-    fetchData->>receiveData: StopTrace()
-    deactivate receiveData
-    fetchData->>receiveData: StartTrace()
-    activate receiveData
-    fetchData->>receiveData: StopTrace()
-    deactivate receiveData
-    fetchData->>Tracer: Close()
-    deactivate fetchData
-    deactivate Tracer
-```
+    __NOTE: The Tracer object is reusable. If a new CAN Trace is desired, repeat steps 2-3, creating and registering a new trace object. A new file will be written to with this traffic.__
