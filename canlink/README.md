@@ -8,7 +8,7 @@ BusManager and Tracer
 `BusManager` is a centralized node responsible for orchestrating all interactions with a CAN bus.
 It acts as a message broker supporting the transmission of bus traffic to registered handlers and receiving incoming messages from these handlers to write to the bus.
 
-`Tracer` captures writes traffic on a CAN bus into trace files.
+`Tracer` writes traffic on a CAN bus into trace files.
 Currently supported formats are Json and Ascii.
 
 
