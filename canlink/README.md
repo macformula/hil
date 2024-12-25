@@ -37,7 +37,6 @@ A logger, and pointer to a socketcan connection are passed as arguments.
 2) Create an instance of Tracer with the `NewTracer()` function. 
 A can interface, trace directory and logger must be provided as arguments. 
 The trace directory must be a folder within the current directory with the same name as the argument provided.
-
 Functional options are available of type `TracerOption` if required. 
 
     ```go
