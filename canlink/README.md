@@ -15,7 +15,7 @@ Currently supported formats are Json and Ascii.
 ### Usage
 
 1) Create a Bus Manager using `NewBusManager()` function.
-A logger, and pointer to a socketcan connection are passed in.
+A logger, and pointer to a socketcan connection are passed as arguments.
 
     ```go
     func main() {
@@ -51,7 +51,7 @@ Functional options are available of type `TracerOption` if required.
 	    )
     }
     ```
-3) Register `Tracer` instance as a handler for the bus manager by calling `Register`, passing in `tracer`. The `broadcast` channel receives frames from the socket connection. The `transmit` channel can be used by handlers to transmit frames onto the CAN bus.
+3) Register the `Tracer` instance as a handler for the bus manager by calling `Register`, passing in the `Tracer`. Once started, the manager will send frames from the CAN bus through the broadcast channel to every registered handler. The `transmit` channel can be used by handlers to transmit frames onto the CAN bus.
 
     ```go
     func main() {
