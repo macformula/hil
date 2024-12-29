@@ -20,6 +20,8 @@ Handler
 ---------------
 `Handler` is an interface implemented by structs if they wish to receive and/or transmit data to the bus manager. The `Name` method simply returns a string used for logging purposes. The `Handle` method is used to pass in a broadcast, and transmit channel for communicating frames between the handler and the bus manager. The first parameter is the frame channel which receives frames broadcasted by the bus manager. The second parameter is a frame channel that the `Handler` can access to transmit frames to the bus manager, which will transmit the frames to the socketcan connection.
 
+The bus manager is designed to be the __single point of contact__ to a can interface. To receive or broadcast any CAN frames, a handler must be implemented.
+
 
 ### Usage
 
