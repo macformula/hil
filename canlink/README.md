@@ -16,6 +16,10 @@ A `Converter` must have a method `GetFileExtension`to return the proper file ext
 
 __NOTE: If seeking to trace traffic into an unsupported format, implement a converter for that specific format.__
 
+Handler
+---------------
+`Handler` is an interface implemented by structs if they wish to receive and/or transmit data to the bus manager. The `Name` method simply returns a string used for logging purposes. The `Handle` method is used to pass in a broadcast, and transmit channel for communicating frames between the handler and the bus manager. The first parameter is the frame channel which receives frames broadcasted by the bus manager. The second parameter is a frame channel that the `Handler` can access to transmit frames to the bus manager, which will transmit the frames to the socketcan connection.
+
 
 ### Usage
 
