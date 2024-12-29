@@ -8,23 +8,15 @@ import (
 	"go.uber.org/zap"
 )
 
-// Ascii object provides utilities for writing frames to trace files in ascii format
-type Ascii struct {
-	fileExtention string
-}
+// Text object provides utilities for writing frames to trace files in text format
+type Text struct {}
 
-func NewAscii() *Ascii {
-	return &Ascii{
-		fileExtention: ".asc",
-	}
-}
-
-func (a *Ascii) GetFileExtention() string {
-	return a.fileExtention
+func (a *Text) GetFileExtension() string {
+	return "txt"
 }
 
 // FrameToString converts a timestamped frame into a string, for file writing
-func (a *Ascii) FrameToString(l *zap.Logger, timestampedFrame *TimestampedFrame) string {
+func (a *Text) FrameToString(l *zap.Logger, timestampedFrame *TimestampedFrame) string {
 	var builder strings.Builder
 
 	write := func(s string) {

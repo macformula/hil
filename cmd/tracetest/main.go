@@ -4,7 +4,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"time"
@@ -14,13 +13,12 @@ import (
 
 	"github.com/macformula/hil/canlink"
 	"github.com/macformula/hil/macformula/cangen/vehcan"
-	"github.com/pkg/errors"
 )
 
 const (
 	// Can bus select
 	_busName  = "veh"
-	_canIface = "can1"
+	_canIface = "vcan0"
 
 	// Env config
 	_timeFormat        = "2006-01-02_15-04-05"
@@ -49,16 +47,8 @@ const (
 func main() {
 	ctx := context.Background()
 
-	formattedTime := time.Now().Format(_timeFormat)
-	logFileName := fmt.Sprintf(_logFilenameFormat, formattedTime)
-
 	loggerConfig := zap.NewDevelopmentConfig()
-	loggerConfig.OutputPaths = []string{logFileName}
-	loggerConfig.Level = zap.NewAtomicLevelAt(_logLevel)
 	logger, err := loggerConfig.Build()
-	if err != nil {
-		panic(errors.Wrap(err, "failed to create logger"))
-	}
 
 	conn, err := socketcan.DialContext(context.Background(), "can", _canIface)
 	if err != nil {
@@ -66,52 +56,36 @@ func main() {
 			zap.String("can_interface", _canIface),
 			zap.Error(err),
 		)
-
 		return
 	}
 
-	canClient := canlink.NewCanClient(vehcan.Messages(), conn, logger)
+	manager := canlink.NewBusManager(logger, &conn)
 
-	jsonTracer := canlink.NewTracer(
+	tracerJson := canlink.NewTracer(
 		_canIface,
-		_traceDir,
 		logger,
-		canlink.WithBusName(_busName),
-		canlink.WithConverter(canlink.NewJson()))
-	asciiTracer := canlink.NewTracer(
+		&canlink.Jsonl{},
+		canlink.WithFileName("tracedjsonl"),
+	)
+	tracerText := canlink.NewTracer(
 		_canIface,
-		_traceDir,
 		logger,
-		canlink.WithBusName(_busName),
-		canlink.WithConverter(canlink.NewAscii()))
+		&canlink.Text{},
+	)
 
-	err = canClient.Open()
-	if err != nil {
-		logger.Error("open can client", zap.Error(err))
-		return
+	broadcast1, transmit1 := manager.Register(tracerJson)
+	go tracerJson.Handle(broadcast1, transmit1)
+	defer tracerJson.Close()
+
+	broadcast2, transmit2 := manager.Register(tracerText)
+	go tracerText.Handle(broadcast2, transmit2)
+	defer tracerText.Close()
+
+	manager.Start(ctx)
+
+	for {
+
 	}
-
-	fmt.Println("-------------- Starting Test --------------")
-	fmt.Println("-------------- CTRL-C to Stop -------------")
-
-	stop := make(chan struct{})
-
-	go startSendMessageRoutine(ctx, stop, _msgPeriod, canClient, logger)
-
-	waitForSigTerm(stop, logger)
-
-	fmt.Println("-------------- Test Complete --------------")
-
-	logger.Info("closing trace test")
-
-	
-
-	err = canClient.Close()
-	if err != nil {
-		logger.Error("close can client", zap.Error(err))
-	}
-
-	
 }
 
 func waitForSigTerm(stop chan struct{}, logger *zap.Logger) {

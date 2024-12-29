@@ -5,8 +5,8 @@ import (
 )
 
 // Converter provides functionality for converting timestamped frames into strings for file writing.
-// Each supported trace file type must impliment Converter.
+// Each supported trace file type must implement Converter.
 type Converter interface {
-	GetFileExtention() string
+	GetFileExtension() string
 	FrameToString(*zap.Logger, *TimestampedFrame) string
 }

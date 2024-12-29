@@ -3,13 +3,18 @@ canlink
 
 `canlink` contains utilities for managing CAN traffic for the duration of a HIL test.
 
-BusManager and Tracer
+BusManager
 ---------------
 `BusManager` is a centralized node responsible for orchestrating all interactions with a CAN bus.
 It acts as a message broker supporting the transmission of bus traffic to registered handlers and receiving incoming messages from these handlers to write to the bus.
 
+Tracer
+---------------
 `Tracer` writes traffic on a CAN bus into trace files.
-Currently supported formats are Json and Ascii.
+Tracer takes in a struct that must implement the `Converter` interface. 
+A `Converter` must have a method `GetFileExtension`to return the proper file extension and `FrameToString`to convert a frame to a string. Currently implemented converters support `Jsonl` (https://jsonlines.org/) and `Text` for basic text logging. 
+
+__NOTE: If seeking to trace traffic into an unsupported format, implement a converter for that specific format.__
 
 
 ### Usage
@@ -27,7 +32,7 @@ A logger, and pointer to a socketcan connection are passed as arguments.
         // Create a network connection for vcan0
         conn, err := socketcan.DialContext(context.Background(), "can", "vcan0")
         if err != nil {
-        return
+            return
         }
 
         manager := canlink.NewBusManager(logger, &conn)
@@ -35,18 +40,18 @@ A logger, and pointer to a socketcan connection are passed as arguments.
     ```
 
 2) Create an instance of Tracer with the `NewTracer()` function. 
-A can interface, trace directory and logger must be provided as arguments. 
-The trace directory must be a folder within the current directory with the same name as the argument provided.
+A can interface, logger, and converter must be provided as arguments. 
+A timeout and a file name are optional parameters. If no file name is provided, a name will be generated using the current time and date. The tracer will timeout after 30 minutes by default. The trace file will be created in the same directory.
 Functional options are available of type `TracerOption` if required. 
 
     ```go
     func main() {
         tracer := canlink.NewTracer(
             "vcan0",
-            "traces",
             logger,
-            canlink.WithBusName("veh"),
-            canlink.WithConverter(canlink.NewAscii()),
+            canlink.Text{}
+            canlink.WithTimeout(1*time.Second)
+            canlink.WithFileName("trace_sample")
 	    )
     }
     ```
