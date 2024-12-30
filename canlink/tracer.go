@@ -101,7 +101,7 @@ func (t *Tracer) Error() error {
 }
 
 // Handle listens to the frames in the broadcastChan and writes them to a file
-func (t *Tracer) Handle(broadcastChan chan TimestampedFrame, transmitChan chan TimestampedFrame) error {
+func (t *Tracer) Handle(broadcastChan chan TimestampedFrame) error {
 	if t.fileName == _defaultFileName {
 		dateStr := time.Now().Format(_filenameDateFormat)
 		timeStr := time.Now().Format(_filenameTimeFormat)

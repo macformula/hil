@@ -24,8 +24,7 @@ const _channelBufferLength = 1000
 // all interactions with a CAN bus.
 //
 // It acts as a message broker supporting the transmission
-// of bus traffic to registered handlers and receiving incoming
-// messages from these handlers to write to the bus.
+// of bus traffic to registered handlers and writing frames onto the bus.
 //
 // BusManager uses SocketCAN on the Linux platform. Note that
 // it does not manage the lifetime of the network socket connection.
@@ -58,9 +57,9 @@ const _channelBufferLength = 1000
 //	   manager := canlink.NewBusManager(logger, conn)
 //	   handler = NewHandler(...)
 //
-//	   broadcastChan, transmitChan := manager.Register(handler)
+//	   broadcastChan := manager.Register(handler)
 //
-//	   handler.Handle(...)
+//	   handler.Handle(broadcastChan)
 //
 //	   manager.Start(ctx)
 //
@@ -70,7 +69,6 @@ const _channelBufferLength = 1000
 //	   manager.Close()
 type BusManager struct {
 	broadcastChan map[Handler]chan TimestampedFrame
-	incomingChan  chan TimestampedFrame
 
 	receiver    *socketcan.Receiver
 	transmitter *socketcan.Transmitter
@@ -92,7 +90,6 @@ func NewBusManager(l *zap.Logger, conn *net.Conn) *BusManager {
 		l: l.Named("bus_manager"),
 
 		broadcastChan: make(map[Handler]chan TimestampedFrame),
-		incomingChan:  make(chan TimestampedFrame, _channelBufferLength),
 
 		receiver:    socketcan.NewReceiver(*conn),
 		transmitter: socketcan.NewTransmitter(*conn),
@@ -103,15 +100,14 @@ func NewBusManager(l *zap.Logger, conn *net.Conn) *BusManager {
 
 // Register a Handler with the BusManager.
 //
-// Register returns two channels for the specified Handler.
+// Register returns a broadcast channel for the specified Handler.
 // The broadcast channel is a stream of traffic received from
-// the bus. The incoming channel enables the Handler to write
-// a frame to the bus.
+// the bus.
 //
 // The channels operate on a TimestampedFrame object.
 func (b *BusManager) Register(
 	handler Handler,
-) (chan TimestampedFrame, chan TimestampedFrame) {
+) (chan TimestampedFrame) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -122,7 +118,7 @@ func (b *BusManager) Register(
 
 	b.l.Info("registered handler")
 
-	return subscription, b.incomingChan
+	return subscription
 }
 
 // Unregister a Handler from the BusManager.
@@ -136,14 +132,11 @@ func (b *BusManager) Unregister(handler *Handler) {
 	delete(b.broadcastChan, *handler)
 }
 
-// Start the traffic broadcast and incoming frame listener
+// Start the traffic broadcast
 // for each of the registered handlers.
 //
 // The broadcast stream will begin. If handlers cannot keep up
 // with the broadcast, frames for that handler will be dropped.
-//
-// The handlers can now send CAN frames to the BusManager to be
-// transmitted out onto the bus.
 func (b *BusManager) Start(ctx context.Context) {
 	if b.isRunning {
 		b.l.Warn("bus manager is already started")
@@ -155,7 +148,6 @@ func (b *BusManager) Start(ctx context.Context) {
 	b.stop = make(chan struct{})
 
 	go b.broadcast(ctx)
-	go b.processIncoming(ctx)
 
 	b.isRunning = true
 }
@@ -220,22 +212,7 @@ func (b *BusManager) broadcast(ctx context.Context) {
 	}
 }
 
-func (b *BusManager) processIncoming(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			b.l.Info("context deadline exceeded")
-			return
-		case <-b.stop:
-			b.l.Info("stop signal received")
-			return
-		case frame, ok := <-b.incomingChan:
-			if !ok {
-				b.l.Info("incoming channel closed, exiting process routine")
-				return
-			}
-
-			b.transmitter.TransmitFrame(ctx, frame.Frame)
-		}
-	}
+// Send transmits frames onto the connection.
+func (b *BusManager) Send(ctx context.Context, frame *TimestampedFrame) {
+	b.transmitter.TransmitFrame(ctx, frame.Frame)
 }

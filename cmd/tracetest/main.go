@@ -73,12 +73,12 @@ func main() {
 		&canlink.Text{},
 	)
 
-	broadcast1, transmit1 := manager.Register(tracerJson)
-	go tracerJson.Handle(broadcast1, transmit1)
+	broadcast1 := manager.Register(tracerJson)
+	go tracerJson.Handle(broadcast1)
 	defer tracerJson.Close()
 
-	broadcast2, transmit2 := manager.Register(tracerText)
-	go tracerText.Handle(broadcast2, transmit2)
+	broadcast2 := manager.Register(tracerText)
+	go tracerText.Handle(broadcast2)
 	defer tracerText.Close()
 
 	manager.Start(ctx)

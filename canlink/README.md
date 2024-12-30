@@ -6,7 +6,7 @@ canlink
 BusManager
 ---------------
 `BusManager` is a centralized node responsible for orchestrating all interactions with a CAN bus.
-It acts as a message broker supporting the transmission of bus traffic to registered handlers and receiving incoming messages from these handlers to write to the bus.
+It acts as a message broker supporting the transmission of bus traffic to registered handlers and writing frames onto the bus.
 
 Tracer
 ---------------
@@ -18,9 +18,9 @@ __NOTE: If seeking to trace traffic into an unsupported format, implement a conv
 
 Handler
 ---------------
-`Handler` is an interface implemented by structs if they wish to receive and/or transmit data to the bus manager. The `Name` method simply returns a string used for logging purposes. The `Handle` method is used to pass in a broadcast, and transmit channel for communicating frames between the handler and the bus manager. The first parameter is the frame channel which receives frames broadcasted by the bus manager. The second parameter is a frame channel that the `Handler` can access to transmit frames to the bus manager, which will transmit the frames to the socketcan connection.
+`Handler` is an interface implemented by structs if they wish to receive data from the bus manager. The `Name` method simply returns a string used for logging purposes and error messages. The `Handle` method is used to pass in a broadcast channel for communicating frames between the handler and the bus manager. The first parameter is the frame channel which receives frames broadcasted by the bus manager.
 
-The bus manager is designed to be the __single point of contact__ to a can interface. To receive or broadcast any CAN frames, a handler must be implemented.
+The bus manager is designed to be the __single point of contact__ to a can interface. All interaction to a bus should be done through the bus manager.
 
 
 ### Usage
@@ -61,20 +61,20 @@ Functional options are available of type `TracerOption` if required.
 	    )
     }
     ```
-3) Register the `Tracer` instance as a handler for the bus manager by calling `Register`, passing in the `Tracer`. Once started, the manager will send frames from the CAN bus through the broadcast channel to every registered handler. The `transmit` channel can be used by handlers to transmit frames onto the CAN bus.
+3) Register the `Tracer` instance as a handler for the bus manager by calling `Register`, passing in the `Tracer`. Once started, the manager will send frames from the CAN bus through the broadcast channel to every registered handler.
 
     ```go
     func main() {
-        broadcast, transmit := manager.Register(tracer)
-        go tracer.Handle(broadcast, transmit)
+        broadcast := manager.Register(tracer)
+        go tracer.Handle(broadcast)
 	    defer tracer.Close()
     }
     ```
-4) Then call `tracer.Handle` on a separate go routine with the broadcast and transmit channel as arguments. Once `tracer.Handle` is called any frames transmitted on the broadcast channel will be traced. 
+4) Then call `tracer.Handle` on a separate go routine with the broadcast channel as an argument. Once `tracer.Handle` is called any frames transmitted on the broadcast channel will be traced. 
 
     ```go
     func main() {
-        go tracer.Handle(broadcast, transmit)
+        go tracer.Handle(broadcast)
 	    defer tracer.Close()
     }
     ```
@@ -85,6 +85,13 @@ Functional options are available of type `TracerOption` if required.
     func main() {
         manager.Start(ctx)
         defer manager.Close()
+    }
+    ```
+6) Use the `Send` method on the bus manager to transmit frames onto the CAN bus.
+
+    ```go
+    func main() {
+        manager.Send(frame)
     }
     ```
 

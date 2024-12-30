@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.einride.tech/can"
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
 
@@ -25,7 +26,6 @@ func NewHandler() *Handler {
 
 func (h *Handler) Handle (
 	broadcast chan canlink.TimestampedFrame,
-	transmit chan canlink.TimestampedFrame,
 ) error {
 	go func() {
 		for {
@@ -48,8 +48,6 @@ func (h *Handler) Handle (
 			frame.Time = time.Now()
 
 			i = i + 1
-
-			transmit <- frame
 		}
 	}()
 
@@ -78,9 +76,9 @@ func main() {
 	manager := canlink.NewBusManager(logger, &conn)
 	handler := NewHandler()
 
-	broadcast, transmit := manager.Register(handler)
+	broadcast:= manager.Register(handler)
 
-	handler.Handle(broadcast, transmit)
+	handler.Handle(broadcast)
 
 	manager.Start(ctx)
 
