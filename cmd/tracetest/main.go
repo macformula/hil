@@ -61,24 +61,25 @@ func main() {
 
 	manager := canlink.NewBusManager(logger, &conn)
 
-	tracerJson := canlink.NewTracer(
+	tracerJsonl := canlink.NewTracer(
 		_canIface,
 		logger,
 		&canlink.Jsonl{},
-		canlink.WithFileName("tracedjsonl"),
+		canlink.WithTimeout(100*time.Second),
+		canlink.WithFileName("trace_sample"),
 	)
 	tracerText := canlink.NewTracer(
 		_canIface,
 		logger,
 		&canlink.Text{},
+		canlink.WithTimeout(100*time.Second),
+		canlink.WithFileName("trace_sample2"),
 	)
 
-	broadcast1 := manager.Register(tracerJson)
-	go tracerJson.Handle(broadcast1)
-	defer tracerJson.Close()
+	manager.Register(tracerJsonl)
+	defer tracerJsonl.Close()
 
-	broadcast2 := manager.Register(tracerText)
-	go tracerText.Handle(broadcast2)
+	manager.Register(tracerText)
 	defer tracerText.Close()
 
 	manager.Start(ctx)
