@@ -11,16 +11,16 @@ It acts as a message broker supporting the transmission of bus traffic to regist
 Tracer
 ---------------
 `Tracer` writes traffic on a CAN bus into trace files.
-Tracer takes in a struct that must implement the `Converter` interface. 
-A `Converter` must have a method `GetFileExtension`to return the proper file extension and `FrameToString`to convert a frame to a string. Currently implemented converters support `Jsonl` (https://jsonlines.org/) and `Text` for basic text logging. 
+Tracer takes in a struct that must implement the `Converter` interface.
+A `Converter` must have a method `GetFileExtension`to return the proper file extension and `FrameToString`to convert a frame to a string. Currently implemented converters support `Jsonl` (https://jsonlines.org/) and `Text` for basic text logging.
 
 __NOTE: If seeking to trace traffic into an unsupported format, implement a converter for that specific format.__
 
 Handler
 ---------------
-`Handler` is an interface implemented by structs if they wish to receive data from the bus manager. The `Name` method simply returns a string used for logging purposes and error messages. The `Handle` method is used to pass in a broadcast channel for communicating frames between the handler and the bus manager. The first parameter is the frame channel which receives frames broadcasted by the bus manager.
+`Handler` is an interface implemented by structs if they wish to receive data from the bus manager. The `Name` method simply returns a string used for logging purposes and error messages. The `Handle` method is used to pass in a broadcast channel for communicating frames between the handler and the bus manager. The first parameter is the frame channel which receives frames broadcast by the bus manager.
 
-The bus manager is designed to be the __single point of contact__ to a can interface. All interaction to a bus should be done through the bus manager.
+The bus manager is designed to be the __single point of contact__ to a CAN interface. All interaction to a bus should be done through the bus manager.
 
 
 ### Usage
@@ -45,10 +45,10 @@ A logger, and pointer to a socketcan connection are passed as arguments.
     }
     ```
 
-2) Create an instance of Tracer with the `NewTracer()` function. 
-A can interface, logger, and converter must be provided as arguments. 
+2) Create an instance of Tracer with the `NewTracer()` function.
+A CAN interface, logger, and converter must be provided as arguments.
 A timeout and a file name are optional parameters. If no file name is provided, a name will be generated using the current time and date. The tracer will timeout after 30 minutes by default. The trace file will be created in the same directory.
-Functional options are available of type `TracerOption` if required. 
+Functional options are available of type `TracerOption` if required.
 
     ```go
     func main() {
@@ -78,7 +78,7 @@ Functional options are available of type `TracerOption` if required.
         defer manager.Close()
     }
     ```
-6) Use the `Send` method on the bus manager to transmit frames onto the CAN bus.
+5) Use the `Send` method on the bus manager to transmit frames onto the CAN bus.
 
     ```go
     func main() {
@@ -86,4 +86,4 @@ Functional options are available of type `TracerOption` if required.
     }
     ```
 
-    __NOTE: The Tracer object is reusable. If a new CAN Trace is desired, repeat steps 2-3, creating and registering a new trace object. A new file will be written to with this traffic.__
+__NOTE: The Tracer object is reusable. If a new CAN Trace is desired, repeat steps 2-3, creating and registering a new trace object. A new file will be written to with this traffic.__
