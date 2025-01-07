@@ -55,26 +55,17 @@ Functional options are available of type `TracerOption` if required.
         tracer := canlink.NewTracer(
             "vcan0",
             logger,
-            canlink.Text{}
-            canlink.WithTimeout(1*time.Second)
-            canlink.WithFileName("trace_sample")
+            canlink.Text{},
+            canlink.WithTimeout(1*time.Second),
+            canlink.WithFileName("trace_sample"),
 	    )
     }
     ```
-3) Register the `Tracer` instance as a handler for the bus manager by calling `Register`, passing in the `Tracer`. Once started, the manager will send frames from the CAN bus through the broadcast channel to every registered handler.
+3) Register the `Tracer` instance as a handler for the bus manager by calling `Register`, passing in the `Tracer`. The `Register` function will create a broadcast channel for the handler, and call the handler's `Handle` method. Once started, the manager will send frames from the CAN bus through the broadcast channel to every registered handler.
 
     ```go
     func main() {
-        broadcast := manager.Register(tracer)
-        go tracer.Handle(broadcast)
-	    defer tracer.Close()
-    }
-    ```
-4) Then call `tracer.Handle` on a separate go routine with the broadcast channel as an argument. Once `tracer.Handle` is called any frames transmitted on the broadcast channel will be traced. 
-
-    ```go
-    func main() {
-        go tracer.Handle(broadcast)
+        manager.Register(tracer)
 	    defer tracer.Close()
     }
     ```

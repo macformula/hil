@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"go.einride.tech/can"
+	//"go.einride.tech/can"
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
 
@@ -76,9 +76,8 @@ func main() {
 	manager := canlink.NewBusManager(logger, &conn)
 	handler := NewHandler()
 
-	broadcast:= manager.Register(handler)
-
-	handler.Handle(broadcast)
+	manager.Register(handler)
+	
 
 	manager.Start(ctx)
 

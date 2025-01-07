@@ -37,12 +37,12 @@ func (s *setup) Setup(ctx context.Context) error {
 func (s *setup) Run(ctx context.Context) error {
 	s.app.CurrProcess = macformula.NewProcessInfo()
 
-	err := s.app.VehCanTracer.StartTrace(ctx)
+	err := s.app.VehCanTracer.Start(ctx)
 	if err != nil {
 		return errors.Wrap(err, "start trace (veh)")
 	}
 
-	err = s.app.PtCanTracer.StartTrace(ctx)
+	err = s.app.PtCanTracer.Start(ctx)
 	if err != nil {
 		return errors.Wrap(err, "start trace (pt)")
 	}

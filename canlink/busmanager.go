@@ -100,14 +100,14 @@ func NewBusManager(l *zap.Logger, conn *net.Conn) *BusManager {
 
 // Register a Handler with the BusManager.
 //
-// Register returns a broadcast channel for the specified Handler.
+// Register creates a broadcast channel for the handler, then calls the handle function on a separate go routine.
 // The broadcast channel is a stream of traffic received from
 // the bus.
 //
 // The channels operate on a TimestampedFrame object.
 func (b *BusManager) Register(
 	handler Handler,
-) (chan TimestampedFrame) {
+) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -118,7 +118,7 @@ func (b *BusManager) Register(
 
 	b.l.Info("registered handler")
 
-	return subscription
+	go handler.Handle(subscription)
 }
 
 // Unregister a Handler from the BusManager.

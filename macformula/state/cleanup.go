@@ -36,14 +36,14 @@ func (c *cleanup) Setup(_ context.Context) error {
 }
 
 func (c *cleanup) Run(ctx context.Context) error {
-	err := c.app.VehCanTracer.StopTrace()
+	err := c.app.VehCanTracer.Close()
 	if err != nil {
-		return errors.Wrap(err, "stop trace (veh)")
+		return errors.Wrap(err, "close trace (veh)")
 	}
 
-	err = c.app.PtCanTracer.StopTrace()
+	err = c.app.PtCanTracer.Close()
 	if err != nil {
-		return errors.Wrap(err, "stop trace (pt)")
+		return errors.Wrap(err, "close trace (pt)")
 	}
 
 	return nil
