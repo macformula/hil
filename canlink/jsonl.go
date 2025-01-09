@@ -7,9 +7,9 @@ import (
 	"go.uber.org/zap"
 )
 
-// Jsonl object provides utilities for writing frames to trace files in jsonl format. 
+// Jsonl object provides utilities for writing frames to trace files in jsonl format.
 // See https://jsonlines.org/ to view Jsonl documentation.
-type Jsonl struct {}
+type Jsonl struct{}
 
 // GetFileExtension returns the file extension
 func (a *Jsonl) GetFileExtension() string {

@@ -36,7 +36,7 @@ type Tracer struct {
 
 	converter Converter
 	traceFile *os.File
-	fileName string
+	fileName  string
 
 	canInterface string
 	timeout      time.Duration
@@ -54,8 +54,8 @@ func NewTracer(
 		err:          utils.NewResettaleError(),
 		timeout:      _defaultTimeout,
 		canInterface: canInterface,
-		fileName: _defaultFileName,
-		converter: converter,
+		fileName:     _defaultFileName,
+		converter:    converter,
 	}
 
 	for _, o := range opts {
@@ -79,29 +79,13 @@ func WithFileName(fileName string) TracerOption {
 	}
 }
 
-// Close closes the trace file
-func (t *Tracer) Close() error {
-	t.l.Info("closing trace file")
-	err := t.traceFile.Close()
-	if err != nil {
-		t.l.Error(err.Error())
-		return errors.Wrap(err, "closing trace file")
-	}
-
-	if err != nil {
-		return errors.Wrap(err, "close trace file")
-	}
-
-	return nil
-}
-
 // Error returns the error set during trace execution
 func (t *Tracer) Error() error {
 	return t.err.Err()
 }
 
 // Handle listens to the frames in the broadcastChan and writes them to a file
-func (t *Tracer) Handle(broadcastChan chan TimestampedFrame) error {
+func (t *Tracer) Handle(broadcastChan chan TimestampedFrame, stopChan chan struct{}) error {
 	if t.fileName == _defaultFileName {
 		dateStr := time.Now().Format(_filenameDateFormat)
 		timeStr := time.Now().Format(_filenameTimeFormat)
@@ -131,6 +115,10 @@ func (t *Tracer) Handle(broadcastChan chan TimestampedFrame) error {
 	func() error {
 		for {
 			select {
+			case <-stopChan:
+				t.l.Info("stopping handle")
+				t.close()
+				return nil
 			case <-timeout:
 				t.l.Info("maximum trace time reached")
 				return nil
@@ -167,4 +155,20 @@ func (t *Tracer) createEmptyTraceFile() (*os.File, error) {
 	}
 
 	return file, nil
+}
+
+// close closes the trace file
+func (t *Tracer) close() error {
+	t.l.Info("closing trace file")
+	err := t.traceFile.Close()
+	if err != nil {
+		t.l.Error(err.Error())
+		return errors.Wrap(err, "closing trace file")
+	}
+
+	if err != nil {
+		return errors.Wrap(err, "close trace file")
+	}
+
+	return nil
 }

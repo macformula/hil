@@ -69,6 +69,7 @@ const _channelBufferLength = 1000
 //	   manager.Close()
 type BusManager struct {
 	broadcastChan map[Handler]chan TimestampedFrame
+	stopChan      map[Handler]chan struct{}
 
 	receiver    *socketcan.Receiver
 	transmitter *socketcan.Transmitter
@@ -90,6 +91,7 @@ func NewBusManager(l *zap.Logger, conn *net.Conn) *BusManager {
 		l: l.Named("bus_manager"),
 
 		broadcastChan: make(map[Handler]chan TimestampedFrame),
+		stopChan:      make(map[Handler]chan struct{}),
 
 		receiver:    socketcan.NewReceiver(*conn),
 		transmitter: socketcan.NewTransmitter(*conn),
@@ -100,7 +102,7 @@ func NewBusManager(l *zap.Logger, conn *net.Conn) *BusManager {
 
 // Register a Handler with the BusManager.
 //
-// Register creates a broadcast channel for the handler, then calls the handle function on a separate go routine.
+// Register creates a broadcast channel for the handler.
 // The broadcast channel is a stream of traffic received from
 // the bus.
 //
@@ -116,9 +118,10 @@ func (b *BusManager) Register(
 	subscription := make(chan TimestampedFrame, _channelBufferLength)
 	b.broadcastChan[handler] = subscription
 
-	b.l.Info("registered handler")
+	stopChan := make(chan struct{})
+	b.stopChan[handler] = stopChan
 
-	go handler.Handle(subscription)
+	b.l.Info("registered handler")
 }
 
 // Unregister a Handler from the BusManager.
@@ -132,6 +135,7 @@ func (b *BusManager) Unregister(handler *Handler) {
 	delete(b.broadcastChan, *handler)
 }
 
+// Allow handlers to handle incoming frames on a separate routine.
 // Start the traffic broadcast
 // for each of the registered handlers.
 //
@@ -141,6 +145,10 @@ func (b *BusManager) Start(ctx context.Context) {
 	if b.isRunning {
 		b.l.Warn("bus manager is already started")
 		return
+	}
+
+	for handler, broadcastChan := range b.broadcastChan {
+		go handler.Handle(broadcastChan, b.stopChan[handler])
 	}
 
 	b.l.Info("start broadcast and process incoming")
@@ -174,12 +182,21 @@ func (b *BusManager) Close() error {
 		b.Stop()
 	}
 
+	for _, stopChan := range b.stopChan {
+		close(stopChan)
+	}
+
 	b.l.Info("closing socketcan receiver and transmitter")
 
 	b.receiver.Close()
 	b.transmitter.Close()
 
 	return nil
+}
+
+// Send transmits frames onto the connection.
+func (b *BusManager) Send(ctx context.Context, frame *TimestampedFrame) {
+	b.transmitter.TransmitFrame(ctx, frame.Frame)
 }
 
 func (b *BusManager) broadcast(ctx context.Context) {
@@ -210,9 +227,4 @@ func (b *BusManager) broadcast(ctx context.Context) {
 
 		b.mu.Unlock()
 	}
-}
-
-// Send transmits frames onto the connection.
-func (b *BusManager) Send(ctx context.Context, frame *TimestampedFrame) {
-	b.transmitter.TransmitFrame(ctx, frame.Frame)
 }

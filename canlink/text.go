@@ -9,7 +9,7 @@ import (
 )
 
 // Text object provides utilities for writing frames to trace files in text format
-type Text struct {}
+type Text struct{}
 
 func (a *Text) GetFileExtension() string {
 	return "txt"
