@@ -77,16 +77,12 @@ func main() {
 	)
 
 	manager.Register(tracerJsonl)
-	defer tracerJsonl.Close()
-
 	manager.Register(tracerText)
-	defer tracerText.Close()
 
 	manager.Start(ctx)
 
-	for {
-
-	}
+	time.Sleep(10*time.Second)
+	manager.Close()
 }
 
 func waitForSigTerm(stop chan struct{}, logger *zap.Logger) {
