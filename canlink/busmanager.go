@@ -121,6 +121,7 @@ func (b *BusManager) Register(
 	stopChan := make(chan struct{})
 	b.stopChan[handler] = stopChan
 
+	go handler.Handle(subscription, b.stopChan[handler])
 	b.l.Info("registered handler")
 }
 
@@ -145,10 +146,6 @@ func (b *BusManager) Start(ctx context.Context) {
 	if b.isRunning {
 		b.l.Warn("bus manager is already started")
 		return
-	}
-
-	for handler, broadcastChan := range b.broadcastChan {
-		go handler.Handle(broadcastChan, b.stopChan[handler])
 	}
 
 	b.l.Info("start broadcast and process incoming")
