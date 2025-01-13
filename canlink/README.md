@@ -55,7 +55,7 @@ Functional options are available of type `TracerOption` if required.
         tracer := canlink.NewTracer(
             "vcan0",
             logger,
-            canlink.Text{},
+            &canlink.Text{},
             canlink.WithTimeout(1*time.Second),
             canlink.WithFileName("trace_sample"),
 	    )

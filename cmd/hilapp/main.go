@@ -135,7 +135,7 @@ func main() {
 	vehCanTracer := canlink.NewTracer(
 		cfg.VehCanInterface,
 		logger,
-		canlink.Jsonl{},
+		&canlink.Jsonl{},
 		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
 		canlink.WithFileName(_vehCan),
 	)
@@ -143,7 +143,7 @@ func main() {
 	ptCanTracer := canlink.NewTracer(
 		cfg.PtCanInterface,
 		logger,
-		canlink.Jsonl{},
+		&canlink.Jsonl{},
 		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
 		canlink.WithFileName(_ptCan),
 	)
