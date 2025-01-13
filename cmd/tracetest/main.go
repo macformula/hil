@@ -80,11 +80,8 @@ func main() {
 	manager.Register(tracerText)
 
 	manager.Start(ctx)
+	time.Sleep(10*time.Second)
 
-	time.Sleep(5*time.Second)
-	manager.Stop()
-	time.Sleep(1*time.Second)
-	manager.Start(ctx)
 	manager.Stop()
 
 	manager.Close()

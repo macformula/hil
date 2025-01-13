@@ -6,7 +6,6 @@ import (
 
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/macformula"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -36,14 +35,16 @@ func (c *cleanup) Setup(_ context.Context) error {
 }
 
 func (c *cleanup) Run(ctx context.Context) error {
-	err := c.app.VehCanTracer.Close()
+	c.app.PtBusManager.Stop()
+	
+	err := c.app.PtBusManager.Close()
 	if err != nil {
-		return errors.Wrap(err, "close trace (veh)")
+		return err
 	}
-
-	err = c.app.PtCanTracer.Close()
+	
+	err = c.app.VehBusManager.Close()
 	if err != nil {
-		return errors.Wrap(err, "close trace (pt)")
+		return err
 	}
 
 	return nil

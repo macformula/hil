@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/macformula"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"time"
 )
@@ -37,15 +36,11 @@ func (s *setup) Setup(ctx context.Context) error {
 func (s *setup) Run(ctx context.Context) error {
 	s.app.CurrProcess = macformula.NewProcessInfo()
 
-	err := s.app.VehCanTracer.Start(ctx)
-	if err != nil {
-		return errors.Wrap(err, "start trace (veh)")
-	}
+	s.app.VehBusManager.Register(s.app.VehCanTracer)
+	s.app.PtBusManager.Register(s.app.PtCanTracer)
 
-	err = s.app.PtCanTracer.Start(ctx)
-	if err != nil {
-		return errors.Wrap(err, "start trace (pt)")
-	}
+	s.app.VehBusManager.Start(ctx)
+	s.app.PtBusManager.Start(ctx)
 
 	return nil
 }

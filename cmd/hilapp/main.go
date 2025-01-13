@@ -128,13 +128,16 @@ func main() {
 		return
 	}
 
+	vehBusManager := canlink.NewBusManager(logger, &vehCanConn)
+	ptBusManager := canlink.NewBusManager(logger, &ptCanConn)
+
 	// Create can tracers.
 	vehCanTracer := canlink.NewTracer(cfg.VehCanInterface,
 		cfg.TraceDir,
 		logger,
 		vehCanConn,
 		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
-		canlink.WithBusName(_vehCan),
+		canlink.WithFileName(_vehCan),
 	)
 
 	err = vehCanTracer.Open(ctx)
@@ -149,7 +152,7 @@ func main() {
 		logger,
 		ptCanConn,
 		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
-		canlink.WithBusName(_ptCan),
+		canlink.WithFileName(_ptCan),
 	)
 
 	err = ptCanTracer.Open(ctx)
@@ -208,6 +211,8 @@ func main() {
 	// Create app object.
 	app := macformula.App{
 		Config:                cfg,
+		VehBusManager: vehBusManager,
+		PtBusManager: ptBusManager,
 		VehCanTracer:          vehCanTracer,
 		PtCanTracer:           ptCanTracer,
 		PinoutController:      pinoutController,

@@ -121,7 +121,6 @@ func (b *BusManager) Register(
 	stopChan := make(chan struct{})
 	b.stopChan[handler] = stopChan
 
-	go handler.Handle(subscription, b.stopChan[handler])
 	b.l.Info("registered handler")
 }
 
@@ -152,6 +151,10 @@ func (b *BusManager) Start(ctx context.Context) {
 
 	b.stop = make(chan struct{})
 
+	for handler, ch := range b.broadcastChan {
+		go handler.Handle(ch, b.stopChan[handler])
+	}
+
 	go b.broadcast(ctx)
 
 	b.isRunning = true
@@ -168,6 +171,11 @@ func (b *BusManager) Stop() {
 
 	b.l.Info("stop broadcast and process incoming")
 
+	// Close handlers
+	for _, stopChan := range b.stopChan {
+		close(stopChan)
+	}
+
 	close(b.stop)
 	b.isRunning = false
 }
@@ -177,10 +185,6 @@ func (b *BusManager) Close() error {
 	if b.isRunning {
 		b.l.Info("stopping bus manager")
 		b.Stop()
-	}
-
-	for _, stopChan := range b.stopChan {
-		close(stopChan)
 	}
 
 	b.l.Info("closing socketcan receiver and transmitter")

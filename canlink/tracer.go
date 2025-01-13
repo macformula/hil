@@ -86,30 +86,11 @@ func (t *Tracer) Error() error {
 
 // Handle listens to the frames in the broadcastChan and writes them to a file
 func (t *Tracer) Handle(broadcastChan chan TimestampedFrame, stopChan chan struct{}) error {
-	if t.fileName == _defaultFileName {
-		dateStr := time.Now().Format(_filenameDateFormat)
-		timeStr := time.Now().Format(_filenameTimeFormat)
-		t.fileName = fmt.Sprintf(
-			"%s_%s.%s",
-			dateStr,
-			timeStr,
-			t.converter.GetFileExtension(),
-		)
-	} else {
-		t.fileName = fmt.Sprintf(
-			"%s.%s",
-			t.fileName,
-			t.converter.GetFileExtension(),
-		)
-	}
-
-	file, err := t.createEmptyTraceFile()
-	t.traceFile = file
-
+	err := t.createTraceFile()
 	if err != nil {
-		t.l.Info("cannot create trace file")
-		return errors.Wrap(err, "creating trace file")
+		return err
 	}
+
 	timeout := time.After(t.timeout)
 
 	func() error {
@@ -168,6 +149,35 @@ func (t *Tracer) close() error {
 
 	if err != nil {
 		return errors.Wrap(err, "close trace file")
+	}
+
+	return nil
+}
+
+func (t *Tracer) createTraceFile() error {
+	if t.fileName == _defaultFileName {
+		dateStr := time.Now().Format(_filenameDateFormat)
+		timeStr := time.Now().Format(_filenameTimeFormat)
+		t.fileName = fmt.Sprintf(
+			"%s_%s.%s",
+			dateStr,
+			timeStr,
+			t.converter.GetFileExtension(),
+		)
+	} else {
+		t.fileName = fmt.Sprintf(
+			"%s.%s",
+			t.fileName,
+			t.converter.GetFileExtension(),
+		)
+	}
+
+	file, err := t.createEmptyTraceFile()
+	t.traceFile = file
+
+	if err != nil {
+		t.l.Info("cannot create trace file")
+		return errors.Wrap(err, "creating trace file")
 	}
 
 	return nil
