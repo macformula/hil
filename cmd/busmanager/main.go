@@ -13,7 +13,7 @@ import (
 )
 
 type Handler struct {
-	name string
+	name string,
 	Handle(chan TimestampedFrame, chan struct{}) error
 }
 
