@@ -128,36 +128,25 @@ func main() {
 		return
 	}
 
+	vehBusManager := canlink.NewBusManager(logger, &vehCanConn)
+	ptBusManager := canlink.NewBusManager(logger, &ptCanConn)
+
 	// Create can tracers.
-	vehCanTracer := canlink.NewTracer(cfg.VehCanInterface,
-		cfg.TraceDir,
+	vehCanTracer := canlink.NewTracer(
+		cfg.VehCanInterface,
 		logger,
-		vehCanConn,
+		&canlink.Jsonl{},
 		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
-		canlink.WithBusName(_vehCan),
+		canlink.WithFileName(_vehCan),
 	)
 
-	err = vehCanTracer.Open(ctx)
-	if err != nil {
-		logger.Error("failed to open veh can tracer",
-			zap.Error(errors.Wrap(err, "dial context")))
-		return
-	}
-
-	ptCanTracer := canlink.NewTracer(cfg.PtCanInterface,
-		cfg.TraceDir,
+	ptCanTracer := canlink.NewTracer(
+		cfg.PtCanInterface,
 		logger,
-		ptCanConn,
+		&canlink.Jsonl{},
 		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
-		canlink.WithBusName(_ptCan),
+		canlink.WithFileName(_ptCan),
 	)
-
-	err = ptCanTracer.Open(ctx)
-	if err != nil {
-		logger.Error("failed to open pt can tracer",
-			zap.Error(errors.Wrap(err, "dial context")))
-		return
-	}
 
 	// Get controllers
 	var ioOpts = make([]iocontrol.IOControlOption, 0)
@@ -208,6 +197,8 @@ func main() {
 	// Create app object.
 	app := macformula.App{
 		Config:                cfg,
+		VehBusManager: vehBusManager,
+		PtBusManager: ptBusManager,
 		VehCanTracer:          vehCanTracer,
 		PtCanTracer:           ptCanTracer,
 		PinoutController:      pinoutController,

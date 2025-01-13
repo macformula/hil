@@ -3,6 +3,7 @@ package canlink
 import (
 	"context"
 	"net"
+	"strings"
 
 	"go.einride.tech/can"
 	"go.einride.tech/can/pkg/generated"
@@ -13,7 +14,8 @@ import (
 )
 
 const (
-	_canClientLoggerName = "can_client"
+	_canClientLoggerName           = "can_client"
+	_idNotInDatabaseErrorIndicator = "ID not in database"
 )
 
 // MessagesDescriptor is an interface mirroring the MessagesDescriptor struct found in Einride DBCs.
@@ -95,12 +97,14 @@ func (c *CanClient) Read(ctx context.Context, msgsToRead ...generated.Message) (
 			return nil, nil
 		case frame := <-c.rxChan:
 			msg, err := c.md.UnmarshalFrame(frame)
-			if err != nil && !isIdNotInDatabaseError(err) {
-				return nil, errors.Wrap(err, "unmarshal frame")
-			} else if isIdNotInDatabaseError(err) {
-				c.l.Debug("found a message we do not recognize")
-				// Here we have simply read a can frame that we do not know how to unmarshal, continue to next frame.
-				continue
+			if err != nil {
+				if strings.Contains(err.Error(), _idNotInDatabaseErrorIndicator) {
+					c.l.Debug("found a message we do not recognize")
+					// Here we have simply read a can frame that we do not know how to unmarshal, continue to next frame.
+					continue
+				} else {
+					return nil, errors.Wrap(err, "unmarshal frame")
+				}
 			}
 
 			c.l.Debug("read a message", zap.Uint32("id", msg.Frame().ID))

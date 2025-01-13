@@ -1,14 +1,13 @@
 package canlink
 
 import (
-	"context"
-	//"fmt"
-	"net"
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
-	"go.einride.tech/can/pkg/socketcan"
+
 	"go.uber.org/zap"
 )
 
@@ -17,56 +16,46 @@ const (
 	_frameBufferLength = 10
 	_loggerName        = "can_tracer"
 
-	// format for 24-hour clock with minutes, seconds, and 4 digits
-	// of precision after decimal (period and colon delimiter)
-	_messageTimeFormat = "15:04:05.0000"
+	_defaultFileName = "" // if no file name is provided, file name will be generated when trace file is created
 
-	// format for 24-hour clock with minutes and seconds (period delimiter)
+	_decimal = 10
+
+	_messageTimeFormat  = "15:04:05.0000"
 	_filenameTimeFormat = "15-04-05"
-
-	// format for year, month and day with two digits each (period delimiter)
 	_filenameDateFormat = "2006-01-02"
 )
 
 // TracerOption is a type for functions operating on Tracer
 type TracerOption func(*Tracer)
 
-// Tracer listens on a CAN bus and records all traffic during a specified period
+// Tracer listens on a CAN bus and records all traffic
 type Tracer struct {
-	l          *zap.Logger
-	stop       chan struct{}
-	frameCh    chan TimestampedFrame
-	cachedData []TimestampedFrame
-	err        *utils.ResettableError
-	isRunning  bool
-	receiver   *socketcan.Receiver
+	l       *zap.Logger
+	frameCh chan TimestampedFrame // This channel will be created by the bus manager
+	err     *utils.ResettableError
 
-	traceDir     string
+	converter Converter
+	traceFile *os.File
+	fileName  string
+
 	canInterface string
 	timeout      time.Duration
-	busName      string
-	types        []TraceFile
-	conn         net.Conn
 }
 
 // NewTracer returns a new Tracer
 func NewTracer(
 	canInterface string,
-	traceDir string,
 	l *zap.Logger,
-	conn net.Conn,
+	converter Converter,
 	opts ...TracerOption) *Tracer {
 
 	tracer := &Tracer{
 		l:            l.Named(_loggerName),
-		cachedData:   []TimestampedFrame{},
 		err:          utils.NewResettaleError(),
 		timeout:      _defaultTimeout,
 		canInterface: canInterface,
-		traceDir:     traceDir,
-		busName:      canInterface,
-		types:        []TraceFile{},
-		conn:         conn,
+		fileName:     _defaultFileName,
+		converter:    converter,
 	}
 
 	for _, o := range opts {
@@ -83,96 +72,11 @@ func WithTimeout(timeout time.Duration) TracerOption {
 	}
 }
 
-// WithBusName sets the name of the bus for the Tracer
-func WithBusName(name string) TracerOption {
+// WithFileName sets the file name
+func WithFileName(fileName string) TracerOption {
 	return func(t *Tracer) {
-		t.busName = name
+		t.fileName = fileName
 	}
-}
-
-// WithFiles sets different filetypes the tracer can dump CAN data to
-func WithFiles(f ...TraceFile) TracerOption {
-	return func(t *Tracer) {
-		for _, filetype := range f {
-			t.types = append(t.types, filetype)
-		}
-	}
-}
-
-// Open opens a receiver and spawns a fetchData routine
-func (t *Tracer) Open(ctx context.Context) error {
-	t.l.Info("creating socketcan connection")
-
-	t.receiver = socketcan.NewReceiver(t.conn)
-
-	t.l.Info("canlink receiver created")
-
-	// IMPORTANT: frameCh must be open before isRunning is set
-	t.frameCh = make(chan TimestampedFrame, _frameBufferLength)
-
-	go t.fetchData(ctx)
-
-	return nil
-}
-
-// StartTrace starts receiving and caching CAN frames
-func (t *Tracer) StartTrace(ctx context.Context) error {
-	if !t.isRunning {
-		t.l.Info("received start command")
-
-		t.stop = make(chan struct{})
-
-		go t.receiveData(ctx)
-
-		t.isRunning = true
-
-		t.l.Info("tracer is running")
-	}
-
-	return nil
-}
-
-// StopTrace stops the receiving and caching frames, then dumps them to a file as long as the tracer is not stopped
-func (t *Tracer) StopTrace() error {
-	if t.isRunning {
-		t.l.Info("sending stop signal")
-
-		// IMPORTANT: must set isRunning to false before closing frameCh
-		t.isRunning = false
-
-		close(t.stop)
-
-		t.l.Debug("dumping cached data to files", zap.Int("num_frames", len(t.cachedData)))
-		for _, files := range t.types {
-			err := files.dumpToFile(t.cachedData, t.traceDir, t.busName)
-
-			if err != nil {
-				t.l.Error("failed to dump to file", zap.Error(err))
-
-			}
-		}
-
-		t.cachedData = nil
-	}
-
-	return nil
-}
-
-// Close closes the receiver
-func (t *Tracer) Close() error {
-	close(t.frameCh)
-
-	err := t.StopTrace()
-	if err != nil {
-		return errors.Wrap(err, "stop trace")
-	}
-
-	err = t.receiver.Close()
-	if err != nil {
-		return errors.Wrap(err, "close socketcan receiver")
-	}
-
-	return nil
 }
 
 // Error returns the error set during trace execution
@@ -180,51 +84,101 @@ func (t *Tracer) Error() error {
 	return t.err.Err()
 }
 
-// fetchData fetches CAN frames from the socket and sends them over a buffered channel
-func (t *Tracer) fetchData(ctx context.Context) {
-
-	timeFrame := TimestampedFrame{}
-
-	for t.receiver.Receive() {
-		select {
-		case <-ctx.Done():
-			t.l.Info("context deadline exceeded")
-			return
-		case _, ok := <-t.frameCh:
-			if !ok {
-				t.l.Info("frame channel closed, exiting fetch routine")
-				return
-			}
-		default:
-			timeFrame.Frame = t.receiver.Frame()
-			timeFrame.Time = time.Now()
-
-			if t.isRunning {
-				t.frameCh <- timeFrame
-			}
-		}
+// Handle listens to the frames in the broadcastChan and writes them to a file
+func (t *Tracer) Handle(broadcastChan chan TimestampedFrame, stopChan chan struct{}) error {
+	err := t.createTraceFile()
+	if err != nil {
+		return err
 	}
-}
-
-// receiveData listens on the buffered channel for incoming CAN frames, parses them, then caches them
-func (t *Tracer) receiveData(ctx context.Context) {
 
 	timeout := time.After(t.timeout)
 
-	for {
-		select {
-		case <-ctx.Done():
-			t.l.Info("context deadline exceeded")
-			return
-		case <-t.stop:
-			t.l.Info("stop signal received")
-			return
-		case <-timeout:
-			t.l.Info("maximum trace time reached")
-			t.StopTrace()
-			return
-		case receivedFrame := <-t.frameCh:
-			t.cachedData = append(t.cachedData, receivedFrame)
+	func() error {
+		for {
+			select {
+			case <-stopChan:
+				t.l.Info("stopping handle")
+				t.close()
+				return nil
+			case <-timeout:
+				t.l.Info("maximum trace time reached")
+				return nil
+			case receivedFrame := <-broadcastChan:
+				t.l.Info("frame received")
+				line := t.converter.FrameToString(t.l, &receivedFrame)
+
+				_, err := t.traceFile.WriteString(line + "\n")
+				if err != nil {
+					t.l.Info("cannot write to file")
+					return errors.Wrap(err, "writing to trace file")
+				}
+			default:
+			}
 		}
+	}()
+
+	return nil
+}
+
+func (t *Tracer) Name() string {
+	return "Tracer"
+}
+
+func (t *Tracer) GetFileName() string {
+	return t.fileName
+}
+
+// createEmptyTraceFile generates empty trace file given a file name
+func (t *Tracer) createEmptyTraceFile() (*os.File, error) {
+	file, err := os.Create(t.fileName)
+	if err != nil {
+		return nil, errors.Wrap(err, "create trace file")
 	}
+
+	return file, nil
+}
+
+// close closes the trace file
+func (t *Tracer) close() error {
+	t.l.Info("closing trace file")
+	err := t.traceFile.Close()
+	if err != nil {
+		t.l.Error(err.Error())
+		return errors.Wrap(err, "closing trace file")
+	}
+
+	if err != nil {
+		return errors.Wrap(err, "close trace file")
+	}
+
+	return nil
+}
+
+func (t *Tracer) createTraceFile() error {
+	if t.fileName == _defaultFileName {
+		dateStr := time.Now().Format(_filenameDateFormat)
+		timeStr := time.Now().Format(_filenameTimeFormat)
+		t.fileName = fmt.Sprintf(
+			"%s_%s.%s",
+			dateStr,
+			timeStr,
+			t.converter.GetFileExtension(),
+		)
+	} else {
+		t.fileName = fmt.Sprintf(
+			"%s.%s",
+			t.fileName,
+			t.converter.GetFileExtension(),
+		)
+	}
+
+	file, err := t.createEmptyTraceFile()
+	t.traceFile = file
+
+	if err != nil {
+		t.l.Info("cannot create trace file")
+		return errors.Wrap(err, "creating trace file")
+	}
+
+	return nil
 }

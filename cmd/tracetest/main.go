@@ -1,8 +1,9 @@
 package main
 
+// THIS FILE IS NOT UP TO DATE
+
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"time"
@@ -12,13 +13,12 @@ import (
 
 	"github.com/macformula/hil/canlink"
 	"github.com/macformula/hil/macformula/cangen/vehcan"
-	"github.com/pkg/errors"
 )
 
 const (
 	// Can bus select
 	_busName  = "veh"
-	_canIface = "can1"
+	_canIface = "vcan0"
 
 	// Env config
 	_timeFormat        = "2006-01-02_15-04-05"
@@ -42,19 +42,13 @@ const (
 	_packCurrentIncrPerSec   = 5 // amps per second
 )
 
+
+
 func main() {
 	ctx := context.Background()
 
-	formattedTime := time.Now().Format(_timeFormat)
-	logFileName := fmt.Sprintf(_logFilenameFormat, formattedTime)
-
 	loggerConfig := zap.NewDevelopmentConfig()
-	loggerConfig.OutputPaths = []string{logFileName}
-	loggerConfig.Level = zap.NewAtomicLevelAt(_logLevel)
 	logger, err := loggerConfig.Build()
-	if err != nil {
-		panic(errors.Wrap(err, "failed to create logger"))
-	}
 
 	conn, err := socketcan.DialContext(context.Background(), "can", _canIface)
 	if err != nil {
@@ -62,71 +56,35 @@ func main() {
 			zap.String("can_interface", _canIface),
 			zap.Error(err),
 		)
-
 		return
 	}
 
-	canClient := canlink.NewCanClient(vehcan.Messages(), conn, logger)
-	mcap := canlink.NewMcap(canClient, logger)
-	ascii := canlink.NewAscii(logger)
+	manager := canlink.NewBusManager(logger, &conn)
 
-	tracer := canlink.NewTracer(
+	tracerJsonl := canlink.NewTracer(
 		_canIface,
-		_traceDir,
 		logger,
-		conn,
-		canlink.WithBusName(_busName),
-		canlink.WithFiles(mcap, ascii))
+		&canlink.Jsonl{},
+		canlink.WithTimeout(100*time.Second),
+		canlink.WithFileName("trace_sample"),
+	)
+	tracerText := canlink.NewTracer(
+		_canIface,
+		logger,
+		&canlink.Text{},
+		canlink.WithTimeout(100*time.Second),
+		canlink.WithFileName("trace_sample2"),
+	)
 
-	err = canClient.Open()
-	if err != nil {
-		logger.Error("open can client", zap.Error(err))
+	manager.Register(tracerJsonl)
+	manager.Register(tracerText)
 
-		return
-	}
+	manager.Start(ctx)
+	time.Sleep(10*time.Second)
 
-	err = tracer.Open(ctx)
-	if err != nil {
-		logger.Error("open tracer", zap.Error(err))
-		return
-	}
+	manager.Stop()
 
-	err = tracer.StartTrace(ctx)
-	if err != nil {
-		logger.Error("start trace", zap.Error(err))
-	}
-
-	fmt.Println("-------------- Starting Test --------------")
-	fmt.Println("-------------- CTRL-C to Stop -------------")
-
-	stop := make(chan struct{})
-
-	go startSendMessageRoutine(ctx, stop, _msgPeriod, canClient, logger)
-
-	waitForSigTerm(stop, logger)
-
-	fmt.Println("-------------- Test Complete --------------")
-
-	logger.Info("closing trace test")
-
-	err = tracer.StopTrace()
-	if err != nil {
-		logger.Error("stop trace", zap.Error(err))
-	}
-
-	err = tracer.Close()
-	if err != nil {
-		logger.Error("close tracer", zap.Error(err))
-	}
-
-	err = canClient.Close()
-	if err != nil {
-		logger.Error("close can client", zap.Error(err))
-	}
-
-	if tracer.Error() != nil {
-		logger.Error("tracer error", zap.Error(tracer.Error()))
-	}
+	manager.Close()
 }
 
 func waitForSigTerm(stop chan struct{}, logger *zap.Logger) {
