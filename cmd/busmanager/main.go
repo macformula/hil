@@ -13,15 +13,13 @@ import (
 )
 
 type Handler struct {
-	name string,
-	Handle(chan TimestampedFrame, chan struct{}) error
+	name string
 }
 
 func NewHandler() *Handler {
 	handler := &Handler{
 		name: "testHandler",
 	}
-
 	return handler
 }
 
