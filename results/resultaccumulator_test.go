@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"go.uber.org/zap"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -18,7 +19,7 @@ import (
 // Set this to false to keep the test folders for inspection
 // WARNING: setting this to false may cause failing tests. This is because from test to test,
 // it is assumed that certain files do not exist anymore.
-var deleteTestFolders = true
+var deleteTestFolders = false
 
 type testSetup struct {
 	tempDir         string

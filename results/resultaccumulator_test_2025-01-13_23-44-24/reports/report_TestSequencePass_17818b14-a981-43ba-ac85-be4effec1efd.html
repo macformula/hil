@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Report: TestSequencePass</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Test Report: TestSequencePass</h1>
+        <p><strong>Test ID:</strong> 17818b14-a981-43ba-ac85-be4effec1efd</p>
+        <p><strong>Timestamp:</strong> 2025-01-13 23:44:24</p>
+        
+        <div class="overall-result pass">
+            Overall Result: PASS
+        </div>
+    
+        <h2>Tag Submissions</h2>
+        <table id="tagsTable">
+            <thead>
+                <tr>
+                    <th>Tag ID</th>
+                    <th>Description</th>
+                    <th>Comparison</th>
+                    <th>Submitted Value</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>logTag</td>
+                    <td>
+                        Logging tag
+                        <div class="tag-details">
+                            Unit: log
+                        </div>
+                    </td>
+                    <td>
+                        LOG
+                    </td>
+                    <td>any value</td>
+                    <td>
+                        
+                            <span style="color: #27ae60; font-weight: bold;">PASS</span>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>numericGt</td>
+                    <td>
+                        Numeric greater than test
+                        <div class="tag-details">
+                            Unit: units
+                        </div>
+                    </td>
+                    <td>
+                        X &gt; 10
+                    </td>
+                    <td>15</td>
+                    <td>
+                        
+                            <span style="color: #27ae60; font-weight: bold;">PASS</span>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>numericLt</td>
+                    <td>
+                        Numeric less than test
+                        <div class="tag-details">
+                            Unit: units
+                        </div>
+                    </td>
+                    <td>
+                        X &lt; 10
+                    </td>
+                    <td>5</td>
+                    <td>
+                        
+                            <span style="color: #27ae60; font-weight: bold;">PASS</span>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>numericGele</td>
+                    <td>
+                        Numeric range test (inclusive)
+                        <div class="tag-details">
+                            Unit: units
+                        </div>
+                    </td>
+                    <td>
+                        10 ≤ X ≤ 20
+                    </td>
+                    <td>15</td>
+                    <td>
+                        
+                            <span style="color: #27ae60; font-weight: bold;">PASS</span>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>numericGtlt</td>
+                    <td>
+                        Numeric range test (exclusive)
+                        <div class="tag-details">
+                            Unit: units
+                        </div>
+                    </td>
+                    <td>
+                        10 &lt; X &lt; 20
+                    </td>
+                    <td>15</td>
+                    <td>
+                        
+                            <span style="color: #27ae60; font-weight: bold;">PASS</span>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>boolEq</td>
+                    <td>
+                        Boolean equality test
+                        <div class="tag-details">
+                            Unit: boolean
+                        </div>
+                    </td>
+                    <td>
+                        X == true
+                    </td>
+                    <td>true</td>
+                    <td>
+                        
+                            <span style="color: #27ae60; font-weight: bold;">PASS</span>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>logNumber</td>
+                    <td>
+                        Logging number
+                        <div class="tag-details">
+                            Unit: Num
+                        </div>
+                    </td>
+                    <td>
+                        LOG
+                    </td>
+                    <td>10</td>
+                    <td>
+                        
+                            <span style="color: #27ae60; font-weight: bold;">PASS</span>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>numericGe</td>
+                    <td>
+                        Numeric greater than or equal to test
+                        <div class="tag-details">
+                            Unit: units
+                        </div>
+                    </td>
+                    <td>
+                        X ≥ 20
+                    </td>
+                    <td>20</td>
+                    <td>
+                        
+                            <span style="color: #27ae60; font-weight: bold;">PASS</span>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>numericLe</td>
+                    <td>
+                        Numeric less than or equal to test
+                        <div class="tag-details">
+                            Unit: units
+                        </div>
+                    </td>
+                    <td>
+                        X ≤ 20
+                    </td>
+                    <td>15</td>
+                    <td>
+                        
+                            <span style="color: #27ae60; font-weight: bold;">PASS</span>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>numericEq</td>
+                    <td>
+                        Numeric equality test
+                        <div class="tag-details">
+                            Unit: units
+                        </div>
+                    </td>
+                    <td>
+                        X == 15
+                    </td>
+                    <td>15</td>
+                    <td>
+                        
+                            <span style="color: #27ae60; font-weight: bold;">PASS</span>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>stringEq</td>
+                    <td>
+                        String equality test
+                        <div class="tag-details">
+                            Unit: string
+                        </div>
+                    </td>
+                    <td>
+                        X == expected
+                    </td>
+                    <td>expected</td>
+                    <td>
+                        
+                            <span style="color: #27ae60; font-weight: bold;">PASS</span>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    
+        
+    </div>
+    
+    
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#tagsTable').DataTable({
+                "paging": true,
+                "searching": true,
+                "ordering": true,
+                "order": [],
+                "columnDefs": [
+                    { "orderable": true, "targets": "_all" }
+                ],
+                "language": {
+                    "search": "Filter records:"
+                }
+            });
+        });
+    </script>
+</body>
+</html>
