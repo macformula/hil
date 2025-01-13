@@ -14,6 +14,7 @@ import (
 
 type Handler struct {
 	name string
+	Handle(chan TimestampedFrame, chan struct{}) error
 }
 
 func NewHandler() *Handler {
@@ -26,6 +27,7 @@ func NewHandler() *Handler {
 
 func (h *Handler) Handle (
 	broadcast chan canlink.TimestampedFrame,
+	stopChan chan struct{}
 ) error {
 	go func() {
 		for {
