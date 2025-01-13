@@ -25,10 +25,7 @@ func NewHandler() *Handler {
 	return handler
 }
 
-func (h *Handler) Handle (
-	broadcast chan canlink.TimestampedFrame,
-	stopChan chan struct{}
-) error {
+func (h *Handler) Handle (broadcast chan canlink.TimestampedFrame, stopChan chan struct{}) error {
 	go func() {
 		for {
 			select {
