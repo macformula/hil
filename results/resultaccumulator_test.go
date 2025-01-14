@@ -19,7 +19,7 @@ import (
 // Set this to false to keep the test folders for inspection
 // WARNING: setting this to false may cause failing tests. This is because from test to test,
 // it is assumed that certain files do not exist anymore.
-var deleteTestFolders = false
+var deleteTestFolders = true
 
 type testSetup struct {
 	tempDir         string

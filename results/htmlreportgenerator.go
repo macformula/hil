@@ -1,10 +1,10 @@
 package results
 
 import (
+	_ "embed"
 	"fmt"
 	"html/template"
 	"os"
-	"path"
 	"path/filepath"
 	"time"
 
@@ -12,9 +12,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-    tmplFilePath = "resultsHtml.html"
-)
+//go:embed resultstemplate/resultsHtml.html
+var templateString string
 
 // TagSubmissionDisplay includes a pre-formatted comparison string for display purposes.
 type TagSubmissionDisplay struct {
@@ -23,6 +22,16 @@ type TagSubmissionDisplay struct {
 	Value             any
 	IsPassing         bool
 	ComparisonDisplay string
+}
+
+// TemplateData contains values to fill the results template.
+type TemplateData struct {
+	TestID           string
+	SequenceName     string
+	TagSubmissions   []TagSubmissionDisplay
+	ErrorSubmissions []error
+	OverallPassFail  bool
+	Timestamp        string
 }
 
 // HtmlReportGenerator generates HTML reports.
@@ -46,35 +55,15 @@ func (g *HtmlReportGenerator) Generate(
 	overallPassFail bool,
 	outputDir string,
 ) error {
-    pwd, err := os.Getwd()
-    htmlDir := path.Join(pwd, "resultstemplate", "resultsHtml.html")
-    htmlBytes, err := os.ReadFile(htmlDir)
-    g.templateString = string(htmlBytes)
-
 	// Prepare the display-friendly tag submissions.
 	displaySubmissions := make([]TagSubmissionDisplay, 0, len(tagSubmissions))
-	for tagID, submission := range tagSubmissions {
-		comparison, err := formatComparison(submission.Tag)
-		if err != nil {
-			return errors.Wrapf(err, "failed to format comparison for tag %s", tagID)
-		}
-		displaySubmissions = append(displaySubmissions, TagSubmissionDisplay{
-			TagID:             tagID,
-			Tag:               submission.Tag,
-			Value:             submission.Value,
-			IsPassing:         submission.IsPassing,
-			ComparisonDisplay: comparison,
-		})
+	generated, err := generateTagSubmissionsDisplay(tagSubmissions)
+	if err != nil {
+		return errors.Wrap(err, "failed to generate submission tags")
 	}
+	displaySubmissions = append(displaySubmissions, generated...)
 
-	data := struct {
-		TestID           string
-		SequenceName     string
-		TagSubmissions   []TagSubmissionDisplay
-		ErrorSubmissions []error
-		OverallPassFail  bool
-		Timestamp        string
-	}{
+	data := TemplateData{
 		TestID:           testID.String(),
 		SequenceName:     sequenceName,
 		TagSubmissions:   displaySubmissions,
@@ -83,7 +72,7 @@ func (g *HtmlReportGenerator) Generate(
 		Timestamp:        time.Now().Format("2006-01-02 15:04:05"),
 	}
 
-	tmpl, err := template.New("report").Parse(g.templateString)
+	tmpl, err := template.New("report").Parse(templateString)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse HTML template")
 	}
@@ -126,4 +115,24 @@ func formatComparison(tag Tag) (string, error) {
 	default:
 		return "", fmt.Errorf("unknown ComparisonOperator: %v", tag.CompOp)
 	}
+}
+
+// generateTagSubmissionsDisplay generates the submission displays for each submission tag.
+func generateTagSubmissionsDisplay(tagSubmissions map[string]TagSubmission) ([]TagSubmissionDisplay, error) {
+	generated := make([]TagSubmissionDisplay, 0, len(tagSubmissions))
+	for tagID, submission := range tagSubmissions {
+		comparison, err := formatComparison(submission.Tag)
+		if err != nil {
+			return generated, errors.Wrapf(err, "failed to format comparison for tag %s", tagID)
+		}
+		generated = append(generated, TagSubmissionDisplay{
+			TagID:             tagID,
+			Tag:               submission.Tag,
+			Value:             submission.Value,
+			IsPassing:         submission.IsPassing,
+			ComparisonDisplay: comparison,
+		})
+	}
+
+	return generated, nil
 }
