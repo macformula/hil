@@ -30,9 +30,8 @@ type TracerOption func(*Tracer)
 
 // Tracer listens on a CAN bus and records all traffic
 type Tracer struct {
-	l       *zap.Logger
-	frameCh chan TimestampedFrame // This channel will be created by the bus manager
-	err     *utils.ResettableError
+	l   *zap.Logger
+	err *utils.ResettableError
 
 	converter Converter
 	traceFile *os.File
@@ -120,12 +119,27 @@ func (t *Tracer) Handle(broadcastChan chan TimestampedFrame, stopChan chan struc
 	return nil
 }
 
+// Name returns the name of the handler.
+// This value is only used for error logging
 func (t *Tracer) Name() string {
 	return "Tracer"
 }
 
+// GetFileName simply returns the file name of the trace file this tracer is responsible for
 func (t *Tracer) GetFileName() string {
 	return t.fileName
+}
+
+// close closes the trace file
+func (t *Tracer) close() error {
+	t.l.Info("closing trace file")
+	err := t.traceFile.Close()
+	if err != nil {
+		t.l.Error(err.Error())
+		return errors.Wrap(err, "closing trace file")
+	}
+
+	return nil
 }
 
 // createEmptyTraceFile generates empty trace file given a file name
@@ -138,22 +152,7 @@ func (t *Tracer) createEmptyTraceFile() (*os.File, error) {
 	return file, nil
 }
 
-// close closes the trace file
-func (t *Tracer) close() error {
-	t.l.Info("closing trace file")
-	err := t.traceFile.Close()
-	if err != nil {
-		t.l.Error(err.Error())
-		return errors.Wrap(err, "closing trace file")
-	}
-
-	if err != nil {
-		return errors.Wrap(err, "close trace file")
-	}
-
-	return nil
-}
-
+// createTraceFile creates a new trace file with the proper file name
 func (t *Tracer) createTraceFile() error {
 	if t.fileName == _defaultFileName {
 		dateStr := time.Now().Format(_filenameDateFormat)
