@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-//go:embed resultstemplate/resultsHtml.html
+//go:embed resultstemplate/resultsHtml.go.html
 var templateString string
 
 // TagSubmissionDisplay includes a pre-formatted comparison string for display purposes.
