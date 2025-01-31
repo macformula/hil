@@ -1,19 +1,10 @@
 revision: "sil"
-vehCanInterface: "can0"
-ptCanInterface: "can1"
-traceDir: "/opt/macfe/traces"
-logsDir: "/opt/macfe/logs"
-resultProcessorAutoStart: true
-resultProcessorAddr: "localhost:31763"
-resultProcessorPath: "/opt/macfe/scripts/results/server/main.py"
-resultProcessorPushToGithub: true
+vehCanInterface: "vcan0"
+ptCanInterface: "vcan1"
+traceDir: "../../../traces"
+logsDir: "../../../logs"
+reportsDir: "../../../reports"
+tagsFilePath: "../../../hil/macformula/config/tags.yaml"
+historicTestsFilePath: "../../historic_tests.json"
 canTracerTimeoutMinutes: 10
-resultProcessor:
-  serverAddress: "localhost:31763"
-  tagsFilePath: "/opt/macfe/etc/tags.yaml"
-  historicTestsFilePath: "/opt/macfe/github/macfe-hil.github.io/historic_tests.json"
-  reportsDir: "/opt/macfe/github/macfe-hil.github.io/reports"
-  githubPagesRepoDir: "/opt/macfe/github/macfe-hil.github.io"
-  githubPagesBranch: "main"
-  githubPagesUsername: "macformularacing"
-  githubPagesEmail: "macformulaelectric@gmail.com"
+silPort: 9090
