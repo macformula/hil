@@ -145,6 +145,7 @@ func main() {
 		&canlink.Jsonl{},
 		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
 		canlink.WithFileName(_vehCan),
+		canlink.WithTraceDir(cfg.TraceDir),
 	)
 
 	ptCanTracer := canlink.NewTracer(
@@ -153,6 +154,7 @@ func main() {
 		&canlink.Jsonl{},
 		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
 		canlink.WithFileName(_ptCan),
+		canlink.WithTraceDir(cfg.TraceDir),
 	)
 
 	// Get controllers
