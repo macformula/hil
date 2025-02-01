@@ -68,6 +68,7 @@ func newDoNothingSequence(_ *macformula.App, _ *zap.Logger) flow.Sequence {
 		},
 	}
 }
+
 func newSleepSequence(_ *macformula.App, _ *zap.Logger) flow.Sequence {
 	return flow.Sequence{
 		Name: "Sleeper 💤",

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"time"
+	"os"
 
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
@@ -86,9 +87,15 @@ func main() {
 			cfg.Revision, pinout.RevisionStrings()))
 	}
 
+	workingDir, err := os.Getwd()
+	fmt.Printf("working dir %s", workingDir)
+	if err != nil {
+		panic(errors.Errorf("could not get working dir"))
+	}
+
 	// Create Logger.
 	logFileName := fmt.Sprintf(_logFileFormat, time.Now().Format(_timeFormat))
-	logFilePath := filepath.Join(cfg.LogsDir, logFileName)
+	logFilePath := filepath.Join(workingDir, cfg.LogsDir, logFileName)
 
 	loggerConfig := zap.NewDevelopmentConfig()
 	loggerConfig.OutputPaths = []string{logFilePath}
@@ -102,7 +109,7 @@ func main() {
 	logger.Info("hil app starting", zap.Any("config", cfg))
 
 	// Create result processor.
-	resultProcessor := results.NewResultAccumulator(logger, cfg.TagsFilePath, cfg.HistoricTestsFilePath, cfg.ResultsDir,
+	resultProcessor := results.NewResultAccumulator(logger, filepath.Join(workingDir, cfg.TagsFilePath), filepath.Join(workingDir, cfg.HistoricTestsFilePath), filepath.Join(workingDir, cfg.ReportsDir),
 		results.NewHtmlReportGenerator())
 
 	// Create sequencer.
@@ -136,6 +143,7 @@ func main() {
 		&canlink.Jsonl{},
 		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
 		canlink.WithFileName(_vehCan),
+		canlink.WithTraceDir(cfg.TraceDir),
 	)
 
 	ptCanTracer := canlink.NewTracer(
@@ -144,6 +152,7 @@ func main() {
 		&canlink.Jsonl{},
 		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
 		canlink.WithFileName(_ptCan),
+		canlink.WithTraceDir(cfg.TraceDir),
 	)
 
 	// Get controllers

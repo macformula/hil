@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"path/filepath"
 
 	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
@@ -34,6 +35,7 @@ type Tracer struct {
 	err *utils.ResettableError
 
 	converter Converter
+	traceDir string
 	traceFile *os.File
 	fileName  string
 
@@ -75,6 +77,13 @@ func WithTimeout(timeout time.Duration) TracerOption {
 func WithFileName(fileName string) TracerOption {
 	return func(t *Tracer) {
 		t.fileName = fileName
+	}
+}
+
+// WithTraceDir sets the trace directory
+func WithTraceDir(traceDir string) TracerOption {
+	return func(t *Tracer) {
+		t.traceDir = traceDir
 	}
 }
 
@@ -144,7 +153,7 @@ func (t *Tracer) close() error {
 
 // createEmptyTraceFile generates empty trace file given a file name
 func (t *Tracer) createEmptyTraceFile() (*os.File, error) {
-	file, err := os.Create(t.fileName)
+	file, err := os.Create(filepath.Join(t.traceDir, t.fileName))
 	if err != nil {
 		return nil, errors.Wrap(err, "create trace file")
 	}
