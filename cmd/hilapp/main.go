@@ -18,8 +18,6 @@ import (
 	"github.com/macformula/hil/iocontrol"
 	"github.com/macformula/hil/iocontrol/sil"
 	"github.com/macformula/hil/macformula"
-	"github.com/macformula/hil/macformula/cangen/ptcan"
-	"github.com/macformula/hil/macformula/cangen/vehcan"
 	"github.com/macformula/hil/macformula/config"
 	"github.com/macformula/hil/macformula/ecu/frontcontroller"
 	"github.com/macformula/hil/macformula/ecu/lvcontroller"
@@ -182,31 +180,23 @@ func main() {
 	// Create testbench controller.
 	testBench := macformula.NewTestBench(pinoutController, logger)
 
-	// Create veh can client.
-	vehCanClient := canlink.NewCanClient(vehcan.Messages(), vehCanConn, logger)
-
-	// Create pt can client.
-	ptCanClient := canlink.NewCanClient(ptcan.Messages(), ptCanConn, logger)
-
 	// Create Lv Controller client.
 	lvControllerClient := lvcontroller.NewClient(pinoutController, logger)
 
 	// Create Front Controller client.
-	frontControllerClient := frontcontroller.NewClient(pinoutController, vehCanClient, logger)
+	frontControllerClient := frontcontroller.NewClient(pinoutController, vehBusManager, logger)
 
 	// Create app object.
 	app := macformula.App{
 		Config:                cfg,
-		VehBusManager: vehBusManager,
-		PtBusManager: ptBusManager,
+		VehBusManager: 		   vehBusManager,
+		PtBusManager:          ptBusManager,
 		VehCanTracer:          vehCanTracer,
 		PtCanTracer:           ptCanTracer,
 		PinoutController:      pinoutController,
 		TestBench:             testBench,
 		LvControllerClient:    lvControllerClient,
 		FrontControllerClient: frontControllerClient,
-		VehCanClient:          vehCanClient,
-		PtCanClient:           ptCanClient,
 	}
 
 	// Create sequences.

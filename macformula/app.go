@@ -19,8 +19,6 @@ type App struct {
 	TestBench             *TestBench
 	LvControllerClient    *lvcontroller.Client
 	FrontControllerClient *frontcontroller.Client
-	VehCanClient          *canlink.CanClient
-	PtCanClient           *canlink.CanClient
 
 	CurrProcess *ProcessInfo
 }
