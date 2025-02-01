@@ -43,18 +43,14 @@ func main() {
 		return
 	}
 
-	canClient := canlink.NewCanClient(vehcan.Messages(), conn, logger)
+	busManager := canlink.NewBusManager(logger, &conn)
 
-	err = canClient.Open()
-	if err != nil {
-		logger.Error("failed to open can client", zap.Error(err))
-		return
-	}
+	busManager.Start(ctx)
 
 	defer func() {
-		err = canClient.Close()
+		err = busManager.Close()
 		if err != nil {
-			logger.Error("client close", zap.Error(err))
+			logger.Error("bus manager", zap.Error(err))
 		}
 	}()
 
@@ -90,7 +86,7 @@ func main() {
 	contactors.SetPackPositive(packPositive)
 	contactors.SetPackPrecharge(packPrecharge)
 
-	err = canClient.Send(ctx, contactors)
+	err = busManager.Send(ctx, contactors)
 	if err != nil {
 		logger.Error("failed to send contactors message", zap.Error(err))
 		return

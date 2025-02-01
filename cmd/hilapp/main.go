@@ -88,7 +88,6 @@ func main() {
 	}
 
 	workingDir, err := os.Getwd()
-	fmt.Printf("working dir %s", workingDir)
 	if err != nil {
 		panic(errors.Errorf("could not get working dir"))
 	}
@@ -141,7 +140,7 @@ func main() {
 		cfg.VehCanInterface,
 		logger,
 		&canlink.Jsonl{},
-		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
+		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes) * time.Minute),
 		canlink.WithFileName(_vehCan),
 		canlink.WithTraceDir(cfg.TraceDir),
 	)
