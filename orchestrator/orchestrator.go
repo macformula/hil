@@ -171,22 +171,20 @@ func (o *Orchestrator) Close() error {
 	var resettableErr = utils.NewResettaleError()
 
 	o.l.Info("closing orchestrator")
+	
+	for i, d := range o.dispatchers {
+		err := d.Close()
+		if err != nil {
+			o.l.Error("failed to close dispatcher",
+				zap.String("dispatcher", d.Name()),
+				zap.Error(err),
+			)
 
-	if len(o.dispatchers) > 0 {
-		for i, d := range o.dispatchers {
-			err := d.Close()
-			if err != nil {
-				o.l.Error("failed to close dispatcher",
-					zap.String("dispatcher", d.Name()),
-					zap.Error(err),
-				)
-
-				resettableErr.Set(errors.Wrapf(err, "close dispatcher (%s)", d.Name()))
-			}
-
-			o.resultSubs[i].Unsubscribe()
-			o.statusSubs[i].Unsubscribe()
+			resettableErr.Set(errors.Wrapf(err, "close dispatcher (%s)", d.Name()))
 		}
+
+		o.resultSubs[i].Unsubscribe()
+		o.statusSubs[i].Unsubscribe()
 	}
 
 	o.progSub.Unsubscribe()

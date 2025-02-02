@@ -11,8 +11,10 @@ import (
 // Config holds configuration variables for the HIL setup
 type Config struct {
 	Revision                string `yaml:"revision"`
-	VehCanInterface         string `yaml:"vehCanInterface"`
-	PtCanInterface          string `yaml:"ptCanInterface"`
+	CanInterfaces struct {
+		Veh string `yaml:"veh"`
+		Pt string `yaml:"pt"`
+	} `yaml:"canInterfaces"`
 	TraceDir                string `yaml:"traceDir"`
 	LogsDir                 string `yaml:"logsDir"`
 	ReportsDir              string `yaml:"reportsDir"`

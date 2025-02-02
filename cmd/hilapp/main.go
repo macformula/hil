@@ -121,14 +121,14 @@ func main() {
 	ctx := context.Background()
 
 	// Create socketcan connections.
-	vehCanConn, err := socketcan.DialContext(ctx, _canNetwork, cfg.VehCanInterface)
+	vehCanConn, err := socketcan.DialContext(ctx, _canNetwork, cfg.CanInterfaces.Veh)
 	if err != nil {
 		logger.Error("failed to setup veh can connection",
 			zap.Error(errors.Wrap(err, "dial context")))
 		return
 	}
 
-	ptCanConn, err := socketcan.DialContext(ctx, _canNetwork, cfg.PtCanInterface)
+	ptCanConn, err := socketcan.DialContext(ctx, _canNetwork, cfg.CanInterfaces.Pt)
 	if err != nil {
 		logger.Error("failed to setup pt can connection",
 			zap.Error(errors.Wrap(err, "dial context")))
@@ -140,7 +140,7 @@ func main() {
 
 	// Create can tracers.
 	vehCanTracer := canlink.NewTracer(
-		cfg.VehCanInterface,
+		cfg.CanInterfaces.Veh,
 		logger,
 		&canlink.Jsonl{},
 		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
@@ -149,7 +149,7 @@ func main() {
 	)
 
 	ptCanTracer := canlink.NewTracer(
-		cfg.PtCanInterface,
+		cfg.CanInterfaces.Pt,
 		logger,
 		&canlink.Jsonl{},
 		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),

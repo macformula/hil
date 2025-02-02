@@ -1,6 +1,7 @@
 revision: "sil"
-vehCanInterface: "vcan0"
-ptCanInterface: "vcan1"
+canInterfaces:
+  veh: "vcan0"
+  pt: "vcan1"
 traceDir: "../../../traces"
 logsDir: "../../../logs"
 reportsDir: "../../../reports"
