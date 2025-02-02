@@ -1,8 +1,2 @@
 hilapp
 !/env
-
-/reports/*
-/logs/*
-/traces/*
-
-historic_tests.json

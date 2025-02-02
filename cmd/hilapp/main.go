@@ -90,7 +90,6 @@ func main() {
 	}
 
 	workingDir, err := os.Getwd()
-	fmt.Printf("working dir %s", workingDir)
 	if err != nil {
 		panic(errors.Errorf("could not get working dir"))
 	}
