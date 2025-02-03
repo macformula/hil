@@ -19,7 +19,6 @@ type Config struct {
 	LogsDir                 string `yaml:"logsDir"`
 	ReportsDir              string `yaml:"reportsDir"`
 	TagsFilePath            string `yaml:"tagsFilePath"`
-	HistoricTestsFilePath   string `yaml:"historicTestsFilePath"`
 	CanTracerTimeoutMinutes int    `yaml:"canTracerTimeoutMinutes"`
 	SilPort                 int    `yaml:"silPort"`
 }

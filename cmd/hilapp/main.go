@@ -110,7 +110,7 @@ func main() {
 	logger.Info("hil app starting", zap.Any("config", cfg))
 
 	// Create result processor.
-	resultProcessor := results.NewResultAccumulator(logger, filepath.Join(workingDir, cfg.TagsFilePath), filepath.Join(workingDir, cfg.HistoricTestsFilePath), filepath.Join(workingDir, cfg.ReportsDir),
+	resultProcessor := results.NewResultAccumulator(logger, filepath.Join(workingDir, cfg.TagsFilePath), filepath.Join(workingDir, cfg.HistoricTestsFilePath),
 		results.NewHtmlReportGenerator())
 
 	// Create sequencer.

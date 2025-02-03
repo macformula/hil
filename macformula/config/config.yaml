@@ -5,7 +5,6 @@ canInterfaces:
 traceDir: "../../macformula/results/traces"
 logsDir: "../../macformula/results/logs"
 reportsDir: "../../macformula/results/reports"
-historicTestsFilePath: "../../macformula/results/historic_tests.json"
 tagsFilePath: "../../../hil/macformula/config/tags.yaml"
 canTracerTimeoutMinutes: 10
 silPort: 9090

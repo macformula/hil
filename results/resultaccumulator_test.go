@@ -2,7 +2,6 @@ package results
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"
 	"os"
@@ -23,7 +22,6 @@ var deleteTestFolders = true
 type testSetup struct {
 	tempDir         string
 	tagsFile        string
-	historicTestsFP string
 	reportsDir      string
 	ra              *ResultAccumulator
 }
@@ -42,7 +40,6 @@ func setupTest(t *testing.T) testSetup {
 	}
 
 	tagsFile := filepath.Join(currentDir, "testtags.yaml")
-	historicTestsFP := filepath.Join(tempDir, "historic_tests.json")
 	reportsDir := filepath.Join(tempDir, "reports")
 
 	// Create the reports directory
@@ -50,12 +47,11 @@ func setupTest(t *testing.T) testSetup {
 	require.NoError(t, err)
 
 	htmlGenerator := NewHtmlReportGenerator()
-	ra := NewResultAccumulator(zap.NewNop(), tagsFile, historicTestsFP, reportsDir, htmlGenerator)
+	ra := NewResultAccumulator(zap.NewNop(), tagsFile, reportsDir, htmlGenerator)
 
 	return testSetup{
 		tempDir:         tempDir,
 		tagsFile:        tagsFile,
-		historicTestsFP: historicTestsFP,
 		reportsDir:      reportsDir,
 		ra:              ra,
 	}
@@ -160,15 +156,6 @@ func TestResultAccumulatorCompleteTest(t *testing.T) {
 	assert.NoError(t, err)
 	assert.False(t, overallPassFail)
 
-	t.Run("HistoricTestsFile", func(t *testing.T) {
-		historicTests, err := setup.ra.loadExistingTests()
-		assert.NoError(t, err)
-		assert.Len(t, historicTests, 1)
-		assert.Equal(t, testID.String(), historicTests[0]["testId"])
-		assert.Equal(t, sequenceName, historicTests[0]["sequenceName"])
-		assert.Equal(t, false, historicTests[0]["testPassed"])
-	})
-
 	t.Run("HtmlReportGeneration", func(t *testing.T) {
 		htmlReportPath := filepath.Join(setup.reportsDir, fmt.Sprintf("report_%s_%s.html", sequenceName, testID.String()))
 		_, err := os.Stat(htmlReportPath)
@@ -194,7 +181,7 @@ func TestResultAccumulatorCompleteTest(t *testing.T) {
 func TestResultAccumulatorEdgeCases(t *testing.T) {
 	t.Run("NonExistentTagsFile", func(t *testing.T) {
 		setup := setupTest(t)
-		ra := NewResultAccumulator(zap.NewNop(), "non_existent_file.yaml", setup.historicTestsFP, setup.reportsDir)
+		ra := NewResultAccumulator(zap.NewNop(), "non_existent_file.yaml", setup.reportsDir)
 		err := ra.Open(context.Background())
 		assert.Error(t, err)
 	})
@@ -207,44 +194,9 @@ func TestResultAccumulatorEdgeCases(t *testing.T) {
 		err := os.WriteFile(invalidTagsFile, []byte("invalid yaml"), 0644)
 		require.NoError(t, err)
 
-		ra := NewResultAccumulator(zap.NewNop(), invalidTagsFile, setup.historicTestsFP, setup.reportsDir)
+		ra := NewResultAccumulator(zap.NewNop(), invalidTagsFile, setup.reportsDir)
 		err = ra.Open(context.Background())
 		assert.Error(t, err)
-	})
-
-	t.Run("CompleteTestWithExistingHistoricTests", func(t *testing.T) {
-		setup := setupTest(t)
-		existingTests := []map[string]interface{}{
-			{
-				"testId":       "existing-test-id",
-				"sequenceName": "ExistingSequence",
-				"testPassed":   true,
-				"date":         "2023-04-20",
-				"time":         "12-00-00",
-			},
-		}
-		existingTestsData, err := json.Marshal(existingTests)
-		require.NoError(t, err)
-		err = os.WriteFile(setup.historicTestsFP, existingTestsData, 0644)
-		require.NoError(t, err)
-
-		err = setup.ra.Open(context.Background())
-		require.NoError(t, err)
-
-		ctx := context.Background()
-		testID := uuid.New()
-		_, err = setup.ra.SubmitTag(ctx, "numericGt", 15)
-		require.NoError(t, err)
-
-		overallPassFail, err := setup.ra.CompleteTest(ctx, testID, "NewSequence")
-		assert.NoError(t, err)
-		assert.True(t, overallPassFail)
-
-		historicTests, err := setup.ra.loadExistingTests()
-		assert.NoError(t, err)
-		assert.Len(t, historicTests, 2)
-		assert.Equal(t, testID.String(), historicTests[0]["testId"])
-		assert.Equal(t, "existing-test-id", historicTests[1]["testId"])
 	})
 }
 
@@ -288,15 +240,6 @@ func TestResultAccumulatorSubmitTagAndCompleteTestPass(t *testing.T) {
 	overallPassFail, err := setup.ra.CompleteTest(ctx, testID, sequenceName)
 	assert.NoError(t, err)
 	assert.True(t, overallPassFail)
-
-	t.Run("HistoricTestsFile", func(t *testing.T) {
-		historicTests, err := setup.ra.loadExistingTests()
-		assert.NoError(t, err)
-		assert.Len(t, historicTests, 1)
-		assert.Equal(t, testID.String(), historicTests[0]["testId"])
-		assert.Equal(t, sequenceName, historicTests[0]["sequenceName"])
-		assert.Equal(t, true, historicTests[0]["testPassed"])
-	})
 
 	t.Run("HtmlReportGeneration", func(t *testing.T) {
 		htmlReportPath := filepath.Join(setup.reportsDir, fmt.Sprintf("report_%s_%s.html", sequenceName, testID.String()))
@@ -361,15 +304,6 @@ func TestResultAccumulatorSubmitTagAndCompleteTestFail(t *testing.T) {
 	overallPassFail, err := setup.ra.CompleteTest(ctx, testID, sequenceName)
 	assert.NoError(t, err)
 	assert.False(t, overallPassFail)
-
-	t.Run("HistoricTestsFile", func(t *testing.T) {
-		historicTests, err := setup.ra.loadExistingTests()
-		assert.NoError(t, err)
-		assert.Len(t, historicTests, 1)
-		assert.Equal(t, testID.String(), historicTests[0]["testId"])
-		assert.Equal(t, sequenceName, historicTests[0]["sequenceName"])
-		assert.Equal(t, false, historicTests[0]["testPassed"])
-	})
 
 	t.Run("HtmlReportGeneration", func(t *testing.T) {
 		htmlReportPath := filepath.Join(setup.reportsDir, fmt.Sprintf("report_%s_%s.html", sequenceName, testID.String()))

@@ -32,7 +32,7 @@ func main() {
 	defer logger.Sync()
 
 	resultProcessor := results.NewResultAccumulator(logger,
-		_tagsPath, _historicTestsPath, _reportsDir, results.NewHtmlReportGenerator())
+		_tagsPath, _reportsDir, results.NewHtmlReportGenerator())
 	sequencer := flow.NewSequencer(resultProcessor, logger)
 	cliDispatcher := cli.NewCliDispatcher(test.Sequences, logger)
 	simpleDispatcher := test.NewSimpleDispatcher(logger, 5*time.Second, 10*time.Second)
