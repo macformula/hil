@@ -2,9 +2,9 @@ revision: "sil"
 canInterfaces:
   veh: "vcan0"
   pt: "vcan1"
-traceDir: "../../macformula/results/traces"
-logsDir: "../../macformula/results/logs"
-reportsDir: "../../macformula/results/reports"
-tagsFilePath: "../../../hil/macformula/config/tags.yaml"
+traceDir: "/home/macformula/macfe/hil/macformula/results/traces"
+logsDir: "/home/macformula/macfe/hil/macformula/results/logs"
+reportsDir: "/home/macformula/macfe/hil/macformula/results/reports"
+tagsFilePath: "/home/macformula/macfe/hil/macformula/config/tags.yaml"
 canTracerTimeoutMinutes: 10
 silPort: 9090
