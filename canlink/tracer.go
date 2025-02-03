@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"time"
-	"path/filepath"
 
 	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
@@ -16,8 +15,6 @@ const (
 	_defaultTimeout    = 30 * time.Minute
 	_frameBufferLength = 10
 	_loggerName        = "can_tracer"
-
-	_defaultFileName = "" // if no file name is provided, file name will be generated when trace file is created
 
 	_decimal = 10
 
@@ -35,9 +32,8 @@ type Tracer struct {
 	err *utils.ResettableError
 
 	converter Converter
-	traceDir string
+	tracePath string
 	traceFile *os.File
-	fileName  string
 
 	canInterface string
 	timeout      time.Duration
@@ -48,6 +44,7 @@ func NewTracer(
 	canInterface string,
 	l *zap.Logger,
 	converter Converter,
+	tracePath string,
 	opts ...TracerOption) *Tracer {
 
 	tracer := &Tracer{
@@ -55,7 +52,7 @@ func NewTracer(
 		err:          utils.NewResettaleError(),
 		timeout:      _defaultTimeout,
 		canInterface: canInterface,
-		fileName:     _defaultFileName,
+		tracePath:     tracePath,
 		converter:    converter,
 	}
 
@@ -70,20 +67,6 @@ func NewTracer(
 func WithTimeout(timeout time.Duration) TracerOption {
 	return func(t *Tracer) {
 		t.timeout = timeout
-	}
-}
-
-// WithFileName sets the file name
-func WithFileName(fileName string) TracerOption {
-	return func(t *Tracer) {
-		t.fileName = fileName
-	}
-}
-
-// WithTraceDir sets the trace directory
-func WithTraceDir(traceDir string) TracerOption {
-	return func(t *Tracer) {
-		t.traceDir = traceDir
 	}
 }
 
@@ -131,12 +114,12 @@ func (t *Tracer) Handle(broadcastChan chan TimestampedFrame, stopChan chan struc
 // Name returns the name of the handler.
 // This value is only used for error logging
 func (t *Tracer) Name() string {
-	return "Tracer"
+	return fmt.Sprintf("Tracer (%s)", t.tracePath)
 }
 
-// GetFileName simply returns the file name of the trace file this tracer is responsible for
-func (t *Tracer) GetFileName() string {
-	return t.fileName
+// GetTracePath simply returns the specified path to the trace file
+func (t *Tracer) GetTracePath() string {
+	return t.tracePath
 }
 
 // close closes the trace file
@@ -153,7 +136,7 @@ func (t *Tracer) close() error {
 
 // createEmptyTraceFile generates empty trace file given a file name
 func (t *Tracer) createEmptyTraceFile() (*os.File, error) {
-	file, err := os.Create(filepath.Join(t.traceDir, t.fileName))
+	file, err := os.Create(t.tracePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "create trace file")
 	}
@@ -163,23 +146,6 @@ func (t *Tracer) createEmptyTraceFile() (*os.File, error) {
 
 // createTraceFile creates a new trace file with the proper file name
 func (t *Tracer) createTraceFile() error {
-	if t.fileName == _defaultFileName {
-		dateStr := time.Now().Format(_filenameDateFormat)
-		timeStr := time.Now().Format(_filenameTimeFormat)
-		t.fileName = fmt.Sprintf(
-			"%s_%s.%s",
-			dateStr,
-			timeStr,
-			t.converter.GetFileExtension(),
-		)
-	} else {
-		t.fileName = fmt.Sprintf(
-			"%s.%s",
-			t.fileName,
-			t.converter.GetFileExtension(),
-		)
-	}
-
 	file, err := t.createEmptyTraceFile()
 	t.traceFile = file
 
