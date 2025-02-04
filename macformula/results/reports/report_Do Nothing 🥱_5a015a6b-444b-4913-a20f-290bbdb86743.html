@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Report: Do Nothing 🥱</title>
+    
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <style>
+         
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            color: #333;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+         
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+         
+        .overall-result {
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+        .overall-result.pass {
+            background-color: #27ae60;
+        }
+        .overall-result.fail {
+            background-color: #c0392b;
+        }
+         
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+        }
+        th {
+            background-color: #2980b9;
+            color: #fff;
+            cursor: pointer;
+        }
+        tr:nth-child(even) {
+            background-color: #ecf0f1;
+        }
+        tr:hover {
+            background-color: #d0d7de;
+        }
+         
+        .tag-details {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+         
+        .error-list {
+            background-color: #ffecec;
+            border-left: 5px solid #e74c3c;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .error-list ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+        .error-list li {
+            margin-bottom: 10px;
+        }
+         
+        @media (max-width: 768px) {
+            th, td {
+                padding: 10px;
+            }
+            .overall-result {
+                font-size: 1em;
+            }
+            .tag-details {
+                font-size: 0.8em;
+            }
+        }
+         
+        .dataTables_filter {
+            float: right;
+            text-align: right;
+        }
+        .dataTables_filter input {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Report: Do Nothing 🥱</h1>
+        <p><strong>Test ID:</strong> 5a015a6b-444b-4913-a20f-290bbdb86743</p>
+        <p><strong>Timestamp:</strong> 2025-02-03 21:15:45</p>
+        
+        <div class="overall-result pass">
+            Overall Result: PASS
+        </div>
+    
+        <h2>Tag Submissions</h2>
+        <table id="tagsTable">
+            <thead>
+                <tr>
+                    <th>Tag ID</th>
+                    <th>Description</th>
+                    <th>Comparison</th>
+                    <th>Submitted Value</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            </tbody>
+        </table>
+    
+        
+    </div>
+    
+    
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#tagsTable').DataTable({
+                "paging": true,
+                "searching": true,
+                "ordering": true,
+                "order": [],
+                "columnDefs": [
+                    { "orderable": true, "targets": "_all" }
+                ],
+                "language": {
+                    "search": "Filter records:"
+                }
+            });
+        });
+    </script>
+</body>
+</html>
