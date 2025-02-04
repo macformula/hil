@@ -139,6 +139,13 @@ func (t *Tracer) GetFileName() string {
 	return t.fileName
 }
 
+// SetTraceDir switches the directory where trace files are logged to
+func (t *Tracer) SetTraceDir(traceDir string) error {
+	t.traceDir = traceDir
+	err := t.createTraceFile()
+	return err
+}
+
 // close closes the trace file
 func (t *Tracer) close() error {
 	t.l.Info("closing trace file")

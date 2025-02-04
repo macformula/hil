@@ -15,6 +15,7 @@ type Config struct {
 		Veh string `yaml:"veh"`
 		Pt string `yaml:"pt"`
 	} `yaml:"canInterfaces"`
+	ResultsDir              string `yaml:"resultsDir"`
 	TraceDir                string `yaml:"traceDir"`
 	LogsDir                 string `yaml:"logsDir"`
 	ReportsDir              string `yaml:"reportsDir"`

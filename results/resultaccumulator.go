@@ -136,3 +136,7 @@ func (r *ResultAccumulator) CompleteTest(_ context.Context, testID uuid.UUID, se
 
 	return overallPassFail, nil
 }
+
+func (r *ResultAccumulator) SetReportsDir(reportsDir string) {
+	r.reportsDir = reportsDir
+}

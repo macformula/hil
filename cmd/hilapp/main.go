@@ -199,8 +199,8 @@ func main() {
 	// Create app object.
 	app := macformula.App{
 		Config:                cfg,
-		VehBusManager: vehBusManager,
-		PtBusManager: ptBusManager,
+		VehBusManager:         vehBusManager,
+		PtBusManager:          ptBusManager,
 		VehCanTracer:          vehCanTracer,
 		PtCanTracer:           ptCanTracer,
 		PinoutController:      pinoutController,

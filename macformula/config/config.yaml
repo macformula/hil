@@ -2,6 +2,7 @@ revision: "sil"
 canInterfaces:
   veh: "vcan0"
   pt: "vcan1"
+resultsDir: "/home/macformula/macfe/hil/macformula/results"
 traceDir: "/home/macformula/macfe/hil/macformula/results/traces"
 logsDir: "/home/macformula/macfe/hil/macformula/results/logs"
 reportsDir: "/home/macformula/macfe/hil/macformula/results/reports"
