@@ -1,5 +1,4 @@
-/reports/*
+/results/*
 /logs/*
-/traces/*
 
 historic_tests.json
