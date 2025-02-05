@@ -104,7 +104,7 @@ func main() {
 	logger.Info("hil app starting", zap.Any("config", cfg))
 
 	// Create result processor.
-	resultProcessor := results.NewResultAccumulator(logger, cfg.TagsFilePath, cfg.ReportsDir,
+	resultProcessor := results.NewResultAccumulator(logger, cfg.TagsFilePath,
 		results.NewHtmlReportGenerator())
 
 	// Create sequencer.
@@ -209,6 +209,7 @@ func main() {
 		FrontControllerClient: frontControllerClient,
 		VehCanClient:          vehCanClient,
 		PtCanClient:           ptCanClient,
+		ResultsProcessor:      resultProcessor,
 	}
 
 	// Create sequences.

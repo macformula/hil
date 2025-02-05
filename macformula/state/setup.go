@@ -6,7 +6,6 @@ import (
 	"time"
 	"os"
 
-	"github.com/macformula/hil/canlink"
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/macformula"
 	"go.uber.org/zap"
@@ -45,6 +44,7 @@ func (s *setup) Run(ctx context.Context) error {
 
 	s.app.VehCanTracer.SetTraceDir(sequenceResultsDir)
 	s.app.PtCanTracer.SetTraceDir(sequenceResultsDir)
+	s.app.ResultsProcessor.SetReportsDir(sequenceResultsDir)
 
 	s.app.VehBusManager.Register(s.app.VehCanTracer)
 	s.app.PtBusManager.Register(s.app.PtCanTracer)

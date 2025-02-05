@@ -136,7 +136,7 @@ func (t *Tracer) Name() string {
 
 // GetFileName simply returns the file name of the trace file this tracer is responsible for
 func (t *Tracer) GetFileName() string {
-	return t.fileName
+	return fmt.Sprintf("%s.%s", t.fileName, t.converter.GetFileExtension())
 }
 
 // SetTraceDir switches the directory where trace files are logged to
@@ -160,7 +160,7 @@ func (t *Tracer) close() error {
 
 // createEmptyTraceFile generates empty trace file given a file name
 func (t *Tracer) createEmptyTraceFile() (*os.File, error) {
-	file, err := os.Create(filepath.Join(t.traceDir, t.fileName))
+	file, err := os.Create(filepath.Join(t.traceDir, fmt.Sprintf("%s.%s", t.fileName, t.converter.GetFileExtension())))
 	if err != nil {
 		return nil, errors.Wrap(err, "create trace file")
 	}
@@ -174,16 +174,9 @@ func (t *Tracer) createTraceFile() error {
 		dateStr := time.Now().Format(_filenameDateFormat)
 		timeStr := time.Now().Format(_filenameTimeFormat)
 		t.fileName = fmt.Sprintf(
-			"%s_%s.%s",
+			"%s_%s",
 			dateStr,
 			timeStr,
-			t.converter.GetFileExtension(),
-		)
-	} else {
-		t.fileName = fmt.Sprintf(
-			"%s.%s",
-			t.fileName,
-			t.converter.GetFileExtension(),
 		)
 	}
 

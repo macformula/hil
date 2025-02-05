@@ -16,9 +16,7 @@ type Config struct {
 		Pt string `yaml:"pt"`
 	} `yaml:"canInterfaces"`
 	ResultsDir              string `yaml:"resultsDir"`
-	TraceDir                string `yaml:"traceDir"`
 	LogsDir                 string `yaml:"logsDir"`
-	ReportsDir              string `yaml:"reportsDir"`
 	TagsFilePath            string `yaml:"tagsFilePath"`
 	CanTracerTimeoutMinutes int    `yaml:"canTracerTimeoutMinutes"`
 	SilPort                 int    `yaml:"silPort"`

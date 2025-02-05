@@ -2,9 +2,10 @@ package results
 
 import (
 	"context"
-	"go.uber.org/zap"
 	"os"
 	"strings"
+
+	"go.uber.org/zap"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -32,13 +33,13 @@ type TagSubmission struct {
 	IsPassing bool
 }
 
-func NewResultAccumulator(l *zap.Logger, tagsFP, reportsDir string, generators ...Generator) *ResultAccumulator {
+func NewResultAccumulator(l *zap.Logger, tagsFP string, generators ...Generator) *ResultAccumulator {
 	return &ResultAccumulator{
 		l:                l.Named(_loggerName),
 		tagSubmissions:   make(map[string]TagSubmission),
 		errorSubmissions: []error{},
 		tagsFP:           tagsFP,
-		reportsDir:       reportsDir,
+		reportsDir:       "",
 		allTagsPassing:   true,
 		generators:       generators,
 	}
