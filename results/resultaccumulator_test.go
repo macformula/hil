@@ -3,11 +3,12 @@ package results
 import (
 	"context"
 	"fmt"
-	"go.uber.org/zap"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -22,15 +23,13 @@ var deleteTestFolders = true
 type testSetup struct {
 	tempDir         string
 	tagsFile        string
-	reportsDir      string
+	resultsDir      string
 	ra              *ResultAccumulator
 }
 
 func setupTest(t *testing.T) testSetup {
-	currentDir, err := os.Getwd()
-	require.NoError(t, err)
-	tempDir := filepath.Join(currentDir, "resultaccumulator_test_"+time.Now().Format("2006-01-02_15-04-05"))
-	err = os.MkdirAll(tempDir, 0755)
+	tempDir := filepath.Join("resultaccumulator_test_"+time.Now().Format("2006-01-02_15-04-05"))
+	err := os.Mkdir(tempDir, 0755)
 	require.NoError(t, err)
 
 	t.Logf("Test files created in: %s", tempDir)
@@ -39,20 +38,21 @@ func setupTest(t *testing.T) testSetup {
 		t.Cleanup(func() { os.RemoveAll(tempDir) })
 	}
 
-	tagsFile := filepath.Join(currentDir, "testtags.yaml")
-	reportsDir := filepath.Join(tempDir, "reports")
+	tagsFile := "testtags.yaml"
+	resultsDir := filepath.Join(tempDir, "test_results")
 
 	// Create the reports directory
-	err = os.MkdirAll(reportsDir, 0755)
+	err = os.Mkdir(resultsDir, 0755)
 	require.NoError(t, err)
 
 	htmlGenerator := NewHtmlReportGenerator()
 	ra := NewResultAccumulator(zap.NewNop(), tagsFile, htmlGenerator)
+	ra.SetReportsDir(resultsDir)
 
 	return testSetup{
 		tempDir:         tempDir,
 		tagsFile:        tagsFile,
-		reportsDir:      reportsDir,
+		resultsDir:      resultsDir,
 		ra:              ra,
 	}
 }
@@ -157,7 +157,7 @@ func TestResultAccumulatorCompleteTest(t *testing.T) {
 	assert.False(t, overallPassFail)
 
 	t.Run("HtmlReportGeneration", func(t *testing.T) {
-		htmlReportPath := filepath.Join(setup.reportsDir, fmt.Sprintf("report_%s_%s.html", sequenceName, testID.String()))
+		htmlReportPath := filepath.Join(setup.resultsDir, fmt.Sprintf("report_%s_%s.html", sequenceName, testID.String()))
 		_, err := os.Stat(htmlReportPath)
 		assert.NoError(t, err, "HTML report should exist")
 
@@ -181,7 +181,7 @@ func TestResultAccumulatorCompleteTest(t *testing.T) {
 func TestResultAccumulatorEdgeCases(t *testing.T) {
 	t.Run("NonExistentTagsFile", func(t *testing.T) {
 		setup := setupTest(t)
-		ra := NewResultAccumulator(zap.NewNop(), "non_existent_file.yaml", setup.reportsDir)
+		ra := NewResultAccumulator(zap.NewNop(), "non_existent_file.yaml", setup.ra.generators...)
 		err := ra.Open(context.Background())
 		assert.Error(t, err)
 	})
@@ -194,7 +194,7 @@ func TestResultAccumulatorEdgeCases(t *testing.T) {
 		err := os.WriteFile(invalidTagsFile, []byte("invalid yaml"), 0644)
 		require.NoError(t, err)
 
-		ra := NewResultAccumulator(zap.NewNop(), invalidTagsFile, setup.reportsDir)
+		ra := NewResultAccumulator(zap.NewNop(), invalidTagsFile, setup.ra.generators...)
 		err = ra.Open(context.Background())
 		assert.Error(t, err)
 	})
@@ -242,7 +242,7 @@ func TestResultAccumulatorSubmitTagAndCompleteTestPass(t *testing.T) {
 	assert.True(t, overallPassFail)
 
 	t.Run("HtmlReportGeneration", func(t *testing.T) {
-		htmlReportPath := filepath.Join(setup.reportsDir, fmt.Sprintf("report_%s_%s.html", sequenceName, testID.String()))
+		htmlReportPath := filepath.Join(setup.resultsDir, fmt.Sprintf("report_%s_%s.html", sequenceName, testID.String()))
 		_, err := os.Stat(htmlReportPath)
 		assert.NoError(t, err, "HTML report should exist")
 
@@ -306,7 +306,7 @@ func TestResultAccumulatorSubmitTagAndCompleteTestFail(t *testing.T) {
 	assert.False(t, overallPassFail)
 
 	t.Run("HtmlReportGeneration", func(t *testing.T) {
-		htmlReportPath := filepath.Join(setup.reportsDir, fmt.Sprintf("report_%s_%s.html", sequenceName, testID.String()))
+		htmlReportPath := filepath.Join(setup.resultsDir, fmt.Sprintf("report_%s_%s.html", sequenceName, testID.String()))
 		_, err := os.Stat(htmlReportPath)
 		assert.NoError(t, err, "HTML report should exist")
 
