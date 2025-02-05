@@ -47,7 +47,7 @@ func setupTest(t *testing.T) testSetup {
 	require.NoError(t, err)
 
 	htmlGenerator := NewHtmlReportGenerator()
-	ra := NewResultAccumulator(zap.NewNop(), tagsFile, reportsDir, htmlGenerator)
+	ra := NewResultAccumulator(zap.NewNop(), tagsFile, htmlGenerator)
 
 	return testSetup{
 		tempDir:         tempDir,

@@ -53,11 +53,12 @@ func newTracerSequence(a *macformula.App, l *zap.Logger) flow.Sequence {
 	}
 }
 
-func newDoNothingSequence(_ *macformula.App, _ *zap.Logger) flow.Sequence {
+func newDoNothingSequence(a *macformula.App, l *zap.Logger) flow.Sequence {
 	return flow.Sequence{
 		Name: "Do Nothing 🥱",
 		Desc: "Wow... it does nothing",
 		States: []flow.State{
+			newSetup(a, l),
 			newNothing(),
 			newNothing(),
 			newNothing(),
@@ -65,19 +66,22 @@ func newDoNothingSequence(_ *macformula.App, _ *zap.Logger) flow.Sequence {
 			newNothing(),
 			newNothing(),
 			newNothing(),
+			newCleanup(a, l),
 		},
 	}
 }
 
-func newSleepSequence(_ *macformula.App, _ *zap.Logger) flow.Sequence {
+func newSleepSequence(a *macformula.App, l *zap.Logger) flow.Sequence {
 	return flow.Sequence{
 		Name: "Sleeper 💤",
 		Desc: "zzz",
 		States: []flow.State{
+			newSetup(a, l),
 			newSleep(1 * time.Second),
 			newSleep(5 * time.Second),
 			newSleep(2 * time.Second),
 			newSleep(1 * time.Second),
+			newCleanup(a, l),
 		},
 	}
 }
