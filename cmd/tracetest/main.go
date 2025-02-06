@@ -1,7 +1,5 @@
 package main
 
-// THIS FILE IS NOT UP TO DATE
-
 import (
 	"context"
 	"os"
