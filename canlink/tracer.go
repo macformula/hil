@@ -3,8 +3,8 @@ package canlink
 import (
 	"fmt"
 	"os"
-	"time"
 	"path/filepath"
+	"time"
 
 	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
@@ -35,7 +35,7 @@ type Tracer struct {
 	err *utils.ResettableError
 
 	converter Converter
-	traceDir string
+	traceDir  string
 	traceFile *os.File
 	fileName  string
 
@@ -139,7 +139,7 @@ func (t *Tracer) GetFileName() string {
 	return fmt.Sprintf("%s.%s", t.fileName, t.converter.GetFileExtension())
 }
 
-// SetTraceDir switches the directory where trace files are logged to
+// SetTraceDir changes the directory where trace files are logged to and creates a new trace file
 func (t *Tracer) SetTraceDir(traceDir string) error {
 	t.traceDir = traceDir
 	err := t.createTraceFile()

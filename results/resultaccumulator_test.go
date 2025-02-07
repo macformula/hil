@@ -21,14 +21,14 @@ import (
 var deleteTestFolders = true
 
 type testSetup struct {
-	tempDir         string
-	tagsFile        string
-	resultsDir      string
-	ra              *ResultAccumulator
+	tempDir    string
+	tagsFile   string
+	resultsDir string
+	ra         *ResultAccumulator
 }
 
 func setupTest(t *testing.T) testSetup {
-	tempDir := filepath.Join("resultaccumulator_test_"+time.Now().Format("2006-01-02_15-04-05"))
+	tempDir := filepath.Join("resultaccumulator_test_" + time.Now().Format("2006-01-02_15-04-05"))
 	err := os.Mkdir(tempDir, 0755)
 	require.NoError(t, err)
 
@@ -50,10 +50,10 @@ func setupTest(t *testing.T) testSetup {
 	ra.SetReportsDir(resultsDir)
 
 	return testSetup{
-		tempDir:         tempDir,
-		tagsFile:        tagsFile,
-		resultsDir:      resultsDir,
-		ra:              ra,
+		tempDir:    tempDir,
+		tagsFile:   tagsFile,
+		resultsDir: resultsDir,
+		ra:         ra,
 	}
 }
 

@@ -171,7 +171,7 @@ func (o *Orchestrator) Close() error {
 	var resettableErr = utils.NewResettaleError()
 
 	o.l.Info("closing orchestrator")
-	
+
 	for i, d := range o.dispatchers {
 		err := d.Close()
 		if err != nil {

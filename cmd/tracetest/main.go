@@ -40,8 +40,6 @@ const (
 	_packCurrentIncrPerSec   = 5 // amps per second
 )
 
-
-
 func main() {
 	ctx := context.Background()
 
@@ -78,7 +76,7 @@ func main() {
 	manager.Register(tracerText)
 
 	manager.Start(ctx)
-	time.Sleep(10*time.Second)
+	time.Sleep(10 * time.Second)
 
 	manager.Stop()
 

@@ -10,10 +10,10 @@ import (
 
 // Config holds configuration variables for the HIL setup
 type Config struct {
-	Revision                string `yaml:"revision"`
+	Revision      string `yaml:"revision"`
 	CanInterfaces struct {
-		Veh                 string `yaml:"veh"`
-		Pt                   string `yaml:"pt"`
+		Veh string `yaml:"veh"`
+		Pt  string `yaml:"pt"`
 	} `yaml:"canInterfaces"`
 	ResultsDir              string `yaml:"resultsDir"`
 	LogsDir                 string `yaml:"logsDir"`
