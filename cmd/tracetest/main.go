@@ -49,6 +49,9 @@ func main() {
 
 	loggerConfig := zap.NewDevelopmentConfig()
 	logger, err := loggerConfig.Build()
+	if err != nil {
+		logger.Error("failed to create logger")
+	}
 
 	conn, err := socketcan.DialContext(context.Background(), "can", _canIface)
 	if err != nil {
@@ -102,7 +105,7 @@ func waitForSigTerm(stop chan struct{}, logger *zap.Logger) {
 }
 
 func startSendMessageRoutine(
-	ctx context.Context, stop chan struct{}, msgPeriod time.Duration, cc *canlink.CanClient, l *zap.Logger) {
+	ctx context.Context, stop chan struct{}, msgPeriod time.Duration, bm *canlink.BusManager, l *zap.Logger) {
 	packState := vehcan.NewPack_State()
 	packState.SetPopulated_Cells(_numCells)
 	packState.SetPack_Current(0)
@@ -144,14 +147,14 @@ func startSendMessageRoutine(
 				packState.SetPack_Current(0)
 			}
 
-			err := cc.Send(ctx, packState)
+			err := bm.Send(ctx, packState)
 			if err != nil {
 				l.Error("failed to send pack state", zap.Error(err))
 
 				return
 			}
 
-			err = cc.Send(ctx, ctrStates)
+			err = bm.Send(ctx, ctrStates)
 			if err != nil {
 				l.Error("failed to send contactor states", zap.Error(err))
 

@@ -15,7 +15,7 @@ type Config struct {
 	PtCanInterface          string `yaml:"ptCanInterface"`
 	TraceDir                string `yaml:"traceDir"`
 	LogsDir                 string `yaml:"logsDir"`
-	ResultsDir              string `yaml:"resultsDir"`
+	ReportsDir              string `yaml:"reportsDir"`
 	TagsFilePath            string `yaml:"tagsFilePath"`
 	HistoricTestsFilePath   string `yaml:"historicTestsFilePath"`
 	CanTracerTimeoutMinutes int    `yaml:"canTracerTimeoutMinutes"`

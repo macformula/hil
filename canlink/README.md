@@ -1,7 +1,7 @@
 canlink
 ======================
 
-`canlink` contains utilities for managing CAN traffic for the duration of a HIL test.
+`canlink` contains utilities for managing CAN traffic for the duration of a HIL test. 
 
 BusManager
 ---------------
@@ -14,7 +14,7 @@ Tracer
 Tracer takes in a struct that must implement the `Converter` interface.
 A `Converter` must have a method `GetFileExtension` to return the proper file extension and `FrameToString` to convert a frame to a string. Currently implemented converters support `Jsonl` (https://jsonlines.org/) and `Text` for basic text logging.
 
-__NOTE: If seeking to trace traffic into an unsupported format, implement a converter for that specific format.__
+__NOTE: If seeking to trace traffic into an unsupported format, implement a `Converter` for that specific format.__
 
 Handler
 ---------------
@@ -69,7 +69,7 @@ Functional options are available of type `TracerOption` if required.
     }
     ```
 
-5) Call `manager.Start` to start the traffic broadcast and incoming frame listener for each of the registered handlers. This will also run the `Handle` method on all registered `Handler`'s.
+5) Call `manager.Start` to start the traffic broadcast and incoming frame listener for each of the registered handlers. This will also run the `Handle` method on all registered `Handler`'s. The `manager` will now listen for CAN frames and automatically transmit them to registered `Handler`'s.
 
     ```go
     func main() {
@@ -77,11 +77,18 @@ Functional options are available of type `TracerOption` if required.
         defer manager.Close()
     }
     ```
-5) Use the `Send` method on the bus manager to transmit frames onto the CAN bus.
+5) The `Send` method on the bus manager can be used to transmit frames onto the CAN bus.
 
     ```go
     func main() {
         manager.Send(frame)
+    }
+    ```
+6) Use the `Stop` method to close all registered handlers. If seeking to stop and start the manager, handlers will have to be instantiated and registered with the bus manager before calling `manager.Start` again.
+
+    ```go
+    func main() {
+        manager.Stop()
     }
     ```
 

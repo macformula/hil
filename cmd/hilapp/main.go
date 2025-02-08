@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"time"
+	"os"
 
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
@@ -18,8 +19,6 @@ import (
 	"github.com/macformula/hil/iocontrol"
 	"github.com/macformula/hil/iocontrol/sil"
 	"github.com/macformula/hil/macformula"
-	"github.com/macformula/hil/macformula/cangen/ptcan"
-	"github.com/macformula/hil/macformula/cangen/vehcan"
 	"github.com/macformula/hil/macformula/config"
 	"github.com/macformula/hil/macformula/ecu/frontcontroller"
 	"github.com/macformula/hil/macformula/ecu/lvcontroller"
@@ -88,9 +87,14 @@ func main() {
 			cfg.Revision, pinout.RevisionStrings()))
 	}
 
+	workingDir, err := os.Getwd()
+	if err != nil {
+		panic(errors.Errorf("could not get working dir"))
+	}
+
 	// Create Logger.
 	logFileName := fmt.Sprintf(_logFileFormat, time.Now().Format(_timeFormat))
-	logFilePath := filepath.Join(cfg.LogsDir, logFileName)
+	logFilePath := filepath.Join(workingDir, cfg.LogsDir, logFileName)
 
 	loggerConfig := zap.NewDevelopmentConfig()
 	loggerConfig.OutputPaths = []string{logFilePath}
@@ -104,7 +108,7 @@ func main() {
 	logger.Info("hil app starting", zap.Any("config", cfg))
 
 	// Create result processor.
-	resultProcessor := results.NewResultAccumulator(logger, cfg.TagsFilePath, cfg.HistoricTestsFilePath, cfg.ResultsDir,
+	resultProcessor := results.NewResultAccumulator(logger, filepath.Join(workingDir, cfg.TagsFilePath), filepath.Join(workingDir, cfg.HistoricTestsFilePath), filepath.Join(workingDir, cfg.ReportsDir),
 		results.NewHtmlReportGenerator())
 
 	// Create sequencer.
@@ -136,8 +140,9 @@ func main() {
 		cfg.VehCanInterface,
 		logger,
 		&canlink.Jsonl{},
-		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
+		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes) * time.Minute),
 		canlink.WithFileName(_vehCan),
+		canlink.WithTraceDir(cfg.TraceDir),
 	)
 
 	ptCanTracer := canlink.NewTracer(
@@ -146,6 +151,7 @@ func main() {
 		&canlink.Jsonl{},
 		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
 		canlink.WithFileName(_ptCan),
+		canlink.WithTraceDir(cfg.TraceDir),
 	)
 
 	// Get controllers
@@ -182,31 +188,23 @@ func main() {
 	// Create testbench controller.
 	testBench := macformula.NewTestBench(pinoutController, logger)
 
-	// Create veh can client.
-	vehCanClient := canlink.NewCanClient(vehcan.Messages(), vehCanConn, logger)
-
-	// Create pt can client.
-	ptCanClient := canlink.NewCanClient(ptcan.Messages(), ptCanConn, logger)
-
 	// Create Lv Controller client.
 	lvControllerClient := lvcontroller.NewClient(pinoutController, logger)
 
 	// Create Front Controller client.
-	frontControllerClient := frontcontroller.NewClient(pinoutController, vehCanClient, logger)
+	frontControllerClient := frontcontroller.NewClient(pinoutController, vehBusManager, logger)
 
 	// Create app object.
 	app := macformula.App{
 		Config:                cfg,
-		VehBusManager: vehBusManager,
-		PtBusManager: ptBusManager,
+		VehBusManager: 		   vehBusManager,
+		PtBusManager:          ptBusManager,
 		VehCanTracer:          vehCanTracer,
 		PtCanTracer:           ptCanTracer,
 		PinoutController:      pinoutController,
 		TestBench:             testBench,
 		LvControllerClient:    lvControllerClient,
 		FrontControllerClient: frontControllerClient,
-		VehCanClient:          vehCanClient,
-		PtCanClient:           ptCanClient,
 	}
 
 	// Create sequences.

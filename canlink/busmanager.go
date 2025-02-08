@@ -8,8 +8,10 @@ import (
 	"sync"
 	"time"
 
+	"go.einride.tech/can/pkg/generated"
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
+	"github.com/pkg/errors"
 )
 
 // Default buffered channel length for the broadcast and
@@ -162,7 +164,7 @@ func (b *BusManager) Start(ctx context.Context) {
 
 // Stop the traffic broadcast and incoming frame listener.
 //
-// Preserves registered handlers and their assosciated channels.
+// Closes all registered handlers.
 func (b *BusManager) Stop() {
 	if !b.isRunning {
 		b.l.Warn("bus manager is already stopped")
@@ -196,8 +198,18 @@ func (b *BusManager) Close() error {
 }
 
 // Send transmits frames onto the connection.
-func (b *BusManager) Send(ctx context.Context, frame *TimestampedFrame) {
-	b.transmitter.TransmitFrame(ctx, frame.Frame)
+func (b *BusManager) Send(ctx context.Context, msg generated.Message) error {
+	frame, err := msg.MarshalFrame()
+	if err != nil {
+		return errors.Wrap(err, "marshal frame")
+	}
+
+	err = b.transmitter.TransmitFrame(ctx, frame)
+	if err != nil {
+		return errors.Wrap(err, "transmit frame")
+	}
+
+	return nil
 }
 
 func (b *BusManager) broadcast(ctx context.Context) {
