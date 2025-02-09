@@ -149,13 +149,13 @@ func (t *Tracer) close() error {
 	return nil
 }
 
-// createEmptyTraceFile generates empty trace file given a file name
-func (t *Tracer) createEmptyTraceFile() (*os.File, error) {
-	file, err := os.Create(filepath.Join(t.traceDir, fmt.Sprintf("%s.%s", t.fileName, t.converter.GetFileExtension())))
+// createEmptyTraceFile generates empty trace file
+func (t *Tracer) createEmptyTraceFile(fileName string) (*os.File, error) {
+	file, err := os.Create(filepath.Join(t.traceDir, fmt.Sprintf("%s.%s", fileName, t.converter.GetFileExtension())))
 	if err != nil {
+		t.l.Info(fmt.Sprintf("cannot create trace file (%s/%s.%s)", t.traceDir, t.fileName, t.converter.GetFileExtension()))
 		return nil, errors.Wrap(err, "create trace file")
 	}
-
 	return file, nil
 }
 
@@ -164,19 +164,22 @@ func (t *Tracer) createTraceFile() error {
 	if t.fileName == _defaultFileName {
 		dateStr := time.Now().Format(_filenameDateFormat)
 		timeStr := time.Now().Format(_filenameTimeFormat)
-		t.fileName = fmt.Sprintf(
+		fileName := fmt.Sprintf(
 			"%s_%s",
 			dateStr,
 			timeStr,
 		)
-	}
-
-	file, err := t.createEmptyTraceFile()
-	t.traceFile = file
-
-	if err != nil {
-		t.l.Info("cannot create trace file")
-		return errors.Wrap(err, "creating trace file")
+		file, err := t.createEmptyTraceFile(fileName)
+		if err != nil {
+			return err
+		}
+		t.traceFile = file
+	} else {
+		file, err := t.createEmptyTraceFile(t.fileName)
+		if err != nil {
+			return err
+		}
+		t.traceFile = file
 	}
 
 	return nil
