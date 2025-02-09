@@ -113,10 +113,7 @@ nav:
     - index.md
   - Tutorials:
     - tutorials/index.md
-    # - tutorials/git.md
-    - tutorials/site-dev.md
-    - tutorials/wsl-can/index.md
-    - tutorials/ssh-signing/index.md
+    - tutorials/quickstart/index.md
   - Firmware:
     - firmware/index.md
     - firmware/dev-setup.md
