@@ -20,15 +20,15 @@ const (
 type Client struct {
 	l             *zap.Logger
 	pinController *pinout.Controller
-	vehCanClient  *canlink.CanClient
+	vehBusManager  *canlink.BusManager
 }
 
 // NewClient creates a new front controller client.
-func NewClient(pc *pinout.Controller, veh *canlink.CanClient, l *zap.Logger) *Client {
+func NewClient(pc *pinout.Controller, veh *canlink.BusManager, l *zap.Logger) *Client {
 	return &Client{
 		l:             l.Named(_clientName),
 		pinController: pc,
-		vehCanClient:  veh,
+		vehBusManager:  veh,
 	}
 }
 
@@ -41,7 +41,7 @@ func (c *Client) CommandContactors(ctx context.Context, hvPositive, hvNegative, 
 	contactorCommand.SetPackNegative(utils.BoolToNumeric(hvNegative))
 	contactorCommand.SetPackPrecharge(utils.BoolToNumeric(precharge))
 
-	err := c.vehCanClient.Send(ctx, contactorCommand)
+	err := c.vehBusManager.Send(ctx, contactorCommand)
 	if err != nil {
 		return errors.Wrap(err, "veh can client send")
 	}
@@ -55,7 +55,7 @@ func (c *Client) CommandInverter(ctx context.Context, enable bool) error {
 
 	inverterCommand.SetEnableInverter(enable)
 
-	err := c.vehCanClient.Send(ctx, inverterCommand)
+	err := c.vehBusManager.Send(ctx, inverterCommand)
 	if err != nil {
 		return errors.Wrap(err, "veh can client send")
 	}
