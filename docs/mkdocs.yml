@@ -37,6 +37,7 @@ copyright: Copyright &copy; McMaster Formula Electric
 
 plugins:
   - search
+  - open-in-new-tab
   - spellcheck:
       backends:  # the backends you want to use
       - symspellpy  # as strings
@@ -114,15 +115,11 @@ nav:
   - Tutorials:
     - tutorials/index.md
     - tutorials/quickstart/index.md
-  - Firmware:
-    - firmware/index.md
-    - firmware/dev-setup.md
-    - firmware/architecture/index.md
-    - firmware/project-structure/index.md
-    - firmware/compile-project.md
-    - firmware/flashing/index.md
-    - firmware/hw-debug.md
-    - firmware/can-traffic/index.md
+  - Mac Formula:
+    - macfe/index.md
+    - macfe/setup.md
+    - macfe/config.md
+    - macfe/run.md
   - Glossary: glossary.md
 
 watch:
