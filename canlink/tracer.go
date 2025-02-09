@@ -14,6 +14,7 @@ import (
 
 const (
 	_defaultTimeout    = 30 * time.Minute
+	_defaultFileName = ""
 	_frameBufferLength = 10
 	_loggerName        = "can_tracer"
 
@@ -33,6 +34,7 @@ type Tracer struct {
 	err *utils.ResettableError
 
 	converter Converter
+	fileName string
 	traceDir  string
 	traceFile *os.File
 
@@ -45,7 +47,6 @@ func NewTracer(
 	canInterface string,
 	l *zap.Logger,
 	converter Converter,
-	tracePath string,
 	opts ...TracerOption) *Tracer {
 
 	tracer := &Tracer{
@@ -53,7 +54,6 @@ func NewTracer(
 		err:          utils.NewResettaleError(),
 		timeout:      _defaultTimeout,
 		canInterface: canInterface,
-		tracePath:     tracePath,
 		converter:    converter,
 	}
 
@@ -68,6 +68,13 @@ func NewTracer(
 func WithTimeout(timeout time.Duration) TracerOption {
 	return func(t *Tracer) {
 		t.timeout = timeout
+	}
+}
+
+// WithFileName sets the filename for the tracer
+func WithFileName(fileName string) TracerOption {
+	return func(t *Tracer) {
+		t.fileName = fileName
 	}
 }
 
@@ -115,7 +122,7 @@ func (t *Tracer) Handle(broadcastChan chan TimestampedFrame, stopChan chan struc
 // Name returns the name of the handler.
 // This value is only used for error logging
 func (t *Tracer) Name() string {
-	return fmt.Sprintf("Tracer (%s)", t.tracePath)
+	return fmt.Sprintf("Tracer (%s/%s.%s)", t.traceDir, t.fileName, t.converter.GetFileExtension())
 }
 
 // GetFileName simply returns the file name of the trace file this tracer is responsible for

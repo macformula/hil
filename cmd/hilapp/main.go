@@ -197,8 +197,6 @@ func main() {
 		TestBench:             testBench,
 		LvControllerClient:    lvControllerClient,
 		FrontControllerClient: frontControllerClient,
-		VehCanClient:          vehCanClient,
-		PtCanClient:           ptCanClient,
 		ResultsProcessor:      resultProcessor,
 	}
 
