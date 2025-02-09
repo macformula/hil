@@ -162,7 +162,7 @@ func (b *BusManager) Start(ctx context.Context) {
 
 // Stop the traffic broadcast and incoming frame listener.
 //
-// Preserves registered handlers and their assosciated channels.
+// Closes all registered handlers.
 func (b *BusManager) Stop() {
 	if !b.isRunning {
 		b.l.Warn("bus manager is already stopped")

@@ -2,11 +2,10 @@ package results
 
 import (
 	"context"
-	"encoding/json"
-	"go.uber.org/zap"
 	"os"
 	"strings"
-	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -22,7 +21,6 @@ type ResultAccumulator struct {
 	tagDB            map[string]Tag
 	tagSubmissions   map[string]TagSubmission
 	errorSubmissions []error
-	historicTestsFP  string
 	tagsFP           string
 	reportsDir       string
 	allTagsPassing   bool
@@ -35,14 +33,13 @@ type TagSubmission struct {
 	IsPassing bool
 }
 
-func NewResultAccumulator(l *zap.Logger, tagsFP, historicTestsFP, reportsDir string, generators ...Generator) *ResultAccumulator {
+func NewResultAccumulator(l *zap.Logger, tagsFP string, generators ...Generator) *ResultAccumulator {
 	return &ResultAccumulator{
 		l:                l.Named(_loggerName),
 		tagSubmissions:   make(map[string]TagSubmission),
 		errorSubmissions: []error{},
-		historicTestsFP:  historicTestsFP,
 		tagsFP:           tagsFP,
-		reportsDir:       reportsDir,
+		reportsDir:       "",
 		allTagsPassing:   true,
 		generators:       generators,
 	}
@@ -117,13 +114,7 @@ func (r *ResultAccumulator) SubmitError(_ context.Context, err error) error {
 }
 
 func (r *ResultAccumulator) CompleteTest(_ context.Context, testID uuid.UUID, sequenceName string) (bool, error) {
-	dateTime := time.Now().Format("2006-01-02_15-04-05")
-
 	overallPassFail := r.allTagsPassing && len(r.errorSubmissions) == 0
-
-	if err := r.updateHistoricTests(testID.String(), sequenceName, dateTime, overallPassFail); err != nil {
-		return false, errors.Wrap(err, "failed to update historic tests")
-	}
 
 	for _, generator := range r.generators {
 		err := generator.Generate(
@@ -147,55 +138,6 @@ func (r *ResultAccumulator) CompleteTest(_ context.Context, testID uuid.UUID, se
 	return overallPassFail, nil
 }
 
-func (r *ResultAccumulator) updateHistoricTests(testID, sequenceName, dt string, testPassed bool) error {
-	ymd, hms, _ := strings.Cut(dt, "_")
-
-	newTest := map[string]any{
-		"testId":       testID,
-		"sequenceName": sequenceName,
-		"testPassed":   testPassed,
-		"date":         ymd,
-		"time":         hms,
-	}
-
-	existingTests, err := r.loadExistingTests()
-	if err != nil {
-		return err
-	}
-
-	updatedTests := append([]map[string]any{newTest}, existingTests...)
-
-	return r.saveUpdatedTests(updatedTests)
-}
-
-func (r *ResultAccumulator) loadExistingTests() ([]map[string]any, error) {
-	data, err := os.ReadFile(r.historicTestsFP)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return []map[string]any{}, nil
-		}
-		return nil, errors.Wrap(err, "failed to read historic tests file")
-	}
-
-	var existingTests []map[string]any
-	err = json.Unmarshal(data, &existingTests)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to unmarshal historic tests")
-	}
-
-	return existingTests, nil
-}
-
-func (r *ResultAccumulator) saveUpdatedTests(updatedTests []map[string]any) error {
-	data, err := json.MarshalIndent(updatedTests, "", "  ")
-	if err != nil {
-		return errors.Wrap(err, "failed to marshal updated tests")
-	}
-
-	err = os.WriteFile(r.historicTestsFP, data, 0644)
-	if err != nil {
-		return errors.Wrap(err, "failed to write updated tests to file")
-	}
-
-	return nil
+func (r *ResultAccumulator) SetReportsDir(reportsDir string) {
+	r.reportsDir = reportsDir
 }

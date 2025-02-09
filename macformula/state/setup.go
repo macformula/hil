@@ -2,10 +2,13 @@ package state
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/macformula/hil/flow"
 	"github.com/macformula/hil/macformula"
 	"go.uber.org/zap"
-	"time"
 )
 
 const (
@@ -35,6 +38,13 @@ func (s *setup) Setup(ctx context.Context) error {
 
 func (s *setup) Run(ctx context.Context) error {
 	s.app.CurrProcess = macformula.NewProcessInfo()
+
+	sequenceResultsDir := filepath.Join(s.app.Config.ResultsDir, time.Now().Format("15:04:05.0000"))
+	os.Mkdir(sequenceResultsDir, 0755)
+
+	s.app.VehCanTracer.SetTraceDir(sequenceResultsDir)
+	s.app.PtCanTracer.SetTraceDir(sequenceResultsDir)
+	s.app.ResultsProcessor.SetReportsDir(sequenceResultsDir)
 
 	s.app.VehBusManager.Register(s.app.VehCanTracer)
 	s.app.PtBusManager.Register(s.app.PtCanTracer)
