@@ -136,7 +136,7 @@ var LvStartupTags = LvStartupTagCollection{
 	},
 	ShutdownCircuitTimeToEnable: flow.Tag{
 		ID:          "LVSTART019",
-		Description: " Shutdown circuit time to enable after contactos commanded open (ms).",
+		Description: " Shutdown circuit time to enable after contactors commanded open (ms).",
 	},
 	DcdcEnabledBeforeContactorsClosed: flow.Tag{
 		ID:          "LVSTART020",

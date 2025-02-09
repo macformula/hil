@@ -20,7 +20,7 @@ const (
 type Client struct {
 	l             *zap.Logger
 	pinController *pinout.Controller
-	vehBusManager  *canlink.BusManager
+	vehBusManager *canlink.BusManager
 }
 
 // NewClient creates a new front controller client.
@@ -28,7 +28,7 @@ func NewClient(pc *pinout.Controller, veh *canlink.BusManager, l *zap.Logger) *C
 	return &Client{
 		l:             l.Named(_clientName),
 		pinController: pc,
-		vehBusManager:  veh,
+		vehBusManager: veh,
 	}
 }
 
