@@ -14,7 +14,7 @@ import (
 
 const (
 	_defaultTimeout    = 30 * time.Minute
-	_defaultFileName = ""
+	_defaultFileName   = ""
 	_frameBufferLength = 10
 	_loggerName        = "can_tracer"
 
@@ -34,7 +34,7 @@ type Tracer struct {
 	err *utils.ResettableError
 
 	converter Converter
-	fileName string
+	fileName  string
 	traceDir  string
 	traceFile *os.File
 

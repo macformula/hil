@@ -134,7 +134,7 @@ func main() {
 		cfg.CanInterfaces.Veh,
 		logger,
 		&canlink.Jsonl{},
-		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes) * time.Minute),
+		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
 		canlink.WithFileName(_vehCan),
 	)
 

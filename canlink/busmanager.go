@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
 	"go.einride.tech/can/pkg/generated"
 	"go.einride.tech/can/pkg/socketcan"
 	"go.uber.org/zap"
-	"github.com/pkg/errors"
 )
 
 // Default buffered channel length for the broadcast and

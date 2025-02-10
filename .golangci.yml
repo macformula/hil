@@ -1,140 +1,140 @@
-#linters-settings:
-#  depguard:
-#    # new configuration
-#    rules:
-#      logger:
-#        deny:
-#          # logging is allowed only by logutils.Log,
-#          # logrus is allowed to use only in logutils package.
-#          - pkg: "github.com/sirupsen/logrus"
-#            desc: logging is allowed only by logutils.Log
-#  dupl:
-#    threshold: 100
-#  funlen:
-#    lines: -1 # the number of lines (code + empty lines) is not a right metric and leads to code without empty line or one-liner.
-#    statements: 50
-#  goconst:
-#    min-len: 2
-#    min-occurrences: 3
-#  gocritic:
-#    enabled-tags:
-#      - diagnostic
-#      - experimental
-#      - opinionated
-#      - performance
-#      - style
-#    disabled-checks:
-#      - dupImport # https://github.com/go-critic/go-critic/issues/845
-#      - ifElseChain
-#      - octalLiteral
-#      - whyNoLint
-#  gocyclo:
-#    min-complexity: 15
-#  gofmt:
-#    rewrite-rules:
-#      - pattern: 'interface{}'
-#        replacement: 'any'
-#  goimports:
-#    local-prefixes: github.com/golangci/golangci-lint
-#  gomnd:
-#    # don't include the "operation" and "assign"
-#    checks:
-#      - argument
-#      - case
-#      - condition
-#      - return
-#    ignored-numbers:
-#      - '0'
-#      - '1'
-#      - '2'
-#      - '3'
-#    ignored-functions:
-#      - strings.SplitN
-#
-#  govet:
-#    check-shadowing: true
-#    settings:
-#      printf:
-#        funcs:
-#          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
-#          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
-#          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
-#          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
-#  errorlint:
-#    asserts: false
-#  lll:
-#    line-length: 140
-#  misspell:
-#    locale: US
-#  nolintlint:
-#    allow-unused: false # report any unused nolint directives
-#    require-explanation: false # don't require an explanation for nolint directives
-#    require-specific: false # don't require nolint directives to be specific about which linter is being skipped
-#  revive:
-#    rules:
-#      - name: unexported-return
-#        disabled: true
-#      - name: unused-parameter
+# #linters-settings:
+# #  depguard:
+# #    # new configuration
+# #    rules:
+# #      logger:
+# #        deny:
+# #          # logging is allowed only by logutils.Log,
+# #          # logrus is allowed to use only in logutils package.
+# #          - pkg: "github.com/sirupsen/logrus"
+# #            desc: logging is allowed only by logutils.Log
+# #  dupl:
+# #    threshold: 100
+# #  funlen:
+# #    lines: -1 # the number of lines (code + empty lines) is not a right metric and leads to code without empty line or one-liner.
+# #    statements: 50
+# #  goconst:
+# #    min-len: 2
+# #    min-occurrences: 3
+# #  gocritic:
+# #    enabled-tags:
+# #      - diagnostic
+# #      - experimental
+# #      - opinionated
+# #      - performance
+# #      - style
+# #    disabled-checks:
+# #      - dupImport # https://github.com/go-critic/go-critic/issues/845
+# #      - ifElseChain
+# #      - octalLiteral
+# #      - whyNoLint
+# #  gocyclo:
+# #    min-complexity: 15
+# #  gofmt:
+# #    rewrite-rules:
+# #      - pattern: 'interface{}'
+# #        replacement: 'any'
+# #  goimports:
+# #    local-prefixes: github.com/golangci/golangci-lint
+# #  gomnd:
+# #    # don't include the "operation" and "assign"
+# #    checks:
+# #      - argument
+# #      - case
+# #      - condition
+# #      - return
+# #    ignored-numbers:
+# #      - '0'
+# #      - '1'
+# #      - '2'
+# #      - '3'
+# #    ignored-functions:
+# #      - strings.SplitN
+# #
+# #  govet:
+# #    check-shadowing: true
+# #    settings:
+# #      printf:
+# #        funcs:
+# #          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+# #          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+# #          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+# #          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+# #  errorlint:
+# #    asserts: false
+# #  lll:
+# #    line-length: 140
+# #  misspell:
+# #    locale: US
+# #  nolintlint:
+# #    allow-unused: false # report any unused nolint directives
+# #    require-explanation: false # don't require an explanation for nolint directives
+# #    require-specific: false # don't require nolint directives to be specific about which linter is being skipped
+# #  revive:
+# #    rules:
+# #      - name: unexported-return
+# #        disabled: true
+# #      - name: unused-parameter
 
-# https://golangci-lint.run/usage/linters/
-linters:
-  disable-all: true
-  enable:
-    - unused
-#    - bodyclose
-#    - depguard
-#    - dogsled
-#    - dupl
-    - errcheck
-    - errorlint
-#    - exportloopref
-    - funlen
-#    - gocheckcompilerdirectives
-    - gochecknoinits
-    - goconst
-#    - gocritic
-#    - gocyclo
-#    - gomnd
-    - goprintffuncname
-#    - gosec
-    - gosimple
-#    - govet
-#    - ineffassign
-#    - lll
-#    - misspell
-#    - nakedret
-#    - noctx
-#    - nolintlint
-#    - revive
-    - staticcheck
-    - stylecheck
-    - typecheck
-#    - unconvert
-#    - unparam
-    - whitespace
+# # https://golangci-lint.run/usage/linters/
+# linters:
+#   disable-all: true
+#   enable:
+#     - unused
+# #    - bodyclose
+# #    - depguard
+# #    - dogsled
+# #    - dupl
+# #    - errcheck
+# #    - errorlint
+# #    - exportloopref
+# #    - funlen
+# #    - gocheckcompilerdirectives
+# #    - gochecknoinits
+# #    - goconst
+# #    - gocritic
+# #    - gocyclo
+# #    - gomnd
+# #    - goprintffuncname
+# #    - gosec
+# #    - gosimple
+# #    - govet
+# #    - ineffassign
+# #    - lll
+# #    - misspell
+# #    - nakedret
+# #    - noctx
+# #    - nolintlint
+# #    - revive
+# #    - staticcheck
+# #    - stylecheck
+# #    - typecheck
+# #    - unconvert
+# #    - unparam
+# #    - whitespace
 
-  # don't enable:
-  # - asciicheck
-  # - scopelint
-  # - gochecknoglobals
-  # - gocognit
-  # - godot
-  # - godox
-  # - goerr113
-  # - interfacer
-  # - maligned
-  # - nestif
-  # - prealloc
-  # - testpackage
-  # - wsl
-  # - gofmt
-  # - goimports
+#   # don't enable:
+#   # - asciicheck
+#   # - scopelint
+#   # - gochecknoglobals
+#   # - gocognit
+#   # - godot
+#   # - godox
+#   # - goerr113
+#   # - interfacer
+#   # - maligned
+#   # - nestif
+#   # - prealloc
+#   # - testpackage
+#   # - wsl
+#   # - gofmt
+#   # - goimports
 
 
-run:
-  timeout: 5m
-#  skip-dirs:
-#    - test/testdata_etc # test files
-#    - internal/cache # extracted from Go code
-#    - internal/renameio # extracted from Go code
-#    - internal/robustio # extracted from Go code
+# run:
+#   timeout: 5m
+# #  skip-dirs:
+# #    - test/testdata_etc # test files
+# #    - internal/cache # extracted from Go code
+# #    - internal/renameio # extracted from Go code
+# #    - internal/robustio # extracted from Go code
