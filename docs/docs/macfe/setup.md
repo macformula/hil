@@ -24,4 +24,29 @@ As long as you can successfully build the gRPC example and have Go installed you
 
 ## Precommit setup
 
-We run `go fmt` before our code gets pushed to Github to maintain consistency. 
+We have a precommit that will ensure `go fmt` is ran before every commit to maintain style consistency. To 
+
+=== "Windows"
+    1. If you don't already have Python installed, get it from [https://www.python.org/downloads](https://www.python.org/downloads).
+    2. Open a terminal and run:
+    ```bash
+    pip install pre-commit
+    ```
+    3. Open a terminal in the `hil` directory and run:
+    ```bash
+    pre-commit install
+    ```
+
+
+=== "Mac/Linux"
+    1. If you don't already have Python installed, get it from [https://www.python.org/downloads](https://www.python.org/downloads), or by using a package manager like [Brew](https://docs.brew.sh).
+    2. Open a terminal and run:
+    ```bash
+    pip3 install pre-commit
+    ```
+    3. Open a terminal in the `hil` directory and run:
+    ```bash
+    pre-commit install
+    ```
+
+Now if you try committing to your local repository with formatting errors in a `.go` file, an error will be thrown and your code will automatically be reformated!

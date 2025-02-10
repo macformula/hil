@@ -114,11 +114,10 @@ nav:
     - index.md
   - Tutorials:
     - tutorials/index.md
-    - tutorials/quickstart/index.md
+    - tutorials/start/index.md
   - Mac Formula:
     - macfe/index.md
     - macfe/setup.md
-    - macfe/config.md
     - macfe/run.md
   - Glossary: glossary.md
 
