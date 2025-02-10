@@ -113,8 +113,15 @@ nav:
   - Home:
     - index.md
   - Tutorials:
-    - tutorials/index.md
-    - tutorials/start/index.md
+    - Setting up the SIL:
+      - tutorials/index.md
+      - tutorials/setup/1.md
+      - tutorials/setup/2.md
+      - tutorials/setup/3.md
+      - tutorials/setup/4.md
+    - Extra Configuration:
+      - tutorial/extra/trace.md
+      - tutorial/extra/handlers.md
   - Mac Formula:
     - macfe/index.md
     - macfe/setup.md
