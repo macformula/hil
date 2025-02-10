@@ -21,3 +21,7 @@ You will need a Unix development environment (Unix machine, WSL, or remote into 
 Go through the [gRPC Go Quickstart Guide](https://grpc.io/docs/languages/go/quickstart/). Build the example project.
 
 As long as you can successfully build the gRPC example and have Go installed you are ready to get started with the SIL!
+
+## Precommit setup
+
+We run `go fmt` before our code gets pushed to Github to maintain consistency. 
