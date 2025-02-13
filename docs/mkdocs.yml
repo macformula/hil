@@ -120,8 +120,9 @@ nav:
       - tutorials/setup/3.md
       - tutorials/setup/4.md
     - Extra Configuration:
-      - tutorial/extra/trace.md
+      - tutorial/extra/trace_format.md
       - tutorial/extra/handlers.md
+      - tutorial/extra/config.md
   - Mac Formula:
     - macfe/index.md
     - macfe/setup.md
