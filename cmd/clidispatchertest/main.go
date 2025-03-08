@@ -19,7 +19,6 @@ const (
 	_resultServerPath    = "./results/server/main.py"
 	_tagsPath            = "./results/tags.yaml"
 	_historicTestsPath   = "./results/historic_tests.yaml"
-	_reportsDir          = "./results/reports"
 )
 
 func main() {
@@ -32,7 +31,7 @@ func main() {
 	defer logger.Sync()
 
 	resultProcessor := results.NewResultAccumulator(logger,
-		_tagsPath, _historicTestsPath, _reportsDir, results.NewHtmlReportGenerator())
+		_tagsPath, results.NewHtmlReportGenerator())
 	sequencer := flow.NewSequencer(resultProcessor, logger)
 	cliDispatcher := cli.NewCliDispatcher(test.Sequences, logger)
 	simpleDispatcher := test.NewSimpleDispatcher(logger, 5*time.Second, 10*time.Second)

@@ -62,7 +62,7 @@ func NewController(port int, l *zap.Logger) *Controller {
 func (c *Controller) Open(ctx context.Context) error {
 	c.l.Info("opening sil controller")
 
-	addr := fmt.Sprintf("[::]:%v", c.port)
+	addr := fmt.Sprintf("localhost:%v", c.port)
 
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
