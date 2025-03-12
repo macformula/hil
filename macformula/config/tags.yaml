@@ -3,6 +3,18 @@ TEST001:
   compareOp: LOG
   type: string
   unit: N/A
+DEMOSTATE1:
+  description: Led high when button down.
+  compareOp: EQ
+  expectedVal: true
+  type: bool
+  unit: N/A
+DEMOSTATE2:
+  description: Led low when button up.
+  compareOp: EQ
+  expectedVal: false
+  type: bool
+  unit: N/A
 FW001:
   description: Front controller flashed.
   compareOp: EQ

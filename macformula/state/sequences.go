@@ -23,10 +23,23 @@ func GetSequences(a *macformula.App, l *zap.Logger) []flow.Sequence {
 type sequenceConstructor = func(a *macformula.App, l *zap.Logger) flow.Sequence
 
 var _sequenceConstructors = []sequenceConstructor{
+	newDemoSequence,
 	newLvControllerSequence,
 	newTracerSequence,
 	newSleepSequence,
 	newDoNothingSequence,
+}
+
+func newDemoSequence(a *macformula.App, l *zap.Logger) flow.Sequence {
+	return flow.Sequence{
+		Name: "Demo Controller Sequence 😴",
+		Desc: "Demo sequence.",
+		States: []flow.State{
+			newSetup(a, l),
+			newDemoState(a, l),
+			newCleanup(a, l),
+		},
+	}
 }
 
 func newLvControllerSequence(a *macformula.App, l *zap.Logger) flow.Sequence {

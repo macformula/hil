@@ -53,6 +53,11 @@ type LvStartupTagCollection struct {
 	InverterSwitchTimeToEnable                        flow.Tag
 }
 
+type DemoStateTagCollection struct {
+	MirrorsButtonDown flow.Tag
+	MirrorsButtonUp flow.Tag
+}
+
 var LvStartupTags = LvStartupTagCollection{
 	PowerCycledTestBench: flow.Tag{
 		ID:          "LVSTART001",
@@ -165,5 +170,16 @@ var LvStartupTags = LvStartupTagCollection{
 	InverterSwitchTimeToEnable: flow.Tag{
 		ID:          "LVSTART026",
 		Description: "Inverter switch time to enable after commanded to enable by the front controller (ms).",
+	},
+}
+
+var DemoStateTags = DemoStateTagCollection{
+	MirrorsButtonDown: flow.Tag{
+		ID:          "DEMOSTATE1",
+		Description: "Led indicator high when button is down.",
+	},
+	MirrorsButtonUp: flow.Tag{
+		ID:          "DEMOSTATE2",
+		Description: "Led indicator low when button is up.",
 	},
 }
