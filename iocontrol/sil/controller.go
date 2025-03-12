@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	pb "github.com/macformula/hil/iocontrol/sil/proto"
+	"google.golang.org/grpc/reflection"
 )
 
 const (
@@ -72,6 +73,7 @@ func (c *Controller) Open(ctx context.Context) error {
 	c.server = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
 
 	pb.RegisterSignalsServer(c.server, c)
+	reflection.Register(c.server)
 
 	go func() {
 		c.l.Info("starting server", zap.String("listening_at", addr))
