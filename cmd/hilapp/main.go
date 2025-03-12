@@ -18,8 +18,6 @@ import (
 	"github.com/macformula/hil/iocontrol"
 	"github.com/macformula/hil/iocontrol/sil"
 	"github.com/macformula/hil/macformula"
-	"github.com/macformula/hil/macformula/cangen/ptcan"
-	"github.com/macformula/hil/macformula/cangen/vehcan"
 	"github.com/macformula/hil/macformula/config"
 	"github.com/macformula/hil/macformula/ecu/frontcontroller"
 	"github.com/macformula/hil/macformula/ecu/lvcontroller"
@@ -104,7 +102,7 @@ func main() {
 	logger.Info("hil app starting", zap.Any("config", cfg))
 
 	// Create result processor.
-	resultProcessor := results.NewResultAccumulator(logger, cfg.TagsFilePath, cfg.HistoricTestsFilePath, cfg.ResultsDir,
+	resultProcessor := results.NewResultAccumulator(logger, cfg.TagsFilePath,
 		results.NewHtmlReportGenerator())
 
 	// Create sequencer.
@@ -114,14 +112,14 @@ func main() {
 	ctx := context.Background()
 
 	// Create socketcan connections.
-	vehCanConn, err := socketcan.DialContext(ctx, _canNetwork, cfg.VehCanInterface)
+	vehCanConn, err := socketcan.DialContext(ctx, _canNetwork, cfg.CanInterfaces.Veh)
 	if err != nil {
 		logger.Error("failed to setup veh can connection",
 			zap.Error(errors.Wrap(err, "dial context")))
 		return
 	}
 
-	ptCanConn, err := socketcan.DialContext(ctx, _canNetwork, cfg.PtCanInterface)
+	ptCanConn, err := socketcan.DialContext(ctx, _canNetwork, cfg.CanInterfaces.Pt)
 	if err != nil {
 		logger.Error("failed to setup pt can connection",
 			zap.Error(errors.Wrap(err, "dial context")))
@@ -133,7 +131,7 @@ func main() {
 
 	// Create can tracers.
 	vehCanTracer := canlink.NewTracer(
-		cfg.VehCanInterface,
+		cfg.CanInterfaces.Veh,
 		logger,
 		&canlink.Jsonl{},
 		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
@@ -141,7 +139,7 @@ func main() {
 	)
 
 	ptCanTracer := canlink.NewTracer(
-		cfg.PtCanInterface,
+		cfg.CanInterfaces.Pt,
 		logger,
 		&canlink.Jsonl{},
 		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
@@ -182,31 +180,24 @@ func main() {
 	// Create testbench controller.
 	testBench := macformula.NewTestBench(pinoutController, logger)
 
-	// Create veh can client.
-	vehCanClient := canlink.NewCanClient(vehcan.Messages(), vehCanConn, logger)
-
-	// Create pt can client.
-	ptCanClient := canlink.NewCanClient(ptcan.Messages(), ptCanConn, logger)
-
 	// Create Lv Controller client.
 	lvControllerClient := lvcontroller.NewClient(pinoutController, logger)
 
 	// Create Front Controller client.
-	frontControllerClient := frontcontroller.NewClient(pinoutController, vehCanClient, logger)
+	frontControllerClient := frontcontroller.NewClient(pinoutController, vehBusManager, logger)
 
 	// Create app object.
 	app := macformula.App{
 		Config:                cfg,
-		VehBusManager: vehBusManager,
-		PtBusManager: ptBusManager,
+		VehBusManager:         vehBusManager,
+		PtBusManager:          ptBusManager,
 		VehCanTracer:          vehCanTracer,
 		PtCanTracer:           ptCanTracer,
 		PinoutController:      pinoutController,
 		TestBench:             testBench,
 		LvControllerClient:    lvControllerClient,
 		FrontControllerClient: frontControllerClient,
-		VehCanClient:          vehCanClient,
-		PtCanClient:           ptCanClient,
+		ResultsProcessor:      resultProcessor,
 	}
 
 	// Create sequences.

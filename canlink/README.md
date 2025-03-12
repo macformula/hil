@@ -57,7 +57,7 @@ Functional options are available of type `TracerOption` if required.
             logger,
             &canlink.Text{},
             canlink.WithTimeout(1*time.Second),
-            canlink.WithFileName("trace_sample"),
+    
 	    )
     }
     ```
