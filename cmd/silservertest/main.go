@@ -14,7 +14,7 @@ import (
 
 type Client struct {
 	addr string
-	l *zap.Logger
+	l    *zap.Logger
 }
 
 func (c *Client) Write() {
@@ -30,7 +30,7 @@ func (c *Client) Write() {
 	builder := flatbuffers.NewBuilder(1024)
 	ecu := builder.CreateString("lv_controller")
 	signal_name := builder.CreateString("raspi_en")
-	
+
 	signals.ReadRequestStart(builder)
 	signals.ReadRequestAddEcuName(builder, ecu)
 	signals.ReadRequestAddSignalName(builder, signal_name)
@@ -64,7 +64,7 @@ func main() {
 
 	client := Client{
 		addr: "localhost:12345",
-		l: logger,
+		l:    logger,
 	}
 	client.Write()
 

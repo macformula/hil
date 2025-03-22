@@ -17,9 +17,6 @@ import (
 	signals "github.com/macformula/hil/iocontrol/sil/signals"
 )
 
-const (
-)
-
 //go:generate protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/signals.proto
 type FbController struct {
 	pb.UnimplementedSignalsServer
@@ -67,7 +64,7 @@ func (c *FbController) Open(ctx context.Context) error {
 	if err != nil {
 		c.l.Error(fmt.Sprintf("creating listener: %s", errors.Wrap(err, "creating listener")))
 	}
-	defer listener.Close();
+	defer listener.Close()
 
 	c.l.Info(fmt.Sprintf("sil listening on %s", addr))
 
@@ -95,13 +92,13 @@ func (c *FbController) handleConnection(conn net.Conn) {
 	for {
 		n, err := conn.Read(buffer)
 		if err != nil {
-            if err != io.EOF {
-                c.l.Error(fmt.Sprintf("read error: %s", err))
-            }
-            break
-        }
+			if err != io.EOF {
+				c.l.Error(fmt.Sprintf("read error: %s", err))
+			}
+			break
+		}
 		request := signals.GetRootAsRequest(buffer, 0)
-		
+
 		unionTable := new(flatbuffers.Table)
 		if request.Request(unionTable) {
 			requestType := request.RequestType()
@@ -113,9 +110,7 @@ func (c *FbController) handleConnection(conn net.Conn) {
 				sig_name := string(unionRequest.SignalName())
 				c.l.Info(fmt.Sprintf("the ecu is: %s, sig is %s", ecu, sig_name))
 			}
-
 		}
-		
 
 		// switch requestType {
 		// case signals.RequestTypeReadRequest:
@@ -440,4 +435,3 @@ func (c *FbController) RegisterSignal(_ context.Context, in *pb.RegisterSignalRe
 		Error:  "",
 	}, nil
 }
-
