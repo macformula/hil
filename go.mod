@@ -32,6 +32,7 @@ require (
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/google/flatbuffers v25.2.10+incompatible
 	github.com/holiman/uint256 v1.2.3 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
