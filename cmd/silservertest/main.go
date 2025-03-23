@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"time"
 
 	signals "github.com/macformula/hil/cmd/silservertest/signals"
 
@@ -44,8 +45,39 @@ func (c *Client) Write() {
 	builder.Finish(request)
 	buf := builder.FinishedBytes()
 
+	builder2 := flatbuffers.NewBuilder(1024)
+	ecu2 := builder2.CreateString("tms")
+	signal_name2 := builder2.CreateString("signal 2")
+
+	signals.DigitalStart(builder2)
+	signals.DigitalAddValue(builder2, true)
+	dig_sig := signals.DigitalEnd(builder2)
+
+	signals.SetRequestStart(builder2)
+	signals.SetRequestAddEcuName(builder2, ecu2)
+	signals.SetRequestAddSignalName(builder2, signal_name2)
+	signals.SetRequestAddSignalType(builder2, signals.SIGNAL_TYPEDIGITAL)
+	signals.SetRequestAddSignalValueType(builder2, signals.SignalValueDigital)
+	signals.SetRequestAddSignalValue(builder2, dig_sig)
+	setRequest2 := signals.ReadRequestEnd(builder2)
+
+	signals.RequestStart(builder2)
+	signals.RequestAddRequestType(builder2, signals.RequestTypeSetRequest)
+	signals.RequestAddRequest(builder2, setRequest2)
+	setRequest := signals.RequestEnd(builder2)
+	builder2.Finish(setRequest)
+	buf2 := builder2.FinishedBytes()
+
 	// Send data to the server
 	_, err = conn.Write(buf)
+	if err != nil {
+		fmt.Println("Error sending data:", err)
+		return
+	}
+
+	time.Sleep(2 * time.Second)
+
+	_, err = conn.Write(buf2)
 	if err != nil {
 		fmt.Println("Error sending data:", err)
 		return

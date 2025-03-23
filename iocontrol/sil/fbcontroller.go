@@ -6,7 +6,6 @@ import (
 	"io"
 
 	"net"
-	"sync"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -17,6 +16,8 @@ import (
 	signals "github.com/macformula/hil/iocontrol/sil/signals"
 )
 
+const ()
+
 //go:generate protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/signals.proto
 type FbController struct {
 	pb.UnimplementedSignalsServer
@@ -24,33 +25,15 @@ type FbController struct {
 	l      *zap.Logger
 	port   int
 	server *grpc.Server
-
-	digitalInputPins  map[string]map[string]bool
-	digitalOutputPins map[string]map[string]bool
-	analogInputPins   map[string]map[string]float64
-	analogOutputPins  map[string]map[string]float64
-	signalInfo        map[string]map[string]*pb.SignalInfo
-
-	digitalInputMtx  *sync.Mutex
-	digitalOutputMtx *sync.Mutex
-	analogInputMtx   *sync.Mutex
-	analogOutputMtx  *sync.Mutex
+	pins   *PinModel
 }
 
 // NewFbController returns a new SIL FbController.
 func NewFbController(port int, l *zap.Logger) *FbController {
 	return &FbController{
-		l:                 l.Named(_loggerName),
-		port:              port,
-		digitalInputPins:  make(map[string]map[string]bool),
-		digitalOutputPins: make(map[string]map[string]bool),
-		analogInputPins:   make(map[string]map[string]float64),
-		analogOutputPins:  make(map[string]map[string]float64),
-		signalInfo:        make(map[string]map[string]*pb.SignalInfo),
-		digitalInputMtx:   &sync.Mutex{},
-		digitalOutputMtx:  &sync.Mutex{},
-		analogInputMtx:    &sync.Mutex{},
-		analogOutputMtx:   &sync.Mutex{},
+		l:    l.Named(_loggerName),
+		port: port,
+		pins: NewPinModel(),
 	}
 }
 
@@ -90,7 +73,7 @@ func (c *FbController) handleConnection(conn net.Conn) {
 
 	buffer := make([]byte, 2024)
 	for {
-		n, err := conn.Read(buffer)
+		_, err := conn.Read(buffer)
 		if err != nil {
 			if err != io.EOF {
 				c.l.Error(fmt.Sprintf("read error: %s", err))
@@ -101,128 +84,57 @@ func (c *FbController) handleConnection(conn net.Conn) {
 
 		unionTable := new(flatbuffers.Table)
 		if request.Request(unionTable) {
+			c.l.Info("recvieved request")
 			requestType := request.RequestType()
-			if requestType == signals.RequestTypeReadRequest {
+			switch requestType {
+			case signals.RequestTypeReadRequest:
 				unionRequest := new(signals.ReadRequest)
 				unionRequest.Init(unionTable.Bytes, unionTable.Pos)
 
 				ecu := string(unionRequest.EcuName())
 				sig_name := string(unionRequest.SignalName())
-				c.l.Info(fmt.Sprintf("the ecu is: %s, sig is %s", ecu, sig_name))
+				sig_type := unionRequest.SignalType()
+
+			case signals.RequestTypeSetRequest:
+				unionRequest := new(signals.SetRequest)
+				unionRequest.Init(unionTable.Bytes, unionTable.Pos)
+
+				ecu := string(unionRequest.EcuName())
+				sig_name := string(unionRequest.SignalName())
+				sig_type := unionRequest.SignalType()
+
+				unionTable = new(flatbuffers.Table)
+				if unionRequest.SignalValue(unionTable) {
+					switch unionRequest.SignalValueType() {
+					case signals.SignalValueDigital:
+						unionSignalValue := new(signals.Digital)
+						unionSignalValue.Init(unionTable.Bytes, unionTable.Pos)
+
+						value := unionSignalValue.Value()
+						c.l.Info(fmt.Sprintf("the ecu is: %s, sig is %s, sig_type is %s, val is %t", ecu, sig_name, sig_type, value))
+					case signals.SignalValueAnalog:
+						unionSignalValue := new(signals.Analog)
+						unionSignalValue.Init(unionTable.Bytes, unionTable.Pos)
+
+						voltage := unionSignalValue.Voltage()
+						c.l.Info(fmt.Sprintf("the ecu is: %s, sig is %s, val is %f", ecu, sig_name, voltage))
+					}
+				}
+
+			case signals.RequestTypeRegisterRequest:
+				unionRequest := new(signals.RegisterRequest)
+				unionRequest.Init(unionTable.Bytes, unionTable.Pos)
+
+				ecu := string(unionRequest.EcuName())
+				sig_name := string(unionRequest.SignalName())
+				sig_type := unionRequest.SignalType()
+				sig_direction := unionRequest.SignalDirection()
+
+				c.l.Info(fmt.Sprintf("the ecu is: %s, sig is %s, sig_type is %s, sig_direction is %s", ecu, sig_name, sig_type, sig_direction))
 			}
+
 		}
-
-		// switch requestType {
-		// case signals.RequestTypeReadRequest:
-		// 	c.l.Info("read request")
-		// case signals.RequestTypeSetRequest:
-		// 	c.l.Info("set request")
-		// case signals.RequestTypeRegisterRequest:
-		// 	c.l.Info("register request")
-		// default:
-		// 	c.l.Info("none matched")
-		// }
-
-		fmt.Printf("recevied %x", buffer[:n])
 	}
-}
-
-func (c *FbController) registerDigitalOutput(ecuName, sigName string) {
-	mapSet(c.digitalOutputPins, ecuName, sigName, false)
-	mapSet(c.signalInfo, ecuName, sigName, &pb.SignalInfo{
-		EcuName:         ecuName,
-		SignalName:      sigName,
-		SignalType:      pb.SignalType_SIGNAL_TYPE_DIGITAL,
-		SignalDirection: pb.SignalDirection_SIGNAL_DIRECTION_INPUT, // Purposely reversed
-	})
-}
-
-func (c *FbController) registerDigitalInput(ecuName, sigName string) {
-	mapSet(c.digitalInputPins, ecuName, sigName, false)
-	mapSet(c.signalInfo, ecuName, sigName, &pb.SignalInfo{
-		EcuName:         ecuName,
-		SignalName:      sigName,
-		SignalType:      pb.SignalType_SIGNAL_TYPE_DIGITAL,
-		SignalDirection: pb.SignalDirection_SIGNAL_DIRECTION_OUTPUT, // Purposely reversed
-	})
-}
-
-func (c *FbController) registerAnalogOutput(ecuName, sigName string) {
-	mapSet(c.analogOutputPins, ecuName, sigName, 0.0)
-	mapSet(c.signalInfo, ecuName, sigName, &pb.SignalInfo{
-		EcuName:         ecuName,
-		SignalName:      sigName,
-		SignalType:      pb.SignalType_SIGNAL_TYPE_ANALOG,
-		SignalDirection: pb.SignalDirection_SIGNAL_DIRECTION_INPUT, // Purposely reversed
-	})
-}
-
-func (c *FbController) registerAnalogInput(ecuName, sigName string) {
-	mapSet(c.analogInputPins, ecuName, sigName, 0.0)
-	mapSet(c.signalInfo, ecuName, sigName, &pb.SignalInfo{
-		EcuName:         ecuName,
-		SignalName:      sigName,
-		SignalType:      pb.SignalType_SIGNAL_TYPE_ANALOG,
-		SignalDirection: pb.SignalDirection_SIGNAL_DIRECTION_OUTPUT, // Purposely reversed
-	})
-}
-
-// SetDigital sets an output digital pin for a SIL digital pin.
-func (c *FbController) SetDigital(pin *DigitalPin, level bool) error {
-	c.digitalOutputMtx.Lock()
-	defer c.digitalOutputMtx.Unlock()
-
-	_, ok := mapLookup(c.digitalOutputPins, pin.info.EcuName, pin.info.SignalName)
-	if !ok {
-		c.registerDigitalOutput(pin.info.EcuName, pin.info.SignalName)
-	}
-
-	c.digitalOutputPins[pin.info.EcuName][pin.info.SignalName] = level
-
-	return nil
-}
-
-// ReadDigital returns the level of a SIL digital pin.
-func (c *FbController) ReadDigital(pin *DigitalPin) (bool, error) {
-	c.digitalInputMtx.Lock()
-	defer c.digitalInputMtx.Unlock()
-
-	level, ok := mapLookup(c.digitalInputPins, pin.info.EcuName, pin.info.SignalName)
-	if !ok {
-		return false, errors.Errorf("no entry for ecu name (%s) signal name (%s)",
-			pin.info.EcuName, pin.info.SignalName)
-	}
-
-	return level, nil
-}
-
-// WriteVoltage sets the voltage of a SIL analog pin.
-func (c *FbController) WriteVoltage(pin *AnalogPin, voltage float64) error {
-	c.analogOutputMtx.Lock()
-	defer c.analogOutputMtx.Unlock()
-
-	_, ok := mapLookup(c.analogOutputPins, pin.info.EcuName, pin.info.SignalName)
-	if !ok {
-		c.registerAnalogOutput(pin.info.EcuName, pin.info.SignalName)
-	}
-
-	c.analogOutputPins[pin.info.EcuName][pin.info.SignalName] = voltage
-
-	return nil
-}
-
-// ReadVoltage returns the voltage of a SIL analog pin.
-func (c *FbController) ReadVoltage(pin *AnalogPin) (float64, error) {
-	c.analogInputMtx.Lock()
-	defer c.analogInputMtx.Unlock()
-
-	voltage, ok := mapLookup(c.analogInputPins, pin.info.EcuName, pin.info.SignalName)
-	if !ok {
-		return 0.0, errors.Errorf("no entry for ecu name (%s) signal name (%s)",
-			pin.info.EcuName, pin.info.SignalName)
-	}
-
-	return voltage, nil
 }
 
 // WriteCurrent sets the current of a SIL analog pin (unimplemented for SIL).

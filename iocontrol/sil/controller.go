@@ -400,27 +400,3 @@ func (c *Controller) RegisterSignal(_ context.Context, in *pb.RegisterSignalRequ
 		Error:  "",
 	}, nil
 }
-
-func mapSet[T any](m map[string]map[string]T, first, second string, value T) {
-	if m[first] == nil {
-		m[first] = make(map[string]T)
-	}
-
-	m[first][second] = value
-}
-
-func mapLookup[T any](m map[string]map[string]T, first, second string) (T, bool) {
-	var ret T
-
-	m1, ok := m[first]
-	if !ok {
-		return ret, false
-	}
-
-	ret, ok = m1[second]
-	if !ok {
-		return ret, false
-	}
-
-	return ret, true
-}
