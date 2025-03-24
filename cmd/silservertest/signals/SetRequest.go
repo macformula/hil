@@ -90,8 +90,20 @@ func (rcv *SetRequest) SignalValue(obj *flatbuffers.Table) bool {
 	return false
 }
 
+func (rcv *SetRequest) SignalDirection() SIGNAL_DIRECTION {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(14))
+	if o != 0 {
+		return SIGNAL_DIRECTION(rcv._tab.GetInt8(o + rcv._tab.Pos))
+	}
+	return 0
+}
+
+func (rcv *SetRequest) MutateSignalDirection(n SIGNAL_DIRECTION) bool {
+	return rcv._tab.MutateInt8Slot(14, int8(n))
+}
+
 func SetRequestStart(builder *flatbuffers.Builder) {
-	builder.StartObject(5)
+	builder.StartObject(6)
 }
 func SetRequestAddEcuName(builder *flatbuffers.Builder, ecuName flatbuffers.UOffsetT) {
 	builder.PrependUOffsetTSlot(0, flatbuffers.UOffsetT(ecuName), 0)
@@ -107,6 +119,9 @@ func SetRequestAddSignalValueType(builder *flatbuffers.Builder, signalValueType 
 }
 func SetRequestAddSignalValue(builder *flatbuffers.Builder, signalValue flatbuffers.UOffsetT) {
 	builder.PrependUOffsetTSlot(4, flatbuffers.UOffsetT(signalValue), 0)
+}
+func SetRequestAddSignalDirection(builder *flatbuffers.Builder, signalDirection SIGNAL_DIRECTION) {
+	builder.PrependInt8Slot(5, int8(signalDirection), 0)
 }
 func SetRequestEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()

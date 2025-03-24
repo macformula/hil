@@ -16,7 +16,10 @@ import (
 	signals "github.com/macformula/hil/iocontrol/sil/signals"
 )
 
-const ()
+const (
+	_unsetDigitalValue = false
+	_unsetAnalogValue  = 0.0
+)
 
 //go:generate protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/signals.proto
 type FbController struct {
@@ -88,97 +91,62 @@ func (c *FbController) handleConnection(conn net.Conn) {
 			requestType := request.RequestType()
 			switch requestType {
 			case signals.RequestTypeReadRequest:
-				unionRequest := new(signals.ReadRequest)
-				unionRequest.Init(unionTable.Bytes, unionTable.Pos)
+				ecu, sigName, sigType, sigDirection := deserializeReadRequest(unionTable)
+				c.l.Info(fmt.Sprintf("ecu: %s, signame: %s, sigType: %s, sigDir: %s", ecu, sigName, sigType, sigDirection))
 
-				ecu := string(unionRequest.EcuName())
-				sig_name := string(unionRequest.SignalName())
-				sig_type := unionRequest.SignalType()
-				sig_direction := unionRequest.SignalDirection()
-
-				switch sig_type {
+				switch sigType {
 				case signals.SIGNAL_TYPEDIGITAL:
-					switch sig_direction {
+					switch sigDirection {
 					case signals.SIGNAL_DIRECTIONINPUT:
-						c.pins.ReadDigitalInput(ecu, sig_name)
+						c.pins.ReadDigitalInput(ecu, sigName)
 					case signals.SIGNAL_DIRECTIONOUTPUT:
-						c.pins.ReadDigitalOutput(ecu, sig_name)
+						c.pins.ReadDigitalOutput(ecu, sigName)
 					}
 				case signals.SIGNAL_TYPEANALOG:
-					switch sig_direction {
+					switch sigDirection {
 					case signals.SIGNAL_DIRECTIONINPUT:
-						c.pins.ReadAnalogInput(ecu, sig_name)
+						c.pins.ReadAnalogInput(ecu, sigName)
 					case signals.SIGNAL_DIRECTIONOUTPUT:
-						c.pins.ReadAnalogOutput(ecu, sig_name)
+						c.pins.ReadAnalogOutput(ecu, sigName)
 					}
 				}
 			case signals.RequestTypeSetRequest:
-				unionRequest := new(signals.SetRequest)
-				unionRequest.Init(unionTable.Bytes, unionTable.Pos)
+				ecu, sigName, sigType, sigDirection, value, voltage := deserializeSetRequest(unionTable)
 
-				ecu := string(unionRequest.EcuName())
-				sig_name := string(unionRequest.SignalName())
-				sig_type := unionRequest.SignalType()
-				sig_direction := unionRequest.SignalDirection()
-
-				unionTable = new(flatbuffers.Table)
-				var value bool
-				var voltage float64
-				if unionRequest.SignalValue(unionTable) {
-					switch unionRequest.SignalValueType() {
-					case signals.SignalValueDigital:
-						unionSignalValue := new(signals.Digital)
-						unionSignalValue.Init(unionTable.Bytes, unionTable.Pos)
-
-						value = unionSignalValue.Value()
-
-					case signals.SignalValueAnalog:
-						unionSignalValue := new(signals.Analog)
-						unionSignalValue.Init(unionTable.Bytes, unionTable.Pos)
-
-						voltage = unionSignalValue.Voltage()
-					}
-				}
-				switch sig_type {
+				switch sigType {
 				case signals.SIGNAL_TYPEDIGITAL:
-					switch sig_direction {
+					switch sigDirection {
 					case signals.SIGNAL_DIRECTIONINPUT:
-						c.pins.SetDigitalInput(ecu, sig_name, value)
+						c.pins.SetDigitalInput(ecu, sigName, value)
 					case signals.SIGNAL_DIRECTIONOUTPUT:
-						c.pins.SetDigitalOutput(ecu, sig_name, value)
+						c.pins.SetDigitalOutput(ecu, sigName, value)
 					}
 				case signals.SIGNAL_TYPEANALOG:
-					switch sig_direction {
+					switch sigDirection {
 					case signals.SIGNAL_DIRECTIONINPUT:
-						c.pins.SetAnalogInput(ecu, sig_name, voltage)
+						c.pins.SetAnalogInput(ecu, sigName, voltage)
 					case signals.SIGNAL_DIRECTIONOUTPUT:
-						c.pins.SetAnalogOutput(ecu, sig_name, voltage)
+						c.pins.SetAnalogOutput(ecu, sigName, voltage)
 					}
 				}
 
 			case signals.RequestTypeRegisterRequest:
-				unionRequest := new(signals.RegisterRequest)
-				unionRequest.Init(unionTable.Bytes, unionTable.Pos)
+				ecu, sigName, sigType, sigDirection := deserializeRegisterRequest(unionTable)
 
-				ecu := string(unionRequest.EcuName())
-				sig_name := string(unionRequest.SignalName())
-				sig_type := unionRequest.SignalType()
-				sig_direction := unionRequest.SignalDirection()
-
-				switch sig_type {
+				switch sigType {
 				case signals.SIGNAL_TYPEDIGITAL:
-					switch sig_direction {
+					switch sigDirection {
 					case signals.SIGNAL_DIRECTIONINPUT:
-						c.pins.RegisterDigitalInput(ecu, sig_name)
+						c.pins.RegisterDigitalInput(ecu, sigName)
 					case signals.SIGNAL_DIRECTIONOUTPUT:
-						c.pins.RegisterDigitalOutput(ecu, sig_name)
+						c.pins.RegisterDigitalOutput(ecu, sigName)
 					}
 				case signals.SIGNAL_TYPEANALOG:
-					switch sig_direction {
+					switch sigDirection {
 					case signals.SIGNAL_DIRECTIONINPUT:
-						c.pins.RegisterAnalogInput(ecu, sig_name)
+						c.pins.RegisterAnalogInput(ecu, sigName)
 					case signals.SIGNAL_DIRECTIONOUTPUT:
-						c.pins.RegisterAnalogOutput(ecu, sig_name)
+						c.pins.RegisterAnalogOutput(ecu, sigName)
 					}
 				}
 			}
@@ -195,4 +163,122 @@ func (c *FbController) WriteCurrent(_ *AnalogPin, _ float64) error {
 // ReadCurrent returns the current of a SIL analog pin (unimplemented for SIL).
 func (c *FbController) ReadCurrent(_ *AnalogPin) (float64, error) {
 	return 0.00, errors.New("unimplemented function on sil FbController")
+}
+
+func deserializeReadRequest(unionTable *flatbuffers.Table) (string, string, signals.SIGNAL_TYPE, signals.SIGNAL_DIRECTION) {
+	unionRequest := new(signals.ReadRequest)
+	unionRequest.Init(unionTable.Bytes, unionTable.Pos)
+
+	ecu := string(unionRequest.EcuName())
+	sigName := string(unionRequest.SignalName())
+	sigType := unionRequest.SignalType()
+	sigDirection := unionRequest.SignalDirection()
+
+	return ecu, sigName, sigType, sigDirection
+}
+
+func deserializeSetRequest(unionTable *flatbuffers.Table) (string, string, signals.SIGNAL_TYPE, signals.SIGNAL_DIRECTION, bool, float64) {
+	unionRequest := new(signals.SetRequest)
+	unionRequest.Init(unionTable.Bytes, unionTable.Pos)
+
+	ecu := string(unionRequest.EcuName())
+	sigName := string(unionRequest.SignalName())
+	sigType := unionRequest.SignalType()
+	sigDirection := unionRequest.SignalDirection()
+
+	unionTable = new(flatbuffers.Table)
+	if unionRequest.SignalValue(unionTable) {
+		switch unionRequest.SignalValueType() {
+		case signals.SignalValueDigital:
+			unionSignalValue := new(signals.Digital)
+			unionSignalValue.Init(unionTable.Bytes, unionTable.Pos)
+
+			return ecu, sigName, sigType, sigDirection, unionSignalValue.Value(), _unsetAnalogValue
+
+		case signals.SignalValueAnalog:
+			unionSignalValue := new(signals.Analog)
+			unionSignalValue.Init(unionTable.Bytes, unionTable.Pos)
+
+			return ecu, sigName, sigType, sigDirection, _unsetDigitalValue, unionSignalValue.Voltage()
+		}
+	}
+	return "", "", signals.SIGNAL_TYPEANALOG, signals.SIGNAL_DIRECTIONINPUT, _unsetDigitalValue, _unsetAnalogValue
+}
+
+func deserializeRegisterRequest(unionTable *flatbuffers.Table) (string, string, signals.SIGNAL_TYPE, signals.SIGNAL_DIRECTION) {
+	unionRequest := new(signals.RegisterRequest)
+	unionRequest.Init(unionTable.Bytes, unionTable.Pos)
+
+	ecu := string(unionRequest.EcuName())
+	sigName := string(unionRequest.SignalName())
+	sigType := unionRequest.SignalType()
+	sigDirection := unionRequest.SignalDirection()
+
+	return ecu, sigName, sigType, sigDirection
+}
+
+func serializeReadResponse(sigType signals.SignalValue, level bool, voltage float64, ok bool, err string) []byte {
+	builder := flatbuffers.NewBuilder(1024)
+
+	var sigVal flatbuffers.UOffsetT
+	if sigType == signals.SignalValueDigital {
+		signals.DigitalStart(builder)
+		signals.DigitalAddValue(builder, level)
+		sigVal = signals.DigitalEnd(builder)
+
+	} else if sigType == signals.SignalValueAnalog {
+		signals.AnalogStart(builder)
+		signals.AnalogAddVoltage(builder, voltage)
+		sigVal = signals.AnalogEnd(builder)
+	}
+
+	signals.ReadResponseStart(builder)
+	signals.ReadResponseAddSignalValueType(builder, sigType)
+	signals.ReadResponseAddSignalValue(builder, sigVal)
+	signals.ReadResponseAddOk(builder, ok)
+	errorString := builder.CreateString(err)
+	signals.ReadResponseAddError(builder, errorString)
+	read_response := signals.ReadResponseEnd(builder)
+
+	signals.ResponseStart(builder)
+	signals.ResponseAddResponseType(builder, signals.ResponseTypeReadResponse)
+	signals.ResponseAddResponse(builder, read_response)
+	response := signals.ResponseEnd(builder)
+	builder.Finish(response)
+
+	return builder.FinishedBytes()
+}
+
+func serializeSetResponse(ok bool, err string) []byte {
+	builder := flatbuffers.NewBuilder(1024)
+	errorString := builder.CreateString(err)
+
+	signals.SetResponseStart(builder)
+	signals.SetResponseAddError(builder, errorString)
+	signals.SetResponseAddOk(builder, ok)
+	setResponse := signals.ReadRequestEnd(builder)
+
+	signals.RequestStart(builder)
+	signals.RequestAddRequestType(builder, signals.RequestTypeSetRequest)
+	signals.RequestAddRequest(builder, setResponse)
+	setRequest := signals.RequestEnd(builder)
+	builder.Finish(setRequest)
+	return builder.FinishedBytes()
+}
+
+func serializeRegisterResponse(ok bool, err string) []byte {
+	builder := flatbuffers.NewBuilder(1024)
+	errorString := builder.CreateString(err)
+
+	signals.RegisterResponseStart(builder)
+	signals.RegisterResponseAddError(builder, errorString)
+	signals.RegisterResponseAddOk(builder, ok)
+	registerResponse := signals.RegisterResponseEnd(builder)
+
+	signals.RequestStart(builder)
+	signals.RequestAddRequestType(builder, signals.RequestTypeRegisterRequest)
+	signals.RequestAddRequest(builder, registerResponse)
+	setRequest := signals.RequestEnd(builder)
+	builder.Finish(setRequest)
+	return builder.FinishedBytes()
 }

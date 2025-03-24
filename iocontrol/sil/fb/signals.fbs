@@ -53,3 +53,7 @@ table SetResponse {
   ok:bool = true;
   error:string;
 }
+table RegisterResponse {
+  ok:bool = true;
+  error:string;
+}

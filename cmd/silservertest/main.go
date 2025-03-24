@@ -41,7 +41,23 @@ func (c *Client) Write() {
 
 	time.Sleep(2 * time.Second)
 
-	_, err = conn.Write(buf2)
+	_, err = conn.Write(read_req1)
+	if err != nil {
+		fmt.Println("Error sending data:", err)
+		return
+	}
+
+	time.Sleep(2 * time.Second)
+
+	_, err = conn.Write(set_req)
+	if err != nil {
+		fmt.Println("Error sending data:", err)
+		return
+	}
+
+	time.Sleep(2 * time.Second)
+
+	_, err = conn.Write(read_req2)
 	if err != nil {
 		fmt.Println("Error sending data:", err)
 		return
