@@ -28,48 +28,12 @@ func (c *Client) Write() {
 
 	fmt.Println("Connected to server")
 
-	builder := flatbuffers.NewBuilder(1024)
-	ecu := builder.CreateString("lv_controller")
-	signal_name := builder.CreateString("raspi_en")
-
-	signals.ReadRequestStart(builder)
-	signals.ReadRequestAddEcuName(builder, ecu)
-	signals.ReadRequestAddSignalName(builder, signal_name)
-	signals.ReadRequestAddSignalType(builder, signals.SIGNAL_TYPEDIGITAL)
-	readRequest := signals.ReadRequestEnd(builder)
-
-	signals.RequestStart(builder)
-	signals.RequestAddRequestType(builder, signals.RequestTypeReadRequest)
-	signals.RequestAddRequest(builder, readRequest)
-	request := signals.RequestEnd(builder)
-	builder.Finish(request)
-	buf := builder.FinishedBytes()
-
-	builder2 := flatbuffers.NewBuilder(1024)
-	ecu2 := builder2.CreateString("tms")
-	signal_name2 := builder2.CreateString("signal 2")
-
-	signals.DigitalStart(builder2)
-	signals.DigitalAddValue(builder2, true)
-	dig_sig := signals.DigitalEnd(builder2)
-
-	signals.SetRequestStart(builder2)
-	signals.SetRequestAddEcuName(builder2, ecu2)
-	signals.SetRequestAddSignalName(builder2, signal_name2)
-	signals.SetRequestAddSignalType(builder2, signals.SIGNAL_TYPEDIGITAL)
-	signals.SetRequestAddSignalValueType(builder2, signals.SignalValueDigital)
-	signals.SetRequestAddSignalValue(builder2, dig_sig)
-	setRequest2 := signals.ReadRequestEnd(builder2)
-
-	signals.RequestStart(builder2)
-	signals.RequestAddRequestType(builder2, signals.RequestTypeSetRequest)
-	signals.RequestAddRequest(builder2, setRequest2)
-	setRequest := signals.RequestEnd(builder2)
-	builder2.Finish(setRequest)
-	buf2 := builder2.FinishedBytes()
-
+	reg_req := serializeRegisterRequest("lv", "raspi_en", signals.SIGNAL_TYPEDIGITAL, signals.SIGNAL_DIRECTIONINPUT)
+	read_req1 := serializeReadRequest("lv", "raspi_en", signals.SIGNAL_TYPEDIGITAL)
+	set_req := serializeSetRequest("lv", "raspi_en", signals.SIGNAL_TYPEDIGITAL, 0.0, true)
+	read_req2 := serializeReadRequest("lv", "raspi_en", signals.SIGNAL_TYPEDIGITAL)
 	// Send data to the server
-	_, err = conn.Write(buf)
+	_, err = conn.Write(reg_req)
 	if err != nil {
 		fmt.Println("Error sending data:", err)
 		return
@@ -103,4 +67,87 @@ func main() {
 	for {
 
 	}
+}
+
+func serializeRegisterRequest(ecu_name string, signal_name string, signal_type signals.SIGNAL_TYPE, signal_direction signals.SIGNAL_DIRECTION) []byte {
+	builder2 := flatbuffers.NewBuilder(1024)
+	ecu2 := builder2.CreateString(ecu_name)
+	signal_name2 := builder2.CreateString(signal_name)
+
+	signals.RegisterRequestStart(builder2)
+	signals.RegisterRequestAddEcuName(builder2, ecu2)
+	signals.RegisterRequestAddSignalName(builder2, signal_name2)
+	signals.RegisterRequestAddSignalType(builder2, signal_type)
+	signals.RegisterRequestAddSignalDirection(builder2, signal_direction)
+
+	reg_request := signals.RegisterRequestEnd(builder2)
+	builder2.Finish(reg_request)
+	return builder2.FinishedBytes()
+}
+
+func serializeReadRequest(ecu_name string, signal_name string, signal_type signals.SIGNAL_TYPE) []byte {
+	builder := flatbuffers.NewBuilder(1024)
+	ecu := builder.CreateString(ecu_name)
+	sig_name := builder.CreateString(signal_name)
+
+	signals.ReadRequestStart(builder)
+	signals.ReadRequestAddEcuName(builder, ecu)
+	signals.ReadRequestAddSignalName(builder, sig_name)
+	signals.ReadRequestAddSignalType(builder, signals.SIGNAL_TYPEDIGITAL)
+	readRequest := signals.ReadRequestEnd(builder)
+
+	signals.RequestStart(builder)
+	signals.RequestAddRequestType(builder, signals.RequestTypeReadRequest)
+	signals.RequestAddRequest(builder, readRequest)
+	request := signals.RequestEnd(builder)
+	builder.Finish(request)
+	return builder.FinishedBytes()
+}
+
+func serializeSetRequest(ecu_name string, signal_name string, signal_type signals.SIGNAL_TYPE, voltage float64, level bool) []byte {
+	builder2 := flatbuffers.NewBuilder(1024)
+	ecu2 := builder2.CreateString(ecu_name)
+	signal_name2 := builder2.CreateString(signal_name)
+
+	switch signal_type {
+	case signals.SIGNAL_TYPEDIGITAL:
+		signals.DigitalStart(builder2)
+		signals.DigitalAddValue(builder2, level)
+		dig_sig := signals.DigitalEnd(builder2)
+
+		signals.SetRequestStart(builder2)
+		signals.SetRequestAddEcuName(builder2, ecu2)
+		signals.SetRequestAddSignalName(builder2, signal_name2)
+		signals.SetRequestAddSignalType(builder2, signals.SIGNAL_TYPEDIGITAL)
+		signals.SetRequestAddSignalValueType(builder2, signals.SignalValueDigital)
+		signals.SetRequestAddSignalValue(builder2, dig_sig)
+		setRequest2 := signals.ReadRequestEnd(builder2)
+
+		signals.RequestStart(builder2)
+		signals.RequestAddRequestType(builder2, signals.RequestTypeSetRequest)
+		signals.RequestAddRequest(builder2, setRequest2)
+		setRequest := signals.RequestEnd(builder2)
+		builder2.Finish(setRequest)
+		return builder2.FinishedBytes()
+	case signals.SIGNAL_TYPEANALOG:
+		signals.AnalogStart(builder2)
+		signals.AnalogAddVoltage(builder2, voltage)
+		dig_sig := signals.AnalogEnd(builder2)
+
+		signals.SetRequestStart(builder2)
+		signals.SetRequestAddEcuName(builder2, ecu2)
+		signals.SetRequestAddSignalName(builder2, signal_name2)
+		signals.SetRequestAddSignalType(builder2, signals.SIGNAL_TYPEANALOG)
+		signals.SetRequestAddSignalValueType(builder2, signals.SignalValueAnalog)
+		signals.SetRequestAddSignalValue(builder2, dig_sig)
+		setRequest2 := signals.ReadRequestEnd(builder2)
+
+		signals.RequestStart(builder2)
+		signals.RequestAddRequestType(builder2, signals.RequestTypeSetRequest)
+		signals.RequestAddRequest(builder2, setRequest2)
+		setRequest := signals.RequestEnd(builder2)
+		builder2.Finish(setRequest)
+		return builder2.FinishedBytes()
+	}
+	return nil
 }

@@ -22,6 +22,7 @@ table ReadRequest {
   ecu_name:string;
   signal_name:string;
   signal_type:SIGNAL_TYPE;
+  signal_direction:SIGNAL_DIRECTION;
 }
 table SetRequest {
   ecu_name:string;

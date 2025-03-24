@@ -69,8 +69,20 @@ func (rcv *ReadRequest) MutateSignalType(n SIGNAL_TYPE) bool {
 	return rcv._tab.MutateInt8Slot(8, int8(n))
 }
 
+func (rcv *ReadRequest) SignalDirection() SIGNAL_DIRECTION {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(10))
+	if o != 0 {
+		return SIGNAL_DIRECTION(rcv._tab.GetInt8(o + rcv._tab.Pos))
+	}
+	return 0
+}
+
+func (rcv *ReadRequest) MutateSignalDirection(n SIGNAL_DIRECTION) bool {
+	return rcv._tab.MutateInt8Slot(10, int8(n))
+}
+
 func ReadRequestStart(builder *flatbuffers.Builder) {
-	builder.StartObject(3)
+	builder.StartObject(4)
 }
 func ReadRequestAddEcuName(builder *flatbuffers.Builder, ecuName flatbuffers.UOffsetT) {
 	builder.PrependUOffsetTSlot(0, flatbuffers.UOffsetT(ecuName), 0)
@@ -80,6 +92,9 @@ func ReadRequestAddSignalName(builder *flatbuffers.Builder, signalName flatbuffe
 }
 func ReadRequestAddSignalType(builder *flatbuffers.Builder, signalType SIGNAL_TYPE) {
 	builder.PrependInt8Slot(2, int8(signalType), 0)
+}
+func ReadRequestAddSignalDirection(builder *flatbuffers.Builder, signalDirection SIGNAL_DIRECTION) {
+	builder.PrependInt8Slot(3, int8(signalDirection), 0)
 }
 func ReadRequestEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()

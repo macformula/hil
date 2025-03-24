@@ -18,7 +18,16 @@ type PinModel struct {
 }
 
 func NewPinModel() *PinModel {
-	return &PinModel{}
+	return &PinModel{
+		digitalInputPins:  make(map[string]map[string]bool),
+		digitalOutputPins: make(map[string]map[string]bool),
+		analogInputPins:   make(map[string]map[string]float64),
+		analogOutputPins:  make(map[string]map[string]float64),
+		digitalInputMtx:   &sync.Mutex{},
+		digitalOutputMtx:  &sync.Mutex{},
+		analogInputMtx:    &sync.Mutex{},
+		analogOutputMtx:   &sync.Mutex{},
+	}
 }
 
 func (p *PinModel) RegisterDigitalOutput(ecuName, sigName string) {
@@ -95,15 +104,15 @@ func (p *PinModel) ReadAnalogOutput(ecu_name string, sig_name string) (float64, 
 
 // SetDigital sets an output digital pin for a SIL digital pin.
 func (p *PinModel) SetDigitalInput(ecu_name string, sig_name string, level bool) error {
-	p.digitalOutputMtx.Lock()
-	defer p.digitalOutputMtx.Unlock()
+	p.digitalInputMtx.Lock()
+	defer p.digitalInputMtx.Unlock()
 
 	_, ok := mapLookup(p.digitalOutputPins, ecu_name, sig_name)
 	if !ok {
-		p.RegisterDigitalOutput(ecu_name, sig_name)
+		p.RegisterDigitalInput(ecu_name, sig_name)
 	}
 
-	p.digitalOutputPins[ecu_name][sig_name] = level
+	p.digitalInputPins[ecu_name][sig_name] = level
 
 	return nil
 }
@@ -114,10 +123,10 @@ func (p *PinModel) SetAnalogInput(ecu_name string, sig_name string, voltage floa
 
 	_, ok := mapLookup(p.analogInputPins, ecu_name, sig_name)
 	if !ok {
-		p.RegisterAnalogOutput(ecu_name, sig_name)
+		p.RegisterAnalogInput(ecu_name, sig_name)
 	}
 
-	p.analogOutputPins[ecu_name][sig_name] = voltage
+	p.analogInputPins[ecu_name][sig_name] = voltage
 
 	return nil
 }

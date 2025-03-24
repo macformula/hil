@@ -94,7 +94,24 @@ func (c *FbController) handleConnection(conn net.Conn) {
 				ecu := string(unionRequest.EcuName())
 				sig_name := string(unionRequest.SignalName())
 				sig_type := unionRequest.SignalType()
+				sig_direction := unionRequest.SignalDirection()
 
+				switch sig_type {
+				case signals.SIGNAL_TYPEDIGITAL:
+					switch sig_direction {
+					case signals.SIGNAL_DIRECTIONINPUT:
+						c.pins.ReadDigitalInput(ecu, sig_name)
+					case signals.SIGNAL_DIRECTIONOUTPUT:
+						c.pins.ReadDigitalOutput(ecu, sig_name)
+					}
+				case signals.SIGNAL_TYPEANALOG:
+					switch sig_direction {
+					case signals.SIGNAL_DIRECTIONINPUT:
+						c.pins.ReadAnalogInput(ecu, sig_name)
+					case signals.SIGNAL_DIRECTIONOUTPUT:
+						c.pins.ReadAnalogOutput(ecu, sig_name)
+					}
+				}
 			case signals.RequestTypeSetRequest:
 				unionRequest := new(signals.SetRequest)
 				unionRequest.Init(unionTable.Bytes, unionTable.Pos)
@@ -102,22 +119,40 @@ func (c *FbController) handleConnection(conn net.Conn) {
 				ecu := string(unionRequest.EcuName())
 				sig_name := string(unionRequest.SignalName())
 				sig_type := unionRequest.SignalType()
+				sig_direction := unionRequest.SignalDirection()
 
 				unionTable = new(flatbuffers.Table)
+				var value bool
+				var voltage float64
 				if unionRequest.SignalValue(unionTable) {
 					switch unionRequest.SignalValueType() {
 					case signals.SignalValueDigital:
 						unionSignalValue := new(signals.Digital)
 						unionSignalValue.Init(unionTable.Bytes, unionTable.Pos)
 
-						value := unionSignalValue.Value()
-						c.l.Info(fmt.Sprintf("the ecu is: %s, sig is %s, sig_type is %s, val is %t", ecu, sig_name, sig_type, value))
+						value = unionSignalValue.Value()
+
 					case signals.SignalValueAnalog:
 						unionSignalValue := new(signals.Analog)
 						unionSignalValue.Init(unionTable.Bytes, unionTable.Pos)
 
-						voltage := unionSignalValue.Voltage()
-						c.l.Info(fmt.Sprintf("the ecu is: %s, sig is %s, val is %f", ecu, sig_name, voltage))
+						voltage = unionSignalValue.Voltage()
+					}
+				}
+				switch sig_type {
+				case signals.SIGNAL_TYPEDIGITAL:
+					switch sig_direction {
+					case signals.SIGNAL_DIRECTIONINPUT:
+						c.pins.SetDigitalInput(ecu, sig_name, value)
+					case signals.SIGNAL_DIRECTIONOUTPUT:
+						c.pins.SetDigitalOutput(ecu, sig_name, value)
+					}
+				case signals.SIGNAL_TYPEANALOG:
+					switch sig_direction {
+					case signals.SIGNAL_DIRECTIONINPUT:
+						c.pins.SetAnalogInput(ecu, sig_name, voltage)
+					case signals.SIGNAL_DIRECTIONOUTPUT:
+						c.pins.SetAnalogOutput(ecu, sig_name, voltage)
 					}
 				}
 
@@ -130,7 +165,22 @@ func (c *FbController) handleConnection(conn net.Conn) {
 				sig_type := unionRequest.SignalType()
 				sig_direction := unionRequest.SignalDirection()
 
-				c.l.Info(fmt.Sprintf("the ecu is: %s, sig is %s, sig_type is %s, sig_direction is %s", ecu, sig_name, sig_type, sig_direction))
+				switch sig_type {
+				case signals.SIGNAL_TYPEDIGITAL:
+					switch sig_direction {
+					case signals.SIGNAL_DIRECTIONINPUT:
+						c.pins.RegisterDigitalInput(ecu, sig_name)
+					case signals.SIGNAL_DIRECTIONOUTPUT:
+						c.pins.RegisterDigitalOutput(ecu, sig_name)
+					}
+				case signals.SIGNAL_TYPEANALOG:
+					switch sig_direction {
+					case signals.SIGNAL_DIRECTIONINPUT:
+						c.pins.RegisterAnalogInput(ecu, sig_name)
+					case signals.SIGNAL_DIRECTIONOUTPUT:
+						c.pins.RegisterAnalogOutput(ecu, sig_name)
+					}
+				}
 			}
 
 		}
@@ -145,205 +195,4 @@ func (c *FbController) WriteCurrent(_ *AnalogPin, _ float64) error {
 // ReadCurrent returns the current of a SIL analog pin (unimplemented for SIL).
 func (c *FbController) ReadCurrent(_ *AnalogPin) (float64, error) {
 	return 0.00, errors.New("unimplemented function on sil FbController")
-}
-
-// EnumerateRegisteredSignals is a gRPC server call that returns all registered signalInfo.
-func (c *FbController) EnumerateRegisteredSignals(
-	_ context.Context, _ *pb.EnumerateRegisteredSignalsRequest) (*pb.EnumerateRegisteredSignalsResponse, error) {
-	var signals []*pb.SignalInfo
-
-	for _, ecuSignals := range c.signalInfo {
-		for _, info := range ecuSignals {
-			signals = append(signals, info)
-		}
-	}
-
-	return &pb.EnumerateRegisteredSignalsResponse{
-		Status:  true,
-		Error:   "",
-		Signals: signals,
-	}, nil
-}
-
-// WriteSignal is a gRPC server call that sets a signal value depending on the signal type.
-func (c *FbController) WriteSignal(_ context.Context, in *pb.WriteSignalRequest) (*pb.WriteSignalResponse, error) {
-	switch in.Value.(type) {
-	// NOTE: if we get a client request to write a signal, it should go to an input map. The opposite is also true.
-	case *pb.WriteSignalRequest_ValueAnalog:
-		_, ok := mapLookup(c.analogInputPins, in.EcuName, in.SignalName)
-		if !ok {
-			return &pb.WriteSignalResponse{
-				Status: false,
-				Error: fmt.Sprintf("no writeable analog signal with ecu name (%s) and signal name (%s)",
-					in.EcuName, in.SignalName),
-			}, nil
-		}
-
-		c.analogInputMtx.Lock()
-		defer c.analogInputMtx.Unlock()
-
-		c.analogInputPins[in.EcuName][in.SignalName] = in.GetValueAnalog().GetVoltage()
-	case *pb.WriteSignalRequest_ValueDigital:
-		_, ok := mapLookup(c.digitalInputPins, in.EcuName, in.SignalName)
-		if !ok {
-			return &pb.WriteSignalResponse{
-				Status: false,
-				Error: fmt.Sprintf("no writeable digital signal with ecu name (%s) and signal name (%s)",
-					in.EcuName, in.SignalName),
-			}, nil
-		}
-
-		c.digitalInputMtx.Lock()
-		defer c.digitalInputMtx.Unlock()
-
-		c.digitalInputPins[in.EcuName][in.SignalName] = in.GetValueDigital().GetLevel()
-	case *pb.WriteSignalRequest_ValuePwm:
-		return &pb.WriteSignalResponse{
-			Status: false,
-			Error:  _pwmUnsupportedErr,
-		}, nil
-	default:
-		return &pb.WriteSignalResponse{
-			Status: false,
-			Error:  _unknownSignalTypeErr,
-		}, nil
-	}
-
-	return &pb.WriteSignalResponse{
-		Status: true,
-		Error:  "",
-	}, nil
-}
-
-// ReadSignal is a gRPC server call that reads a signal value depending on the signal type.
-func (c *FbController) ReadSignal(_ context.Context, in *pb.ReadSignalRequest) (*pb.ReadSignalResponse, error) {
-	switch in.SignalType {
-	case pb.SignalType_SIGNAL_TYPE_DIGITAL:
-		// Allow reading outputs or inputs. An output signal from the client perspective is an input on the server
-		// perspective and vise-versa.
-
-		var pins map[string]map[string]bool
-		switch in.SignalDirection {
-		case pb.SignalDirection_SIGNAL_DIRECTION_INPUT:
-			c.digitalOutputMtx.Lock()
-			defer c.digitalOutputMtx.Unlock()
-			pins = c.digitalOutputPins
-		case pb.SignalDirection_SIGNAL_DIRECTION_OUTPUT:
-			c.digitalInputMtx.Lock()
-			defer c.digitalInputMtx.Unlock()
-			pins = c.digitalInputPins
-		default:
-			return &pb.ReadSignalResponse{
-				Status: false,
-				Error:  _unknownSignalDirErr,
-				Value:  &pb.ReadSignalResponse_ValueDigital{ValueDigital: &pb.DigitalSignal{Level: false}},
-			}, nil
-
-		}
-
-		level, ok := mapLookup(pins, in.EcuName, in.SignalName)
-		if !ok {
-			return &pb.ReadSignalResponse{
-				Status: false,
-				Error: fmt.Sprintf("no digital signal with ecu name (%s) and signal name (%s)",
-					in.EcuName, in.SignalName),
-				Value: &pb.ReadSignalResponse_ValueDigital{ValueDigital: &pb.DigitalSignal{Level: false}},
-			}, nil
-		}
-
-		return &pb.ReadSignalResponse{
-			Status: true,
-			Error:  "",
-			Value:  &pb.ReadSignalResponse_ValueDigital{ValueDigital: &pb.DigitalSignal{Level: level}},
-		}, nil
-	case pb.SignalType_SIGNAL_TYPE_ANALOG:
-		// Allow reading outputs or inputs. An output signal from the client perspective is an input on the server
-		// perspective and vise-versa.
-
-		var pins map[string]map[string]float64
-		switch in.SignalDirection {
-		case pb.SignalDirection_SIGNAL_DIRECTION_INPUT:
-			c.analogOutputMtx.Lock()
-			defer c.analogOutputMtx.Unlock()
-			pins = c.analogOutputPins
-		case pb.SignalDirection_SIGNAL_DIRECTION_OUTPUT:
-			c.analogInputMtx.Lock()
-			defer c.analogInputMtx.Lock()
-			pins = c.analogInputPins
-		default:
-			return &pb.ReadSignalResponse{
-				Status: false,
-				Error:  _unknownSignalDirErr,
-				Value:  &pb.ReadSignalResponse_ValueAnalog{ValueAnalog: &pb.AnalogSignal{Voltage: 0.0}},
-			}, nil
-		}
-
-		voltage, ok := mapLookup(pins, in.EcuName, in.SignalName)
-		if !ok {
-			return &pb.ReadSignalResponse{
-				Status: false,
-				Error: fmt.Sprintf("no analog signal with ecu name (%s) and signal name (%s)",
-					in.EcuName, in.SignalName),
-				Value: &pb.ReadSignalResponse_ValueAnalog{ValueAnalog: &pb.AnalogSignal{Voltage: 0.0}},
-			}, nil
-		}
-
-		return &pb.ReadSignalResponse{
-			Status: true,
-			Error:  "",
-			Value:  &pb.ReadSignalResponse_ValueAnalog{ValueAnalog: &pb.AnalogSignal{Voltage: voltage}},
-		}, nil
-	default:
-		return &pb.ReadSignalResponse{
-			Status: false,
-			Error:  _unknownSignalTypeErr,
-			Value:  &pb.ReadSignalResponse_ValueDigital{ValueDigital: &pb.DigitalSignal{Level: false}},
-		}, nil
-	}
-}
-
-func (c *FbController) RegisterSignal(_ context.Context, in *pb.RegisterSignalRequest) (*pb.RegisterSignalResponse, error) {
-	switch in.SignalType {
-	case pb.SignalType_SIGNAL_TYPE_DIGITAL:
-		// An output signal from the client perspective is an input on the server perspective and vise-versa.
-		switch in.SignalDirection {
-		case pb.SignalDirection_SIGNAL_DIRECTION_INPUT:
-			c.registerDigitalOutput(in.EcuName, in.SignalName)
-		case pb.SignalDirection_SIGNAL_DIRECTION_OUTPUT:
-			c.registerDigitalInput(in.EcuName, in.SignalName)
-		default:
-			return &pb.RegisterSignalResponse{
-				Status: false,
-				Error:  _unknownSignalDirErr,
-			}, nil
-		}
-	case pb.SignalType_SIGNAL_TYPE_ANALOG:
-		// An output signal from the client perspective is an input on the server perspective and vise-versa.
-		switch in.SignalDirection {
-		case pb.SignalDirection_SIGNAL_DIRECTION_INPUT:
-			c.registerAnalogOutput(in.EcuName, in.SignalName)
-		case pb.SignalDirection_SIGNAL_DIRECTION_OUTPUT:
-			c.registerAnalogInput(in.EcuName, in.SignalName)
-		default:
-			return &pb.RegisterSignalResponse{
-				Status: false,
-				Error:  _unknownSignalDirErr,
-			}, nil
-		}
-	case pb.SignalType_SIGNAL_TYPE_PWM:
-		return &pb.RegisterSignalResponse{
-			Status: false,
-			Error:  _pwmUnsupportedErr,
-		}, nil
-	default:
-		return &pb.RegisterSignalResponse{
-			Status: false,
-			Error:  _unknownSignalTypeErr,
-		}, nil
-	}
-
-	return &pb.RegisterSignalResponse{
-		Status: true,
-		Error:  "",
-	}, nil
 }
