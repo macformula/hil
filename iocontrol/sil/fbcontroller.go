@@ -92,15 +92,32 @@ func (c *FbController) handleConnection(conn net.Conn) {
 			switch requestType {
 			case signals.RequestTypeReadRequest:
 				ecu, sigName, sigType, sigDirection := deserializeReadRequest(unionTable)
-				c.l.Info(fmt.Sprintf("ecu: %s, signame: %s, sigType: %s, sigDir: %s", ecu, sigName, sigType, sigDirection))
 
 				switch sigType {
 				case signals.SIGNAL_TYPEDIGITAL:
 					switch sigDirection {
 					case signals.SIGNAL_DIRECTIONINPUT:
-						c.pins.ReadDigitalInput(ecu, sigName)
+						level, err := c.pins.ReadDigitalInput(ecu, sigName)
+						if err != nil {
+							c.l.Error(fmt.Sprintf("read digital input ecu (%s) signal name (%s) error: %s", ecu, sigName, err))
+						}
+
+						response := serializeReadResponse(signals.SignalValueDigital, level, _unsetAnalogValue, true, "")
+						_, err = conn.Write(response)
+						if err != nil {
+							c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
+						}
 					case signals.SIGNAL_DIRECTIONOUTPUT:
-						c.pins.ReadDigitalOutput(ecu, sigName)
+						level, err := c.pins.ReadDigitalOutput(ecu, sigName)
+						if err != nil {
+							c.l.Error(fmt.Sprintf("read digital output ecu (%s) signal name (%s)", ecu, sigName))
+						}
+
+						response := serializeReadResponse(signals.SignalValueDigital, level, _unsetAnalogValue, true, "")
+						_, err = conn.Write(response)
+						if err != nil {
+							c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
+						}
 					}
 				case signals.SIGNAL_TYPEANALOG:
 					switch sigDirection {
@@ -219,6 +236,7 @@ func deserializeRegisterRequest(unionTable *flatbuffers.Table) (string, string, 
 
 func serializeReadResponse(sigType signals.SignalValue, level bool, voltage float64, ok bool, err string) []byte {
 	builder := flatbuffers.NewBuilder(1024)
+	errorString := builder.CreateString(err)
 
 	var sigVal flatbuffers.UOffsetT
 	if sigType == signals.SignalValueDigital {
@@ -236,13 +254,12 @@ func serializeReadResponse(sigType signals.SignalValue, level bool, voltage floa
 	signals.ReadResponseAddSignalValueType(builder, sigType)
 	signals.ReadResponseAddSignalValue(builder, sigVal)
 	signals.ReadResponseAddOk(builder, ok)
-	errorString := builder.CreateString(err)
 	signals.ReadResponseAddError(builder, errorString)
-	read_response := signals.ReadResponseEnd(builder)
+	readResponse := signals.ReadResponseEnd(builder)
 
 	signals.ResponseStart(builder)
 	signals.ResponseAddResponseType(builder, signals.ResponseTypeReadResponse)
-	signals.ResponseAddResponse(builder, read_response)
+	signals.ResponseAddResponse(builder, readResponse)
 	response := signals.ResponseEnd(builder)
 	builder.Finish(response)
 

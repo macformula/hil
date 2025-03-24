@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"time"
 
@@ -13,27 +14,31 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	_addr = "localhost:12345"
+)
+
 type Client struct {
-	addr string
-	l    *zap.Logger
+	l *zap.Logger
 }
 
-func (c *Client) Write() {
-	// Connect to the server
-	conn, err := net.Dial("tcp", c.addr)
-	if err != nil {
-		c.l.Info(fmt.Sprintf("Error connecting to server: %e", err))
-	}
-	defer conn.Close()
-
-	fmt.Println("Connected to server")
-
+func (c *Client) Write(conn net.Conn) {
 	reg_req := serializeRegisterRequest("lv", "raspi_en", signals.SIGNAL_TYPEDIGITAL, signals.SIGNAL_DIRECTIONINPUT)
-	read_req1 := serializeReadRequest("lv", "raspi_en", signals.SIGNAL_TYPEDIGITAL)
-	set_req := serializeSetRequest("lv", "raspi_en", signals.SIGNAL_TYPEDIGITAL, 0.0, true)
-	read_req2 := serializeReadRequest("lv", "raspi_en", signals.SIGNAL_TYPEDIGITAL)
+	set_req1 := serializeSetRequest("lv", "raspi_en", signals.SIGNAL_TYPEDIGITAL, 0.0, false)
+	read_req1 := serializeReadRequest("lv", "raspi_en", signals.SIGNAL_TYPEDIGITAL, signals.SIGNAL_DIRECTIONINPUT)
+	set_req2 := serializeSetRequest("lv", "raspi_en", signals.SIGNAL_TYPEDIGITAL, 0.0, true)
+	read_req2 := serializeReadRequest("lv", "raspi_en", signals.SIGNAL_TYPEDIGITAL, signals.SIGNAL_DIRECTIONINPUT)
+
 	// Send data to the server
-	_, err = conn.Write(reg_req)
+	_, err := conn.Write(reg_req)
+	if err != nil {
+		fmt.Println("Error sending data:", err)
+		return
+	}
+
+	time.Sleep(2 * time.Second)
+
+	_, err = conn.Write(set_req1)
 	if err != nil {
 		fmt.Println("Error sending data:", err)
 		return
@@ -49,7 +54,7 @@ func (c *Client) Write() {
 
 	time.Sleep(2 * time.Second)
 
-	_, err = conn.Write(set_req)
+	_, err = conn.Write(set_req2)
 	if err != nil {
 		fmt.Println("Error sending data:", err)
 		return
@@ -62,6 +67,26 @@ func (c *Client) Write() {
 		fmt.Println("Error sending data:", err)
 		return
 	}
+
+	time.Sleep(2 * time.Second)
+}
+
+func (c *Client) Listen(conn net.Conn) {
+	for {
+		buffer := make([]byte, 2024)
+		_, err := conn.Read(buffer)
+		if err != nil {
+			if err != io.EOF {
+				c.l.Error(fmt.Sprintf("read error: %s", err))
+			}
+		}
+		response := signals.GetRootAsResponse(buffer, 0)
+		unionTable := new(flatbuffers.Table)
+		if response.Response(unionTable) {
+			ok, errorString, level, voltage := deserializeReadResponse(unionTable)
+			c.l.Info(fmt.Sprintf("recieved response ok (%t) errorString (%s) level (%t) voltage (%f)", ok, errorString, level, voltage))
+		}
+	}
 }
 
 func main() {
@@ -71,37 +96,50 @@ func main() {
 	logger, _ := loggerConfig.Build()
 
 	controller := sil.NewFbController(12345, logger)
-
 	go controller.Open(ctx)
 
-	client := Client{
-		addr: "localhost:12345",
-		l:    logger,
+	// Connect to the server
+	conn, err := net.Dial("tcp", _addr)
+	if err != nil {
+		logger.Info(fmt.Sprintf("Error connecting to server: %e", err))
 	}
-	client.Write()
+	defer conn.Close()
+
+	fmt.Println("Connected to server")
+
+	client := Client{
+		l: logger,
+	}
+	go client.Write(conn)
+	go client.Listen(conn)
 
 	for {
 
 	}
 }
 
-func serializeRegisterRequest(ecu_name string, signal_name string, signal_type signals.SIGNAL_TYPE, signal_direction signals.SIGNAL_DIRECTION) []byte {
-	builder2 := flatbuffers.NewBuilder(1024)
-	ecu2 := builder2.CreateString(ecu_name)
-	signal_name2 := builder2.CreateString(signal_name)
+func serializeRegisterRequest(ecu_name string, signal_name string, signalType signals.SIGNAL_TYPE, signal_direction signals.SIGNAL_DIRECTION) []byte {
+	builder := flatbuffers.NewBuilder(1024)
+	ecu2 := builder.CreateString(ecu_name)
+	signal_name2 := builder.CreateString(signal_name)
 
-	signals.RegisterRequestStart(builder2)
-	signals.RegisterRequestAddEcuName(builder2, ecu2)
-	signals.RegisterRequestAddSignalName(builder2, signal_name2)
-	signals.RegisterRequestAddSignalType(builder2, signal_type)
-	signals.RegisterRequestAddSignalDirection(builder2, signal_direction)
+	signals.RegisterRequestStart(builder)
+	signals.RegisterRequestAddEcuName(builder, ecu2)
+	signals.RegisterRequestAddSignalName(builder, signal_name2)
+	signals.RegisterRequestAddSignalType(builder, signalType)
+	signals.RegisterRequestAddSignalDirection(builder, signal_direction)
 
-	reg_request := signals.RegisterRequestEnd(builder2)
-	builder2.Finish(reg_request)
-	return builder2.FinishedBytes()
+	registerRequest := signals.RegisterRequestEnd(builder)
+
+	signals.RequestStart(builder)
+	signals.RequestAddRequestType(builder, signals.RequestTypeRegisterRequest)
+	signals.RequestAddRequest(builder, registerRequest)
+	request := signals.RequestEnd(builder)
+	builder.Finish(request)
+	return builder.FinishedBytes()
 }
 
-func serializeReadRequest(ecu_name string, signal_name string, signal_type signals.SIGNAL_TYPE) []byte {
+func serializeReadRequest(ecu_name string, signal_name string, signalType signals.SIGNAL_TYPE, sigDirection signals.SIGNAL_DIRECTION) []byte {
 	builder := flatbuffers.NewBuilder(1024)
 	ecu := builder.CreateString(ecu_name)
 	sig_name := builder.CreateString(signal_name)
@@ -109,7 +147,8 @@ func serializeReadRequest(ecu_name string, signal_name string, signal_type signa
 	signals.ReadRequestStart(builder)
 	signals.ReadRequestAddEcuName(builder, ecu)
 	signals.ReadRequestAddSignalName(builder, sig_name)
-	signals.ReadRequestAddSignalType(builder, signals.SIGNAL_TYPEDIGITAL)
+	signals.ReadRequestAddSignalType(builder, signalType)
+	signals.ReadRequestAddSignalDirection(builder, sigDirection)
 	readRequest := signals.ReadRequestEnd(builder)
 
 	signals.RequestStart(builder)
@@ -120,50 +159,77 @@ func serializeReadRequest(ecu_name string, signal_name string, signal_type signa
 	return builder.FinishedBytes()
 }
 
-func serializeSetRequest(ecu_name string, signal_name string, signal_type signals.SIGNAL_TYPE, voltage float64, level bool) []byte {
-	builder2 := flatbuffers.NewBuilder(1024)
-	ecu2 := builder2.CreateString(ecu_name)
-	signal_name2 := builder2.CreateString(signal_name)
+func serializeSetRequest(ecu_name string, signal_name string, signalType signals.SIGNAL_TYPE, voltage float64, level bool) []byte {
+	builder := flatbuffers.NewBuilder(1024)
+	ecu2 := builder.CreateString(ecu_name)
+	signal_name2 := builder.CreateString(signal_name)
 
-	switch signal_type {
+	switch signalType {
 	case signals.SIGNAL_TYPEDIGITAL:
-		signals.DigitalStart(builder2)
-		signals.DigitalAddValue(builder2, level)
-		dig_sig := signals.DigitalEnd(builder2)
+		signals.DigitalStart(builder)
+		signals.DigitalAddValue(builder, level)
+		dig_sig := signals.DigitalEnd(builder)
 
-		signals.SetRequestStart(builder2)
-		signals.SetRequestAddEcuName(builder2, ecu2)
-		signals.SetRequestAddSignalName(builder2, signal_name2)
-		signals.SetRequestAddSignalType(builder2, signals.SIGNAL_TYPEDIGITAL)
-		signals.SetRequestAddSignalValueType(builder2, signals.SignalValueDigital)
-		signals.SetRequestAddSignalValue(builder2, dig_sig)
-		setRequest2 := signals.ReadRequestEnd(builder2)
+		signals.SetRequestStart(builder)
+		signals.SetRequestAddEcuName(builder, ecu2)
+		signals.SetRequestAddSignalName(builder, signal_name2)
+		signals.SetRequestAddSignalType(builder, signals.SIGNAL_TYPEDIGITAL)
+		signals.SetRequestAddSignalValueType(builder, signals.SignalValueDigital)
+		signals.SetRequestAddSignalValue(builder, dig_sig)
+		setRequest2 := signals.ReadRequestEnd(builder)
 
-		signals.RequestStart(builder2)
-		signals.RequestAddRequestType(builder2, signals.RequestTypeSetRequest)
-		signals.RequestAddRequest(builder2, setRequest2)
-		setRequest := signals.RequestEnd(builder2)
-		builder2.Finish(setRequest)
-		return builder2.FinishedBytes()
+		signals.RequestStart(builder)
+		signals.RequestAddRequestType(builder, signals.RequestTypeSetRequest)
+		signals.RequestAddRequest(builder, setRequest2)
+		setRequest := signals.RequestEnd(builder)
+		builder.Finish(setRequest)
+		return builder.FinishedBytes()
 	case signals.SIGNAL_TYPEANALOG:
-		signals.AnalogStart(builder2)
-		signals.AnalogAddVoltage(builder2, voltage)
-		dig_sig := signals.AnalogEnd(builder2)
+		signals.AnalogStart(builder)
+		signals.AnalogAddVoltage(builder, voltage)
+		dig_sig := signals.AnalogEnd(builder)
 
-		signals.SetRequestStart(builder2)
-		signals.SetRequestAddEcuName(builder2, ecu2)
-		signals.SetRequestAddSignalName(builder2, signal_name2)
-		signals.SetRequestAddSignalType(builder2, signals.SIGNAL_TYPEANALOG)
-		signals.SetRequestAddSignalValueType(builder2, signals.SignalValueAnalog)
-		signals.SetRequestAddSignalValue(builder2, dig_sig)
-		setRequest2 := signals.ReadRequestEnd(builder2)
+		signals.SetRequestStart(builder)
+		signals.SetRequestAddEcuName(builder, ecu2)
+		signals.SetRequestAddSignalName(builder, signal_name2)
+		signals.SetRequestAddSignalType(builder, signals.SIGNAL_TYPEANALOG)
+		signals.SetRequestAddSignalValueType(builder, signals.SignalValueAnalog)
+		signals.SetRequestAddSignalValue(builder, dig_sig)
+		setRequest2 := signals.ReadRequestEnd(builder)
 
-		signals.RequestStart(builder2)
-		signals.RequestAddRequestType(builder2, signals.RequestTypeSetRequest)
-		signals.RequestAddRequest(builder2, setRequest2)
-		setRequest := signals.RequestEnd(builder2)
-		builder2.Finish(setRequest)
-		return builder2.FinishedBytes()
+		signals.RequestStart(builder)
+		signals.RequestAddRequestType(builder, signals.RequestTypeSetRequest)
+		signals.RequestAddRequest(builder, setRequest2)
+		setRequest := signals.RequestEnd(builder)
+		builder.Finish(setRequest)
+		return builder.FinishedBytes()
 	}
 	return nil
+}
+
+func deserializeReadResponse(unionTable *flatbuffers.Table) (bool, string, bool, float64) {
+	unionResponse := new(signals.ReadResponse)
+	unionResponse.Init(unionTable.Bytes, unionTable.Pos)
+
+	ok := unionResponse.Ok()
+	errorString := string(unionResponse.Error())
+
+	unionTable = new(flatbuffers.Table)
+	if unionResponse.SignalValue(unionTable) {
+		switch unionResponse.SignalValueType() {
+		case signals.SignalValueDigital:
+			unionSignalValue := new(signals.Digital)
+			unionSignalValue.Init(unionTable.Bytes, unionTable.Pos)
+
+			return ok, errorString, unionSignalValue.Value(), 0.0
+
+		case signals.SignalValueAnalog:
+			unionSignalValue := new(signals.Analog)
+			unionSignalValue.Init(unionTable.Bytes, unionTable.Pos)
+
+			return ok, errorString, false, unionSignalValue.Voltage()
+		}
+	}
+
+	return false, "", false, 0.0
 }
