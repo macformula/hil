@@ -35,6 +35,7 @@ const (
 	_vehCan          = "veh"
 	_ptCan           = "pt"
 	_defaultLogLevel = zap.InfoLevel
+	_withVcan        = false // keep this false for mac/windows development
 )
 
 // These are set by the build.sh
@@ -112,39 +113,44 @@ func main() {
 	ctx := context.Background()
 
 	// Create socketcan connections.
-	vehCanConn, err := socketcan.DialContext(ctx, _canNetwork, cfg.CanInterfaces.Veh)
-	if err != nil {
-		logger.Error("failed to setup veh can connection",
-			zap.Error(errors.Wrap(err, "dial context")))
-		return
+	var vehBusManager *canlink.BusManager
+	var ptBusManager *canlink.BusManager
+	var ptCanTracer *canlink.Tracer
+	var vehCanTracer *canlink.Tracer
+	if _withVcan {
+		vehCanConn, err := socketcan.DialContext(ctx, _canNetwork, cfg.CanInterfaces.Veh)
+		if err != nil {
+			logger.Error("failed to setup veh can connection",
+				zap.Error(errors.Wrap(err, "dial context")))
+			return
+		}
+
+		ptCanConn, err := socketcan.DialContext(ctx, _canNetwork, cfg.CanInterfaces.Pt)
+		if err != nil {
+			logger.Error("failed to setup pt can connection",
+				zap.Error(errors.Wrap(err, "dial context")))
+			return
+		}
+		vehBusManager = canlink.NewBusManager(logger, &vehCanConn)
+		ptBusManager = canlink.NewBusManager(logger, &ptCanConn)
+
+		// Create can tracers.
+		vehCanTracer = canlink.NewTracer(
+			cfg.CanInterfaces.Veh,
+			logger,
+			&canlink.Jsonl{},
+			canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
+			canlink.WithFileName(_vehCan),
+		)
+
+		ptCanTracer = canlink.NewTracer(
+			cfg.CanInterfaces.Pt,
+			logger,
+			&canlink.Jsonl{},
+			canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
+			canlink.WithFileName(_ptCan),
+		)
 	}
-
-	ptCanConn, err := socketcan.DialContext(ctx, _canNetwork, cfg.CanInterfaces.Pt)
-	if err != nil {
-		logger.Error("failed to setup pt can connection",
-			zap.Error(errors.Wrap(err, "dial context")))
-		return
-	}
-
-	vehBusManager := canlink.NewBusManager(logger, &vehCanConn)
-	ptBusManager := canlink.NewBusManager(logger, &ptCanConn)
-
-	// Create can tracers.
-	vehCanTracer := canlink.NewTracer(
-		cfg.CanInterfaces.Veh,
-		logger,
-		&canlink.Jsonl{},
-		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
-		canlink.WithFileName(_vehCan),
-	)
-
-	ptCanTracer := canlink.NewTracer(
-		cfg.CanInterfaces.Pt,
-		logger,
-		&canlink.Jsonl{},
-		canlink.WithTimeout(time.Duration(cfg.CanTracerTimeoutMinutes)*time.Minute),
-		canlink.WithFileName(_ptCan),
-	)
 
 	// Get controllers
 	var ioOpts = make([]iocontrol.IOControlOption, 0)
@@ -183,21 +189,35 @@ func main() {
 	// Create Lv Controller client.
 	lvControllerClient := lvcontroller.NewClient(pinoutController, logger)
 
-	// Create Front Controller client.
-	frontControllerClient := frontcontroller.NewClient(pinoutController, vehBusManager, logger)
+	var app macformula.App
+	var frontControllerClient *frontcontroller.Client
+	if _withVcan {
+		frontControllerClient = frontcontroller.NewClient(pinoutController, vehBusManager, logger)
 
-	// Create app object.
-	app := macformula.App{
-		Config:                cfg,
-		VehBusManager:         vehBusManager,
-		PtBusManager:          ptBusManager,
-		VehCanTracer:          vehCanTracer,
-		PtCanTracer:           ptCanTracer,
-		PinoutController:      pinoutController,
-		TestBench:             testBench,
-		LvControllerClient:    lvControllerClient,
-		FrontControllerClient: frontControllerClient,
-		ResultsProcessor:      resultProcessor,
+		// Create app object.
+		app = macformula.App{
+			Config:                cfg,
+			VehBusManager:         vehBusManager,
+			PtBusManager:          ptBusManager,
+			VehCanTracer:          vehCanTracer,
+			PtCanTracer:           ptCanTracer,
+			PinoutController:      pinoutController,
+			TestBench:             testBench,
+			LvControllerClient:    lvControllerClient,
+			FrontControllerClient: frontControllerClient,
+			ResultsProcessor:      resultProcessor,
+			WithVcan:              _withVcan,
+		}
+	} else {
+		app = macformula.App{
+			Config:                cfg,
+			PinoutController:      pinoutController,
+			TestBench:             testBench,
+			LvControllerClient:    lvControllerClient,
+			FrontControllerClient: frontControllerClient,
+			ResultsProcessor:      resultProcessor,
+			WithVcan:              _withVcan,
+		}
 	}
 
 	// Create sequences.

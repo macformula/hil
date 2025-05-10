@@ -22,5 +22,6 @@ type App struct {
 	FrontControllerClient *frontcontroller.Client
 	ResultsProcessor      *results.ResultAccumulator
 
+	WithVcan    bool
 	CurrProcess *ProcessInfo
 }
