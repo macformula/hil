@@ -117,6 +117,7 @@ func main() {
 	var ptBusManager *canlink.BusManager
 	var ptCanTracer *canlink.Tracer
 	var vehCanTracer *canlink.Tracer
+	var silController *sil.Controller
 	if _withVcan {
 		vehCanConn, err := socketcan.DialContext(ctx, _canNetwork, cfg.CanInterfaces.Veh)
 		if err != nil {
@@ -157,7 +158,7 @@ func main() {
 
 	switch rev {
 	case pinout.Sil:
-		silController := sil.NewController(cfg.SilPort, logger)
+		silController = sil.NewController(cfg.SilPort, logger)
 		ioOpts = append(ioOpts, iocontrol.WithSil(silController))
 	default:
 		panic("unconfigured revision")
@@ -202,6 +203,7 @@ func main() {
 			VehCanTracer:          vehCanTracer,
 			PtCanTracer:           ptCanTracer,
 			PinoutController:      pinoutController,
+			PinModel:              silController.Pins,
 			TestBench:             testBench,
 			LvControllerClient:    lvControllerClient,
 			FrontControllerClient: frontControllerClient,
@@ -212,6 +214,7 @@ func main() {
 		app = macformula.App{
 			Config:                cfg,
 			PinoutController:      pinoutController,
+			PinModel:              silController.Pins,
 			TestBench:             testBench,
 			LvControllerClient:    lvControllerClient,
 			FrontControllerClient: frontControllerClient,
