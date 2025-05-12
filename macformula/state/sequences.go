@@ -27,6 +27,7 @@ var _sequenceConstructors = []sequenceConstructor{
 	newTracerSequence,
 	newSleepSequence,
 	newDoNothingSequence,
+	newBasicIoSequence,
 }
 
 func newLvControllerSequence(a *macformula.App, l *zap.Logger) flow.Sequence {
@@ -81,6 +82,18 @@ func newSleepSequence(a *macformula.App, l *zap.Logger) flow.Sequence {
 			newSleep(5 * time.Second),
 			newSleep(2 * time.Second),
 			newSleep(1 * time.Second),
+			newCleanup(a, l),
+		},
+	}
+}
+
+func newBasicIoSequence(a *macformula.App, l *zap.Logger) flow.Sequence {
+	return flow.Sequence{
+		Name: "BasicIo 🧪",
+		Desc: "Test sequence for BasicIo firmware project.",
+		States: []flow.State{
+			newSetup(a, l),
+			newBasicIo(a, l),
 			newCleanup(a, l),
 		},
 	}

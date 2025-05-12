@@ -12,7 +12,7 @@ type Tag struct {
 	CompOp        ComparisonOperator
 	UpperLimit    any    `yaml:"upperLimit,omitempty"`
 	LowerLimit    any    `yaml:"lowerLimit,omitempty"`
-	ExpectedValue any    `yaml:"expectedValue,omitempty"`
+	ExpectedValue any    `yaml:"expectedVal,omitempty"`
 	Unit          string `yaml:"unit"`
 }
 

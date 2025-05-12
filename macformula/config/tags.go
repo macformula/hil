@@ -22,6 +22,11 @@ var TestTags = TestTagCollection{
 	TestTag1: flow.Tag{ID: "TEST001", Description: "Test tag."},
 }
 
+type BasicIoTagCollection struct {
+	LedMatchesButtonHigh flow.Tag
+	LedMatchesButtonLow  flow.Tag
+}
+
 type LvStartupTagCollection struct {
 	PowerCycledTestBench                              flow.Tag
 	TsalEnabled                                       flow.Tag
@@ -166,4 +171,9 @@ var LvStartupTags = LvStartupTagCollection{
 		ID:          "LVSTART026",
 		Description: "Inverter switch time to enable after commanded to enable by the front controller (ms).",
 	},
+}
+
+var BasicIoTags = BasicIoTagCollection{
+	LedMatchesButtonHigh: flow.Tag{ID: "BASICIO001", Description: "Indicator LED is high when button is set to high."},
+	LedMatchesButtonLow:  flow.Tag{ID: "BASICIO002", Description: "Indicator LED is low when button is set to low."},
 }
