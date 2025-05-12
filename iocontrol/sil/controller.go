@@ -45,6 +45,7 @@ func (c *Controller) Open(ctx context.Context) error {
 	c.listener = listener
 	if err != nil {
 		c.l.Error(fmt.Sprintf("creating listener: %s", errors.Wrap(err, "creating listener")))
+		return errors.Wrap(err, "creating sil listener")
 	}
 
 	c.l.Info(fmt.Sprintf("sil listening on %s", addr))
@@ -80,7 +81,6 @@ func (c *Controller) handleConnection(conn net.Conn) {
 
 		unionTable := new(flatbuffers.Table)
 		if request.Request(unionTable) {
-			c.l.Info("recvieved request")
 			requestType := request.RequestType()
 			switch requestType {
 			case signals.RequestTypeReadRequest:

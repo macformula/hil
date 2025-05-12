@@ -93,36 +93,21 @@ func main() {
 		l: logger,
 	}
 
-	registerIndicatorLed := serializeRegisterRequest("DemoProject", "IndicatorLed", signals.SIGNAL_TYPEDIGITAL, signals.SIGNAL_DIRECTIONOUTPUT)
-	registerIndicatorButton := serializeRegisterRequest("DemoProject", "IndicatorButton", signals.SIGNAL_TYPEDIGITAL, signals.SIGNAL_DIRECTIONINPUT)
-
-	_, err = conn.Write(registerIndicatorLed)
-	if err != nil {
-		firmware.l.Error(fmt.Sprintf("Error sending data: %s", err))
-	}
-	firmware.l.Info("Registered indicator led")
-
-	_, err = conn.Write(registerIndicatorButton)
-	if err != nil {
-		firmware.l.Error(fmt.Sprintf("Error sending data: %s", err))
-	}
-	firmware.l.Info("Registered indicator button")
-
 	for {
 		level, err := firmware.ReadButtonValue(conn)
 		if err != nil {
-			firmware.l.Error("Read button value (likely timeout error)")
+			fmt.Printf("Read button value (likely timeout error)")
+			return
 		}
-		firmware.l.Info(fmt.Sprintf("Read indicator button is %t", level))
+		fmt.Printf("Read indicator button is %t", level)
 
-		setLedRequest := serializeSetRequest("DemoProject", "IndicatorLed", signals.SIGNAL_TYPEDIGITAL, 0.0, level)
+		setLedRequest := serializeSetRequest("DemoProject", "IndicatorLed", signals.SIGNAL_TYPEDIGITAL, signals.SIGNAL_DIRECTIONOUTPUT, 0.0, level)
 		// Send data to the server
 		_, err = conn.Write(setLedRequest)
 		if err != nil {
 			fmt.Println("Error sending data:", err)
 		}
-		firmware.l.Info(fmt.Sprintf("Set indicator led to %t", level))
-
-		time.Sleep(100 * time.Millisecond)
+		fmt.Printf("Set indicator led to %t", level)
+		time.Sleep(50 * time.Millisecond)
 	}
 }

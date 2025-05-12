@@ -46,7 +46,7 @@ func serializeReadRequest(ecu_name string, signal_name string, signalType signal
 	return builder.FinishedBytes()
 }
 
-func serializeSetRequest(ecu_name string, signal_name string, signalType signals.SIGNAL_TYPE, voltage float64, level bool) []byte {
+func serializeSetRequest(ecu_name string, signal_name string, signalType signals.SIGNAL_TYPE, sigDirection signals.SIGNAL_DIRECTION, voltage float64, level bool) []byte {
 	builder := flatbuffers.NewBuilder(1024)
 	ecu2 := builder.CreateString(ecu_name)
 	signal_name2 := builder.CreateString(signal_name)
@@ -61,6 +61,7 @@ func serializeSetRequest(ecu_name string, signal_name string, signalType signals
 		signals.SetRequestAddEcuName(builder, ecu2)
 		signals.SetRequestAddSignalName(builder, signal_name2)
 		signals.SetRequestAddSignalType(builder, signals.SIGNAL_TYPEDIGITAL)
+		signals.SetRequestAddSignalDirection(builder, sigDirection)
 		signals.SetRequestAddSignalValueType(builder, signals.SignalValueDigital)
 		signals.SetRequestAddSignalValue(builder, dig_sig)
 		setRequest2 := signals.ReadRequestEnd(builder)

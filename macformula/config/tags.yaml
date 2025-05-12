@@ -182,7 +182,7 @@ LVSTART028:
   type: int
   unit: ms
 BASICIO001:
-  description: Indicator LED is low when button is set to low.
+  description: Indicator LED is high when button is set to high.
   compareOp: EQ
   expectedVal: true
   type: bool
