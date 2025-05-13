@@ -196,7 +196,7 @@ func (io *IOControl) WriteVoltage(output AnalogPin, voltage float64) error {
 			return errors.New("sil target is nil")
 		}
 
-		err = io.sil.Pins.SetAnalogOutput(pin.Ecu_name, pin.Sig_name, voltage)
+		err = io.sil.Pins.SetAnalogOutput(pin.Ecu_name, pin.SigName, voltage)
 		if err != nil {
 			return errors.Wrap(err, "write voltage")
 		}
@@ -237,7 +237,7 @@ func (io *IOControl) ReadVoltage(input AnalogPin) (float64, error) {
 			return voltage, errors.New("sil target is nil")
 		}
 
-		voltage, err = io.sil.Pins.ReadAnalogInput(pin.Ecu_name, pin.Sig_name)
+		voltage, err = io.sil.Pins.ReadAnalogInput(pin.Ecu_name, pin.SigName)
 		if err != nil {
 			return 0.0, errors.Wrap(err, "read voltage")
 		}

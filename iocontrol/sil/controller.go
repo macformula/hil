@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-
 	"net"
 
 	"github.com/pkg/errors"
@@ -28,11 +27,11 @@ type Controller struct {
 }
 
 // NewController returns a new SIL Controller.
-func NewController(port int, l *zap.Logger) *Controller {
+func NewController(port int, l *zap.Logger, digitalInputs digitalPinGroup, digitalOutputs digitalPinGroup, analogInputs analogPinGroup, analogOutputs analogPinGroup) *Controller {
 	return &Controller{
 		l:    l,
 		port: port,
-		Pins: NewPinModel(),
+		Pins: NewPinModel(digitalInputs, digitalOutputs, analogInputs, analogOutputs),
 	}
 }
 

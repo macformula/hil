@@ -2,23 +2,31 @@ package sil
 
 // DigitalPin defines a digital pin for SIL
 type DigitalPin struct {
-	Ecu_name string
-	Sig_name string
+	EcuName string
+	SigName string
+}
+
+func (p *DigitalPin) GetEcuName() string {
+	return p.EcuName
+}
+
+func (p *DigitalPin) GetSigName() string {
+	return p.EcuName
 }
 
 // NewDigitalInputPin returns a new instance of a digital pin with input direction.
 func NewDigitalInputPin(ecu, signal string) *DigitalPin {
 	return &DigitalPin{
-		Ecu_name: ecu,
-		Sig_name: signal,
+		EcuName: ecu,
+		SigName: signal,
 	}
 }
 
 // NewDigitalOutputPin returns a new instance of a digital pin with output direction.
 func NewDigitalOutputPin(ecu, signal string) *DigitalPin {
 	return &DigitalPin{
-		Ecu_name: ecu,
-		Sig_name: signal,
+		EcuName: ecu,
+		SigName: signal,
 	}
 }
 

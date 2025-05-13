@@ -2,21 +2,29 @@ package sil
 
 // AnalogPin defines an analog pin for SIL
 type AnalogPin struct {
-	Ecu_name string
-	Sig_name string
+	EcuName string
+	SigName string
+}
+
+func (p *AnalogPin) GetEcuName() string {
+	return p.EcuName
+}
+
+func (p *AnalogPin) GetSigName() string {
+	return p.EcuName
 }
 
 func NewAnalogInputPin(ecu, signal string) *AnalogPin {
 	return &AnalogPin{
-		Ecu_name: ecu,
-		Sig_name: signal,
+		EcuName: ecu,
+		SigName: signal,
 	}
 }
 
 func NewAnalogOutputPin(ecu, signal string) *AnalogPin {
 	return &AnalogPin{
-		Ecu_name: ecu,
-		Sig_name: signal,
+		EcuName: ecu,
+		SigName: signal,
 	}
 }
 
