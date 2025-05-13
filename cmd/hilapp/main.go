@@ -158,7 +158,23 @@ func main() {
 
 	switch rev {
 	case pinout.Sil:
-		silController = sil.NewController(cfg.SilPort, logger)
+		digitalInputPins, err := pinout.GetDigitalInputs(rev)
+		if err != nil {
+			panic("Could not get digital input pins for revision")
+		}
+		digitalOutputPins, err := pinout.GetDigitalOutputs(rev)
+		if err != nil {
+			panic("Could not get digital output pins for revision")
+		}
+		analogInputPins, err := pinout.GetAnalogInputs(rev)
+		if err != nil {
+			panic("Could not get analog input pins for revision")
+		}
+		analogOutputPins, err := pinout.GetAnalogOutputs(rev)
+		if err != nil {
+			panic("Could not get analog output pins for revision")
+		}
+		silController = sil.NewController(cfg.SilPort, logger, digitalInputPins, digitalOutputPins, analogInputPins, analogOutputPins)
 		ioOpts = append(ioOpts, iocontrol.WithSil(silController))
 	default:
 		panic("unconfigured revision")
