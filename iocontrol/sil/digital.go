@@ -11,11 +11,11 @@ func (p *DigitalPin) GetEcuName() string {
 }
 
 func (p *DigitalPin) GetSigName() string {
-	return p.EcuName
+	return p.SigName
 }
 
 // NewDigitalInputPin returns a new instance of a digital pin with input direction.
-func NewDigitalInputPin(ecu, signal string) *DigitalPin {
+func NewDigitalInputPin(ecu string, signal string) *DigitalPin {
 	return &DigitalPin{
 		EcuName: ecu,
 		SigName: signal,
@@ -23,7 +23,7 @@ func NewDigitalInputPin(ecu, signal string) *DigitalPin {
 }
 
 // NewDigitalOutputPin returns a new instance of a digital pin with output direction.
-func NewDigitalOutputPin(ecu, signal string) *DigitalPin {
+func NewDigitalOutputPin(ecu string, signal string) *DigitalPin {
 	return &DigitalPin{
 		EcuName: ecu,
 		SigName: signal,

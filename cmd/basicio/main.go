@@ -21,7 +21,7 @@ type BasicIo struct {
 }
 
 func (c *BasicIo) ReadButtonValue(conn net.Conn) (bool, error) {
-	readButtonRequest := serializeReadRequest("DemoProject", "IndicatorButton", signals.SIGNAL_TYPEDIGITAL, signals.SIGNAL_DIRECTIONINPUT)
+	readButtonRequest := serializeReadRequest("DemoProject", "IndicatorButton", signals.SIGNAL_TYPEDIGITAL, signals.SIGNAL_DIRECTIONOUTPUT)
 
 	// Send data to the server
 	_, err := conn.Write(readButtonRequest)
@@ -105,7 +105,7 @@ func main() {
 		}
 		fmt.Printf("Read indicator button is %t", level)
 
-		setLedRequest := serializeSetRequest("DemoProject", "IndicatorLed", signals.SIGNAL_TYPEDIGITAL, signals.SIGNAL_DIRECTIONOUTPUT, 0.0, level)
+		setLedRequest := serializeSetRequest("DemoProject", "IndicatorLed", signals.SIGNAL_TYPEDIGITAL, signals.SIGNAL_DIRECTIONINPUT, 0.0, level)
 		// Send data to the server
 		_, err = conn.Write(setLedRequest)
 		if err != nil {

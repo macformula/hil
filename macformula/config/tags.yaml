@@ -190,6 +190,6 @@ BASICIO001:
 BASICIO002: 
   description: Indicator LED is low when button is set to low.
   compareOp: EQ 
-  expectedVal: false
+  expectedVal: false 
   type: bool
   unit: N/A

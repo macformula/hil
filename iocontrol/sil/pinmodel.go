@@ -1,6 +1,7 @@
 package sil
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -32,9 +33,11 @@ func NewPinModel(logger *zap.Logger, digitalInputs []*DigitalPin, digitalOutputs
 	analogInputPins := make(map[string]map[string]float64)
 	analogOutputPins := make(map[string]map[string]float64)
 	for _, digitalInputPin := range digitalInputs {
+		logger.Info(fmt.Sprintf("digital input pin: ecu (%s) sig name (%s)", digitalInputPin.GetEcuName(), digitalInputPin.GetSigName()))
 		mapSet(digitalInputPins, digitalInputPin.GetEcuName(), digitalInputPin.GetSigName(), _defaultDigitalValue)
 	}
 	for _, digitalOutputPin := range digitalOutputs {
+		logger.Info(fmt.Sprintf("dig output pin: ecu (%s) sig name (%s)", digitalOutputPin.GetEcuName(), digitalOutputPin.GetSigName()))
 		mapSet(digitalOutputPins, digitalOutputPin.GetEcuName(), digitalOutputPin.GetSigName(), _defaultDigitalValue)
 	}
 	for _, analogInput := range analogInputs {

@@ -51,9 +51,6 @@ func (l *BasicIo) Setup(_ context.Context) error {
 func (l *BasicIo) Run(ctx context.Context) error {
 	l.l.Info("Starting BasicIO sil test")
 
-	l.a.PinModel.RegisterDigitalInput("DemoProject", "IndicatorLed")
-	l.a.PinModel.RegisterDigitalOutput("DemoProject", "IndicatorButton")
-
 	var (
 		r    = l.results
 		tags = config.BasicIoTags
@@ -74,13 +71,13 @@ func (l *BasicIo) Run(ctx context.Context) error {
 
 	l.a.PinoutController.SetDigitalLevel(pinout.IndicatorButton, false)
 
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	ledLevel, err = l.a.PinoutController.ReadDigitalLevel(pinout.IndicatorLed)
 	if err != nil {
 		return errors.Wrap(err, "read digital level (indicator led)")
 	}
-	r[tags.LedMatchesButtonLow] = !ledLevel
+	r[tags.LedMatchesButtonLow] = ledLevel
 
 	return nil
 }
