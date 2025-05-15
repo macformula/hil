@@ -27,11 +27,11 @@ type Controller struct {
 }
 
 // NewController returns a new SIL Controller.
-func NewController(port int, l *zap.Logger, digitalInputs digitalPinGroup, digitalOutputs digitalPinGroup, analogInputs analogPinGroup, analogOutputs analogPinGroup) *Controller {
+func NewController(port int, l *zap.Logger, digitalInputs []*DigitalPin, digitalOutputs []*DigitalPin, analogInputs []*AnalogPin, analogOutputs []*AnalogPin) *Controller {
 	return &Controller{
 		l:    l,
 		port: port,
-		Pins: NewPinModel(digitalInputs, digitalOutputs, analogInputs, analogOutputs),
+		Pins: NewPinModel(l, digitalInputs, digitalOutputs, analogInputs, analogOutputs),
 	}
 }
 
@@ -92,6 +92,12 @@ func (c *Controller) handleConnection(conn net.Conn) {
 						level, err := c.Pins.ReadDigitalInput(ecu, sigName)
 						if err != nil {
 							c.l.Error(fmt.Sprintf("read digital input ecu (%s) signal name (%s) error: %s", ecu, sigName, err))
+
+							response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, _unsetAnalogValue, false, fmt.Sprintf("read digital input ecu (%s) signal name (%s) error: %s", ecu, sigName, err))
+							_, err = conn.Write(response)
+							if err != nil {
+								c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
+							}
 						}
 
 						response := serializeReadResponse(signals.SignalValueDigital, level, _unsetAnalogValue, true, "")
@@ -103,6 +109,12 @@ func (c *Controller) handleConnection(conn net.Conn) {
 						level, err := c.Pins.ReadDigitalOutput(ecu, sigName)
 						if err != nil {
 							c.l.Error(fmt.Sprintf("read digital output ecu (%s) signal name (%s)", ecu, sigName))
+
+							response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, _unsetAnalogValue, false, fmt.Sprintf("read digital output ecu (%s) signal name (%s)", ecu, sigName))
+							_, err = conn.Write(response)
+							if err != nil {
+								c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
+							}
 						}
 
 						response := serializeReadResponse(signals.SignalValueDigital, level, _unsetAnalogValue, true, "")
@@ -114,9 +126,39 @@ func (c *Controller) handleConnection(conn net.Conn) {
 				case signals.SIGNAL_TYPEANALOG:
 					switch sigDirection {
 					case signals.SIGNAL_DIRECTIONINPUT:
-						c.Pins.ReadAnalogInput(ecu, sigName)
+						voltage, err := c.Pins.ReadAnalogInput(ecu, sigName)
+						if err != nil {
+							c.l.Error(fmt.Sprintf("read analog input ecu (%s) signal name (%s)", ecu, sigName))
+
+							response := serializeReadResponse(signals.SignalValueAnalog, _unsetDigitalValue, _unsetAnalogValue, false, fmt.Sprintf("read digital output ecu (%s) signal name (%s)", ecu, sigName))
+							_, err = conn.Write(response)
+							if err != nil {
+								c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
+							}
+						}
+
+						response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, voltage, true, "")
+						_, err = conn.Write(response)
+						if err != nil {
+							c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
+						}
 					case signals.SIGNAL_DIRECTIONOUTPUT:
-						c.Pins.ReadAnalogOutput(ecu, sigName)
+						voltage, err := c.Pins.ReadAnalogOutput(ecu, sigName)
+						if err != nil {
+							c.l.Error(fmt.Sprintf("read analog output ecu (%s) signal name (%s)", ecu, sigName))
+
+							response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, _unsetAnalogValue, false, fmt.Sprintf("read analog output ecu (%s) signal name (%s)", ecu, sigName))
+							_, err = conn.Write(response)
+							if err != nil {
+								c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
+							}
+						}
+
+						response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, voltage, true, "")
+						_, err = conn.Write(response)
+						if err != nil {
+							c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
+						}
 					}
 				}
 			case signals.RequestTypeSetRequest:

@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 const (
@@ -11,20 +12,9 @@ const (
 	_defaultAnalogValue  = 0.0
 )
 
-type DigitalPinIFace interface {
-	GetEcuName() string
-	GetSigName() string
-}
-
-type AnalogPinIFace interface {
-	GetEcuName() string
-	GetSigName() string
-}
-
-type digitalPinGroup []DigitalPinIFace
-type analogPinGroup []AnalogPinIFace
-
 type PinModel struct {
+	l *zap.Logger
+
 	digitalInputPins  map[string]map[string]bool
 	digitalOutputPins map[string]map[string]bool
 	analogInputPins   map[string]map[string]float64
@@ -36,28 +26,28 @@ type PinModel struct {
 	analogOutputMtx  *sync.Mutex
 }
 
-func NewPinModel(digitalInputs digitalPinGroup, digitalOutputs digitalPinGroup, analogInputs analogPinGroup, analogOutputs analogPinGroup) *PinModel {
+func NewPinModel(logger *zap.Logger, digitalInputs []*DigitalPin, digitalOutputs []*DigitalPin, analogInputs []*AnalogPin, analogOutputs []*AnalogPin) *PinModel {
 	digitalInputPins := make(map[string]map[string]bool)
 	digitalOutputPins := make(map[string]map[string]bool)
 	analogInputPins := make(map[string]map[string]float64)
 	analogOutputPins := make(map[string]map[string]float64)
 	for _, digitalInputPin := range digitalInputs {
-		digitalInputPins[digitalInputPin.GetEcuName()][digitalInputPin.GetSigName()] = _defaultDigitalValue
+		mapSet(digitalInputPins, digitalInputPin.GetEcuName(), digitalInputPin.GetSigName(), _defaultDigitalValue)
 	}
 	for _, digitalOutputPin := range digitalOutputs {
-		digitalOutputPins[digitalOutputPin.GetEcuName()][digitalOutputPin.GetSigName()] = _defaultDigitalValue
+		mapSet(digitalOutputPins, digitalOutputPin.GetEcuName(), digitalOutputPin.GetSigName(), _defaultDigitalValue)
 	}
 	for _, analogInput := range analogInputs {
-		analogInputPins[analogInput.GetEcuName()][analogInput.GetSigName()] = _defaultAnalogValue
+		mapSet(analogInputPins, analogInput.GetEcuName(), analogInput.GetSigName(), _defaultAnalogValue)
 	}
 	for _, analogOutput := range analogOutputs {
-		analogOutputPins[analogOutput.GetEcuName()][analogOutput.GetSigName()] = _defaultAnalogValue
+		mapSet(analogOutputPins, analogOutput.GetEcuName(), analogOutput.GetSigName(), _defaultAnalogValue)
 	}
 	return &PinModel{
-		digitalInputPins:  make(map[string]map[string]bool),
-		digitalOutputPins: make(map[string]map[string]bool),
-		analogInputPins:   make(map[string]map[string]float64),
-		analogOutputPins:  make(map[string]map[string]float64),
+		digitalInputPins:  digitalInputPins,
+		digitalOutputPins: digitalOutputPins,
+		analogInputPins:   analogInputPins,
+		analogOutputPins:  analogOutputPins,
 		digitalInputMtx:   &sync.Mutex{},
 		digitalOutputMtx:  &sync.Mutex{},
 		analogInputMtx:    &sync.Mutex{},

@@ -25,6 +25,7 @@ import (
 	"github.com/macformula/hil/macformula/state"
 	"github.com/macformula/hil/orchestrator"
 	"github.com/macformula/hil/results"
+	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
 )
 
@@ -158,23 +159,7 @@ func main() {
 
 	switch rev {
 	case pinout.Sil:
-		digitalInputPins, err := pinout.GetDigitalInputs(rev)
-		if err != nil {
-			panic("Could not get digital input pins for revision")
-		}
-		digitalOutputPins, err := pinout.GetDigitalOutputs(rev)
-		if err != nil {
-			panic("Could not get digital output pins for revision")
-		}
-		analogInputPins, err := pinout.GetAnalogInputs(rev)
-		if err != nil {
-			panic("Could not get analog input pins for revision")
-		}
-		analogOutputPins, err := pinout.GetAnalogOutputs(rev)
-		if err != nil {
-			panic("Could not get analog output pins for revision")
-		}
-		silController = sil.NewController(cfg.SilPort, logger, digitalInputPins, digitalOutputPins, analogInputPins, analogOutputPins)
+		silController = sil.NewController(cfg.SilPort, logger, utils.GetValues(pinout.SilDigitalInputPins), utils.GetValues(pinout.SilDigitalOutputPins), utils.GetValues(pinout.SilAnalogInputPins), utils.GetValues(pinout.SilAnalogOutputPins))
 		ioOpts = append(ioOpts, iocontrol.WithSil(silController))
 	default:
 		panic("unconfigured revision")

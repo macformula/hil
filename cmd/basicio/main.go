@@ -50,6 +50,10 @@ func (c *BasicIo) WaitForResponse(conn net.Conn) (bool, error) {
 	unionTable := new(flatbuffers.Table)
 	if response.Response(unionTable) {
 		ok, errorString, level, voltage := deserializeReadResponse(unionTable)
+		if !ok {
+			c.l.Error("Request was not ok!")
+			return false, errors.Wrap(err, "")
+		}
 		c.l.Info(fmt.Sprintf("recieved response ok (%t) errorString (%s) level (%t) voltage (%f)", ok, errorString, level, voltage))
 		return level, nil
 	}
