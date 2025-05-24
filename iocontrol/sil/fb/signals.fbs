@@ -18,12 +18,14 @@ table Request {
   request:RequestType;
 }
 
+// ReadRequest will always be for reading firmware inputs/sil outputs
 table ReadRequest {
   ecu_name:string;
   signal_name:string;
   signal_type:SIGNAL_TYPE;
   signal_direction:SIGNAL_DIRECTION;
 }
+// SetRequest will always be for setting firmware outputs/sil inputs
 table SetRequest {
   ecu_name:string;
   signal_name:string;
