@@ -6,14 +6,6 @@ type DigitalPin struct {
 	SigName string
 }
 
-func (p *DigitalPin) GetEcuName() string {
-	return p.EcuName
-}
-
-func (p *DigitalPin) GetSigName() string {
-	return p.SigName
-}
-
 // NewDigitalInputPin returns a new instance of a digital pin with input direction.
 func NewDigitalInputPin(ecu string, signal string) *DigitalPin {
 	return &DigitalPin{

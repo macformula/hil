@@ -33,18 +33,18 @@ func NewPinModel(logger *zap.Logger, digitalInputs []*DigitalPin, digitalOutputs
 	analogInputPins := make(map[string]map[string]float64)
 	analogOutputPins := make(map[string]map[string]float64)
 	for _, digitalInputPin := range digitalInputs {
-		logger.Info(fmt.Sprintf("digital input pin: ecu (%s) sig name (%s)", digitalInputPin.GetEcuName(), digitalInputPin.GetSigName()))
-		mapSet(digitalInputPins, digitalInputPin.GetEcuName(), digitalInputPin.GetSigName(), _defaultDigitalValue)
+		logger.Info(fmt.Sprintf("digital input pin: ecu (%s) sig name (%s)", digitalInputPin.EcuName, digitalInputPin.SigName))
+		mapSet(digitalInputPins, digitalInputPin.EcuName, digitalInputPin.SigName, _defaultDigitalValue)
 	}
 	for _, digitalOutputPin := range digitalOutputs {
-		logger.Info(fmt.Sprintf("dig output pin: ecu (%s) sig name (%s)", digitalOutputPin.GetEcuName(), digitalOutputPin.GetSigName()))
-		mapSet(digitalOutputPins, digitalOutputPin.GetEcuName(), digitalOutputPin.GetSigName(), _defaultDigitalValue)
+		logger.Info(fmt.Sprintf("dig output pin: ecu (%s) sig name (%s)", digitalOutputPin.EcuName, digitalOutputPin.SigName))
+		mapSet(digitalOutputPins, digitalOutputPin.EcuName, digitalOutputPin.SigName, _defaultDigitalValue)
 	}
 	for _, analogInput := range analogInputs {
-		mapSet(analogInputPins, analogInput.GetEcuName(), analogInput.GetSigName(), _defaultAnalogValue)
+		mapSet(analogInputPins, analogInput.EcuName, analogInput.SigName, _defaultAnalogValue)
 	}
 	for _, analogOutput := range analogOutputs {
-		mapSet(analogOutputPins, analogOutput.GetEcuName(), analogOutput.GetSigName(), _defaultAnalogValue)
+		mapSet(analogOutputPins, analogOutput.EcuName, analogOutput.SigName, _defaultAnalogValue)
 	}
 	return &PinModel{
 		digitalInputPins:  digitalInputPins,
@@ -58,133 +58,133 @@ func NewPinModel(logger *zap.Logger, digitalInputs []*DigitalPin, digitalOutputs
 	}
 }
 
-func (p *PinModel) RegisterDigitalOutput(ecuName, sigName string) {
-	mapSet(p.digitalOutputPins, ecuName, sigName, false)
+func (p *PinModel) RegisterDigitalOutput(pin *DigitalPin) {
+	mapSet(p.digitalOutputPins, pin.EcuName, pin.SigName, false)
 }
 
-func (p *PinModel) RegisterDigitalInput(ecuName, sigName string) {
-	mapSet(p.digitalInputPins, ecuName, sigName, false)
+func (p *PinModel) RegisterDigitalInput(pin *DigitalPin) {
+	mapSet(p.digitalInputPins, pin.EcuName, pin.SigName, false)
 }
 
-func (p *PinModel) RegisterAnalogOutput(ecuName, sigName string) {
-	mapSet(p.analogOutputPins, ecuName, sigName, 0.0)
+func (p *PinModel) RegisterAnalogOutput(pin *AnalogPin) {
+	mapSet(p.analogOutputPins, pin.EcuName, pin.SigName, 0.0)
 }
 
-func (p *PinModel) RegisterAnalogInput(ecuName, sigName string) {
-	mapSet(p.analogInputPins, ecuName, sigName, 0.0)
+func (p *PinModel) RegisterAnalogInput(pin *AnalogPin) {
+	mapSet(p.analogInputPins, pin.EcuName, pin.SigName, 0.0)
 }
 
 // ReadDigital returns the level of a SIL digital pin.
-func (p *PinModel) ReadDigitalInput(ecu_name string, sig_name string) (bool, error) {
+func (p *PinModel) ReadDigitalInput(pin *DigitalPin) (bool, error) {
 	p.digitalInputMtx.Lock()
 	defer p.digitalInputMtx.Unlock()
 
-	level, ok := mapLookup(p.digitalInputPins, ecu_name, sig_name)
+	level, ok := mapLookup(p.digitalInputPins, pin.EcuName, pin.SigName)
 	if !ok {
 		return false, errors.Errorf("no entry for ecu name (%s) signal name (%s)",
-			ecu_name, sig_name)
+			pin.EcuName, pin.SigName)
 	}
 
 	return level, nil
 }
 
 // ReadDigital returns the level of a SIL digital pin.
-func (p *PinModel) ReadAnalogInput(ecu_name string, sig_name string) (float64, error) {
+func (p *PinModel) ReadAnalogInput(pin *AnalogPin) (float64, error) {
 	p.analogInputMtx.Lock()
 	defer p.analogInputMtx.Unlock()
 
-	voltage, ok := mapLookup(p.analogInputPins, ecu_name, sig_name)
+	voltage, ok := mapLookup(p.analogInputPins, pin.EcuName, pin.SigName)
 	if !ok {
 		return 0, errors.Errorf("no entry for ecu name (%s) signal name (%s)",
-			ecu_name, sig_name)
+			pin.EcuName, pin.SigName)
 	}
 
 	return voltage, nil
 }
 
 // ReadDigital returns the level of a SIL digital pin.
-func (p *PinModel) ReadDigitalOutput(ecu_name string, sig_name string) (bool, error) {
+func (p *PinModel) ReadDigitalOutput(pin *DigitalPin) (bool, error) {
 	p.digitalOutputMtx.Lock()
 	defer p.digitalOutputMtx.Unlock()
 
-	level, ok := mapLookup(p.digitalOutputPins, ecu_name, sig_name)
+	level, ok := mapLookup(p.digitalOutputPins, pin.EcuName, pin.SigName)
 	if !ok {
 		return false, errors.Errorf("no entry for ecu name (%s) signal name (%s)",
-			ecu_name, sig_name)
+			pin.EcuName, pin.SigName)
 	}
 
 	return level, nil
 }
 
 // ReadDigital returns the level of a SIL digital pin.
-func (p *PinModel) ReadAnalogOutput(ecu_name string, sig_name string) (float64, error) {
+func (p *PinModel) ReadAnalogOutput(pin *AnalogPin) (float64, error) {
 	p.analogOutputMtx.Lock()
 	defer p.analogOutputMtx.Unlock()
 
-	voltage, ok := mapLookup(p.analogOutputPins, ecu_name, sig_name)
+	voltage, ok := mapLookup(p.analogOutputPins, pin.EcuName, pin.SigName)
 	if !ok {
 		return 0, errors.Errorf("no entry for ecu name (%s) signal name (%s)",
-			ecu_name, sig_name)
+			pin.EcuName, pin.SigName)
 	}
 
 	return voltage, nil
 }
 
 // SetDigital sets an output digital pin for a SIL digital pin.
-func (p *PinModel) SetDigitalInput(ecu_name string, sig_name string, level bool) error {
+func (p *PinModel) SetDigitalInput(pin *DigitalPin, level bool) error {
 	p.digitalInputMtx.Lock()
 	defer p.digitalInputMtx.Unlock()
 
-	_, ok := mapLookup(p.digitalOutputPins, ecu_name, sig_name)
+	_, ok := mapLookup(p.digitalOutputPins, pin.EcuName, pin.SigName)
 	if !ok {
-		p.RegisterDigitalInput(ecu_name, sig_name)
+		p.RegisterDigitalInput(pin)
 	}
 
-	p.digitalInputPins[ecu_name][sig_name] = level
+	p.digitalInputPins[pin.EcuName][pin.SigName] = level
 
 	return nil
 }
 
-func (p *PinModel) SetAnalogInput(ecu_name string, sig_name string, voltage float64) error {
+func (p *PinModel) SetAnalogInput(pin *AnalogPin, voltage float64) error {
 	p.analogInputMtx.Lock()
 	defer p.analogInputMtx.Unlock()
 
-	_, ok := mapLookup(p.analogInputPins, ecu_name, sig_name)
+	_, ok := mapLookup(p.analogInputPins, pin.EcuName, pin.SigName)
 	if !ok {
-		p.RegisterAnalogInput(ecu_name, sig_name)
+		p.RegisterAnalogInput(pin)
 	}
 
-	p.analogInputPins[ecu_name][sig_name] = voltage
+	p.analogInputPins[pin.EcuName][pin.SigName] = voltage
 
 	return nil
 }
 
 // SetDigital sets an output digital pin for a SIL digital pin.
-func (p *PinModel) SetDigitalOutput(ecu_name string, sig_name string, level bool) error {
+func (p *PinModel) SetDigitalOutput(pin *DigitalPin, level bool) error {
 	p.digitalOutputMtx.Lock()
 	defer p.digitalOutputMtx.Unlock()
 
-	_, ok := mapLookup(p.digitalOutputPins, ecu_name, sig_name)
+	_, ok := mapLookup(p.digitalOutputPins, pin.EcuName, pin.SigName)
 	if !ok {
-		p.RegisterDigitalOutput(ecu_name, sig_name)
+		p.RegisterDigitalOutput(pin)
 	}
 
-	p.digitalOutputPins[ecu_name][sig_name] = level
+	p.digitalOutputPins[pin.EcuName][pin.SigName] = level
 
 	return nil
 }
 
 // SetDigital sets an output digital pin for a SIL digital pin.
-func (p *PinModel) SetAnalogOutput(ecu_name string, sig_name string, voltage float64) error {
+func (p *PinModel) SetAnalogOutput(pin *AnalogPin, voltage float64) error {
 	p.analogOutputMtx.Lock()
 	defer p.analogOutputMtx.Unlock()
 
-	_, ok := mapLookup(p.analogOutputPins, ecu_name, sig_name)
+	_, ok := mapLookup(p.analogOutputPins, pin.EcuName, pin.SigName)
 	if !ok {
-		p.RegisterDigitalOutput(ecu_name, sig_name)
+		p.RegisterAnalogOutput(pin)
 	}
 
-	p.analogOutputPins[ecu_name][sig_name] = voltage
+	p.analogOutputPins[pin.EcuName][pin.SigName] = voltage
 
 	return nil
 }

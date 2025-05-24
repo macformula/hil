@@ -89,7 +89,8 @@ func (c *Controller) handleConnection(conn net.Conn) {
 				case signals.SIGNAL_TYPEDIGITAL:
 					switch sigDirection {
 					case signals.SIGNAL_DIRECTIONINPUT:
-						level, err := c.Pins.ReadDigitalInput(ecu, sigName)
+						pin := NewDigitalInputPin(ecu, sigName)
+						level, err := c.Pins.ReadDigitalInput(pin)
 						if err != nil {
 							c.l.Error(fmt.Sprintf("read digital input ecu (%s) signal name (%s) error: %s", ecu, sigName, err))
 
@@ -106,7 +107,8 @@ func (c *Controller) handleConnection(conn net.Conn) {
 							c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
 						}
 					case signals.SIGNAL_DIRECTIONOUTPUT:
-						level, err := c.Pins.ReadDigitalOutput(ecu, sigName)
+						pin := NewDigitalOutputPin(ecu, sigName)
+						level, err := c.Pins.ReadDigitalOutput(pin)
 						if err != nil {
 							c.l.Error(fmt.Sprintf("read digital output ecu (%s) signal name (%s)", ecu, sigName))
 
@@ -126,7 +128,8 @@ func (c *Controller) handleConnection(conn net.Conn) {
 				case signals.SIGNAL_TYPEANALOG:
 					switch sigDirection {
 					case signals.SIGNAL_DIRECTIONINPUT:
-						voltage, err := c.Pins.ReadAnalogInput(ecu, sigName)
+						pin := NewAnalogInputPin(ecu, sigName)
+						voltage, err := c.Pins.ReadAnalogInput(pin)
 						if err != nil {
 							c.l.Error(fmt.Sprintf("read analog input ecu (%s) signal name (%s)", ecu, sigName))
 
@@ -143,7 +146,8 @@ func (c *Controller) handleConnection(conn net.Conn) {
 							c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
 						}
 					case signals.SIGNAL_DIRECTIONOUTPUT:
-						voltage, err := c.Pins.ReadAnalogOutput(ecu, sigName)
+						pin := NewAnalogOutputPin(ecu, sigName)
+						voltage, err := c.Pins.ReadAnalogOutput(pin)
 						if err != nil {
 							c.l.Error(fmt.Sprintf("read analog output ecu (%s) signal name (%s)", ecu, sigName))
 
@@ -168,16 +172,20 @@ func (c *Controller) handleConnection(conn net.Conn) {
 				case signals.SIGNAL_TYPEDIGITAL:
 					switch sigDirection {
 					case signals.SIGNAL_DIRECTIONINPUT:
-						c.Pins.SetDigitalInput(ecu, sigName, value)
+						pin := NewDigitalInputPin(ecu, sigName)
+						c.Pins.SetDigitalInput(pin, value)
 					case signals.SIGNAL_DIRECTIONOUTPUT:
-						c.Pins.SetDigitalOutput(ecu, sigName, value)
+						pin := NewDigitalOutputPin(ecu, sigName)
+						c.Pins.SetDigitalOutput(pin, value)
 					}
 				case signals.SIGNAL_TYPEANALOG:
 					switch sigDirection {
 					case signals.SIGNAL_DIRECTIONINPUT:
-						c.Pins.SetAnalogInput(ecu, sigName, voltage)
+						pin := NewAnalogInputPin(ecu, sigName)
+						c.Pins.SetAnalogInput(pin, voltage)
 					case signals.SIGNAL_DIRECTIONOUTPUT:
-						c.Pins.SetAnalogOutput(ecu, sigName, voltage)
+						pin := NewAnalogOutputPin(ecu, sigName)
+						c.Pins.SetAnalogOutput(pin, voltage)
 					}
 				}
 
@@ -188,16 +196,20 @@ func (c *Controller) handleConnection(conn net.Conn) {
 				case signals.SIGNAL_TYPEDIGITAL:
 					switch sigDirection {
 					case signals.SIGNAL_DIRECTIONINPUT:
-						c.Pins.RegisterDigitalInput(ecu, sigName)
+						pin := NewDigitalInputPin(ecu, sigName)
+						c.Pins.RegisterDigitalInput(pin)
 					case signals.SIGNAL_DIRECTIONOUTPUT:
-						c.Pins.RegisterDigitalOutput(ecu, sigName)
+						pin := NewDigitalOutputPin(ecu, sigName)
+						c.Pins.RegisterDigitalOutput(pin)
 					}
 				case signals.SIGNAL_TYPEANALOG:
 					switch sigDirection {
 					case signals.SIGNAL_DIRECTIONINPUT:
-						c.Pins.RegisterAnalogInput(ecu, sigName)
+						pin := NewAnalogInputPin(ecu, sigName)
+						c.Pins.RegisterAnalogInput(pin)
 					case signals.SIGNAL_DIRECTIONOUTPUT:
-						c.Pins.RegisterAnalogOutput(ecu, sigName)
+						pin := NewAnalogOutputPin(ecu, sigName)
+						c.Pins.RegisterAnalogOutput(pin)
 					}
 				}
 			}

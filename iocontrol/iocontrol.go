@@ -115,7 +115,7 @@ func (io *IOControl) SetDigital(output DigitalPin, b bool) error {
 			return errors.New("sil target is nil")
 		}
 
-		err = io.sil.Pins.SetDigitalOutput(pin.GetEcuName(), pin.GetSigName(), b)
+		err = io.sil.Pins.SetDigitalOutput(pin, b)
 		if err != nil {
 			return errors.Wrap(err, "set digital")
 		}
@@ -157,7 +157,7 @@ func (io *IOControl) ReadDigital(input DigitalPin) (bool, error) {
 			return lvl, errors.New("sil target is nil")
 		}
 
-		lvl, err = io.sil.Pins.ReadDigitalInput(pin.GetEcuName(), pin.GetSigName())
+		lvl, err = io.sil.Pins.ReadDigitalInput(pin)
 		if err != nil {
 			return false, errors.Wrap(err, "read digital")
 		}
@@ -196,7 +196,7 @@ func (io *IOControl) WriteVoltage(output AnalogPin, voltage float64) error {
 			return errors.New("sil target is nil")
 		}
 
-		err = io.sil.Pins.SetAnalogOutput(pin.GetEcuName(), pin.SigName, voltage)
+		err = io.sil.Pins.SetAnalogOutput(pin, voltage)
 		if err != nil {
 			return errors.Wrap(err, "write voltage")
 		}
@@ -237,7 +237,7 @@ func (io *IOControl) ReadVoltage(input AnalogPin) (float64, error) {
 			return voltage, errors.New("sil target is nil")
 		}
 
-		voltage, err = io.sil.Pins.ReadAnalogInput(pin.GetEcuName(), pin.SigName)
+		voltage, err = io.sil.Pins.ReadAnalogInput(pin)
 		if err != nil {
 			return 0.0, errors.Wrap(err, "read voltage")
 		}
