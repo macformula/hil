@@ -2,8 +2,8 @@ revision: "sil"
 canInterfaces: 
   veh: "vcan0"
   pt: "vcan1"
-resultsDir: "/Users/andrewiammancini/Developer/Projects/FE/hil/macformula/results"
-logsDir: "/Users/andrewiammancini/Developer/Projects/FE/hil/macformula/results/logs"
-tagsFilePath: "/Users/andrewiammancini/Developer/Projects/FE/hil/macformula/config/tags.yaml"
+resultsDir: "macformula/results"
+logsDir: "macformula/results/logs"
+tagsFilePath: "macformula/config/tags.yaml"
 canTracerTimeoutMinutes: 10
 silPort: 8080
