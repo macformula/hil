@@ -171,13 +171,25 @@ LVSTART026:
   type: int
   unit: ms
 LVSTART027:
-    description: Motor controller precharge disabled after motor controller on.
-    compareOp: EQ
-    expectedVal: false
-    type: bool
-    unit: N/A
+  description: Motor controller precharge disabled after motor controller on.
+  compareOp: EQ
+  expectedVal: false
+  type: bool
+  unit: N/A
 LVSTART028:
-    description: Motor controller precharge time to disable after motor controller on (ms).
-    compareOp: LOG
-    type: int
-    unit: ms
+  description: Motor controller precharge time to disable after motor controller on (ms).
+  compareOp: LOG
+  type: int
+  unit: ms
+BASICIO001:
+  description: Indicator LED is high when button is set to high.
+  compareOp: EQ
+  expectedVal: true
+  type: bool
+  unit: N/A
+BASICIO002: 
+  description: Indicator LED is low when button is set to low.
+  compareOp: EQ 
+  expectedVal: false 
+  type: bool
+  unit: N/A

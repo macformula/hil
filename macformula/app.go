@@ -2,6 +2,7 @@ package macformula
 
 import (
 	"github.com/macformula/hil/canlink"
+	"github.com/macformula/hil/iocontrol/sil"
 	"github.com/macformula/hil/macformula/config"
 	"github.com/macformula/hil/macformula/ecu/frontcontroller"
 	"github.com/macformula/hil/macformula/ecu/lvcontroller"
@@ -16,11 +17,13 @@ type App struct {
 	PtBusManager          *canlink.BusManager
 	VehCanTracer          *canlink.Tracer
 	PtCanTracer           *canlink.Tracer
-	PinoutController      *pinout.Controller
+	PinoutController      *pinout.Controller // remove this eventually
+	PinModel              *sil.PinModel
 	TestBench             *TestBench
-	LvControllerClient    *lvcontroller.Client
-	FrontControllerClient *frontcontroller.Client
+	LvControllerClient    *lvcontroller.Client    // remove this eventually
+	FrontControllerClient *frontcontroller.Client // remove this eventually
 	ResultsProcessor      *results.ResultAccumulator
 
+	WithVcan    bool
 	CurrProcess *ProcessInfo
 }

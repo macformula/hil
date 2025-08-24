@@ -35,17 +35,19 @@ func (c *cleanup) Setup(_ context.Context) error {
 }
 
 func (c *cleanup) Run(ctx context.Context) error {
-	c.app.PtBusManager.Stop()
-	c.app.VehBusManager.Stop()
+	if c.app.WithVcan {
+		c.app.PtBusManager.Stop()
+		c.app.VehBusManager.Stop()
 
-	err := c.app.PtBusManager.Close()
-	if err != nil {
-		return err
-	}
+		err := c.app.PtBusManager.Close()
+		if err != nil {
+			return err
+		}
 
-	err = c.app.VehBusManager.Close()
-	if err != nil {
-		return err
+		err = c.app.VehBusManager.Close()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

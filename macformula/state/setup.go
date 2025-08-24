@@ -42,15 +42,18 @@ func (s *setup) Run(ctx context.Context) error {
 	sequenceResultsDir := filepath.Join(s.app.Config.ResultsDir, time.Now().Format("15:04:05.0000"))
 	os.Mkdir(sequenceResultsDir, 0755)
 
-	s.app.VehCanTracer.SetTraceDir(sequenceResultsDir)
-	s.app.PtCanTracer.SetTraceDir(sequenceResultsDir)
+	if s.app.WithVcan {
+		s.app.VehCanTracer.SetTraceDir(sequenceResultsDir)
+		s.app.PtCanTracer.SetTraceDir(sequenceResultsDir)
+
+		s.app.VehBusManager.Register(s.app.VehCanTracer)
+		s.app.PtBusManager.Register(s.app.PtCanTracer)
+
+		s.app.VehBusManager.Start(ctx)
+		s.app.PtBusManager.Start(ctx)
+	}
+
 	s.app.ResultsProcessor.SetReportsDir(sequenceResultsDir)
-
-	s.app.VehBusManager.Register(s.app.VehCanTracer)
-	s.app.PtBusManager.Register(s.app.PtCanTracer)
-
-	s.app.VehBusManager.Start(ctx)
-	s.app.PtBusManager.Start(ctx)
 
 	return nil
 }

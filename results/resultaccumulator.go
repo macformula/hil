@@ -2,6 +2,7 @@ package results
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
@@ -89,6 +90,7 @@ func (r *ResultAccumulator) SubmitTag(_ context.Context, tagID string, value any
 		return false, errors.Errorf("tag not found: %s", tagID)
 	}
 
+	r.l.Info(fmt.Sprintf("Tag Id: %s, val is %t, expected val is %t, comp op %s, desc is %s", tagID, value, tag.ExpectedValue, tag.CompOpString, tag.Description))
 	isPassing, err := tag.IsPassing(value)
 	if err != nil {
 		return false, errors.Wrapf(err, "failed to validate tag %s", tagID)

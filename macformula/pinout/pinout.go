@@ -103,6 +103,48 @@ var _revisionAnalogOutputPinout = map[Revision]AnalogPinout{
 	},
 }
 
+var SilDigitalInputPins = map[PhysicalIo]*sil.DigitalPin{
+	IndicatorLed:               sil.NewDigitalInputPin("DemoProject", IndicatorLed.String()),
+	MotorControllerPrechargeEn: sil.NewDigitalInputPin("LvController", MotorControllerPrechargeEn.String()),
+	InverterSwitchEn:           sil.NewDigitalInputPin("LvController", InverterSwitchEn.String()),
+	AccumulatorEn:              sil.NewDigitalInputPin("LvController", AccumulatorEn.String()),
+	ShutdownCircuitEn:          sil.NewDigitalInputPin("LvController", ShutdownCircuitEn.String()),
+	TsalEn:                     sil.NewDigitalInputPin("LvController", TsalEn.String()),
+	RaspiEn:                    sil.NewDigitalInputPin("LvController", RaspiEn.String()),
+	FrontControllerEn:          sil.NewDigitalInputPin("LvController", FrontControllerEn.String()),
+	SpeedgoatEn:                sil.NewDigitalInputPin("LvController", SpeedgoatEn.String()),
+	MotorControllerEn:          sil.NewDigitalInputPin("LvController", MotorControllerEn.String()),
+	ImuGpsEn:                   sil.NewDigitalInputPin("LvController", ImuGpsEn.String()),
+	DcdcEn:                     sil.NewDigitalInputPin("LvController", DcdcEn.String()),
+	DcdcValid:                  sil.NewDigitalInputPin("LvController", DcdcValid.String()),
+	DebugLedEn:                 sil.NewDigitalInputPin("FrontController", DebugLedEn.String()),
+	DashboardEn:                sil.NewDigitalInputPin("FrontController", DashboardEn.String()),
+	HvilLedEn:                  sil.NewDigitalInputPin("FrontController", HvilLedEn.String()),
+	BrakeLightEn:               sil.NewDigitalInputPin("FrontController", BrakeLightEn.String()),
+	StatusLedEn:                sil.NewDigitalInputPin("FrontController", StatusLedEn.String()),
+	RtdsEn:                     sil.NewDigitalInputPin("FrontController", RtdsEn.String()),
+}
+var SilDigitalOutputPins = map[PhysicalIo]*sil.DigitalPin{
+	IndicatorButton:  sil.NewDigitalOutputPin("DemoProject", IndicatorButton.String()),
+	StartButtonN:     sil.NewDigitalOutputPin("FrontController", StartButtonN.String()),
+	WheelSpeedLeftA:  sil.NewDigitalOutputPin("FrontController", WheelSpeedLeftA.String()),
+	WheelSpeedLeftB:  sil.NewDigitalOutputPin("FrontController", WheelSpeedLeftB.String()),
+	WheelSpeedRightA: sil.NewDigitalOutputPin("FrontController", WheelSpeedRightA.String()),
+	WheelSpeedRightB: sil.NewDigitalOutputPin("FrontController", WheelSpeedRightB.String()),
+	HvilDisable:      sil.NewDigitalOutputPin("FrontController", HvilDisable.String()),
+	GlvmsDisable:     sil.NewDigitalOutputPin("LvController", GlvmsDisable.String()),
+}
+var SilAnalogInputPins = map[PhysicalIo]*sil.AnalogPin{
+	AccelPedalPosition1: sil.NewAnalogOutputPin("FrontController", AccelPedalPosition1.String()),
+	AccelPedalPosition2: sil.NewAnalogOutputPin("FrontController", AccelPedalPosition2.String()),
+	SteeringAngle:       sil.NewAnalogOutputPin("FrontController", SteeringAngle.String()),
+}
+var SilAnalogOutputPins = map[PhysicalIo]*sil.AnalogPin{
+	AccelPedalPosition1: sil.NewAnalogOutputPin("FrontController", AccelPedalPosition1.String()),
+	AccelPedalPosition2: sil.NewAnalogOutputPin("FrontController", AccelPedalPosition2.String()),
+	SteeringAngle:       sil.NewAnalogOutputPin("FrontController", SteeringAngle.String()),
+}
+
 // GetDigitalInputs returns a digital input pinout for the given revision.
 func GetDigitalInputs(rev Revision) (DigitalPinout, error) {
 	ret, ok := _revisionDigitalInputPinout[rev]
