@@ -44,9 +44,6 @@ plugins:
       - codespell:  # or nested configs
           dictionaries: [clear]
 
-      # known_words can also be a list of words
-      known_words: ../includes/known_words.txt
-
       # ignore words in <code> tags
       ignore_code: yes
 
@@ -83,8 +80,6 @@ markdown_extensions:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.snippets:
-      auto_append:
-        - includes/abbreviations.md
       base_path:
         - !relative
         - !relative $docs_dir/../
@@ -119,15 +114,8 @@ nav:
       - tutorials/setup/2.md
       - tutorials/setup/3.md
       - tutorials/setup/4.md
-    - Extra Configuration:
-      - tutorial/extra/trace_format.md
-      - tutorial/extra/handlers.md
-      - tutorial/extra/config.md
   - Mac Formula:
     - macfe/index.md
     - macfe/setup.md
     - macfe/run.md
-  - Glossary: glossary.md
 
-watch:
-  - includes
