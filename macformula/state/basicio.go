@@ -56,19 +56,21 @@ func (l *BasicIo) Run(ctx context.Context) error {
 		tags = config.BasicIoTags
 	)
 
-	l.a.PinoutController.SetDigitalLevel(pinout.IndicatorButton, true)
+	// Test LED responds to BUTTON within 10ms
+	l.a.PinoutController.SetDigitalLevel(pinout.Button, true)
 
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 
-	ledLevel, err := l.a.PinoutController.ReadDigitalLevel(pinout.IndicatorLed)
+	ledLevel, err := l.a.PinoutController.ReadDigitalLevel(pinout.Led)
 	if err != nil {
-		return errors.Wrap(err, "read digital level (indicator led)")
+		return errors.Wrap(err, "read digital level (led)")
 	}
-
-	l.l.Info(fmt.Sprintf("Indicator led is %t", ledLevel))
-
+	
 	r[tags.LedMatchesButtonHigh] = ledLevel
 
+	
+	
+	l.l.Info(fmt.Sprintf("Indicator led is %t", ledLevel))
 	l.a.PinoutController.SetDigitalLevel(pinout.IndicatorButton, false)
 
 	time.Sleep(200 * time.Millisecond)
