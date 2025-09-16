@@ -6,10 +6,9 @@ import (
 	"net"
 	"time"
 
-	flatbuffers "github.com/google/flatbuffers/go"
 	signals "github.com/macformula/hil/cmd/basicio/signals"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -20,11 +19,45 @@ type BasicIo struct {
 	l *zap.Logger
 }
 
+const ecu_name string = "DemoProject"
+const button_name string = "IndicatorButton"
+const led_name string = "IndicatorLed"
+
+func addr(s string) *string {
+	return &s
+}
+
+func button() *signals.Signal {
+	return &signals.Signal{
+		EcuName:    addr(ecu_name),
+		SignalName: addr(button_name),
+		Type:       signals.SignalType_SIGNAL_TYPE_DIGITAL.Enum(),
+		Direction:  signals.SignalDirection_SIGNAL_DIRECTION_OUTPUT.Enum(),
+	}
+}
+
+func led() *signals.Signal {
+	return &signals.Signal{
+		EcuName:    addr(ecu_name),
+		SignalName: addr(led_name),
+		Type:       signals.SignalType_SIGNAL_TYPE_DIGITAL.Enum(),
+		Direction:  signals.SignalDirection_SIGNAL_DIRECTION_INPUT.Enum(),
+	}
+}
+
 func (c *BasicIo) ReadButtonValue(conn net.Conn) (bool, error) {
-	readButtonRequest := serializeReadRequest("DemoProject", "IndicatorButton", signals.SIGNAL_TYPEDIGITAL, signals.SIGNAL_DIRECTIONOUTPUT)
+	readButtonRequest := signals.Request{
+		Signal:  button(),
+		Request: &signals.Request_Read{},
+	}
+
+	bytes, err := proto.Marshal(&readButtonRequest)
+	if err != nil {
+		c.l.Error(fmt.Sprintf("Error serializing request: %v", err))
+	}
 
 	// Send data to the server
-	_, err := conn.Write(readButtonRequest)
+	_, err = conn.Write(bytes)
 	if err != nil {
 		c.l.Error(fmt.Sprintf("Error sending data: %s", err))
 	}
@@ -40,24 +73,30 @@ func (c *BasicIo) WaitForResponse(conn net.Conn) (bool, error) {
 	_, err := conn.Read(buffer)
 	if err != nil {
 		if err != io.EOF {
-			c.l.Error(fmt.Sprintf("read error: %s", err))
-			return false, errors.Wrap(err, "")
+			return false, fmt.Errorf("read error: %s", err)
 		}
 	}
 
-	// Deserialize server's response
-	response := signals.GetRootAsResponse(buffer, 0)
-	unionTable := new(flatbuffers.Table)
-	if response.Response(unionTable) {
-		ok, errorString, level, voltage := deserializeReadResponse(unionTable)
-		if !ok {
-			c.l.Error("Request was not ok!")
-			return false, errors.Wrap(err, "")
-		}
-		c.l.Info(fmt.Sprintf("received response ok (%t) errorString (%s) level (%t) voltage (%f)", ok, errorString, level, voltage))
-		return level, nil
+	var response signals.Response
+	err = proto.Unmarshal(buffer, &response)
+	if err != nil {
+		return false, fmt.Errorf("Failed to deserialize response")
 	}
-	return false, errors.Errorf("Read reponse could not fit in table.")
+
+	if !*response.Ok {
+		return false, fmt.Errorf("Request was not ok!")
+	}
+
+	read := response.GetRead()
+	if read == nil {
+		return false, fmt.Errorf("Invalid response type")
+	}
+
+	if v, ok := read.Value.GetValue().(*signals.SignalValue_Digital); ok {
+		return v.Digital, nil
+	} else {
+		return false, fmt.Errorf("Missing digital value")
+	}
 }
 
 func (c *BasicIo) Listen(conn net.Conn) {
@@ -69,16 +108,21 @@ func (c *BasicIo) Listen(conn net.Conn) {
 				c.l.Error(fmt.Sprintf("read error: %s", err))
 			}
 		}
-		response := signals.GetRootAsResponse(buffer, 0)
-		unionTable := new(flatbuffers.Table)
-		if response.Response(unionTable) {
-			ok, errorString, level, voltage := deserializeReadResponse(unionTable)
-			c.l.Info(fmt.Sprintf("received response ok (%t) errorString (%s) level (%t) voltage (%f)", ok, errorString, level, voltage))
+
+		var response signals.Response
+		err = proto.Unmarshal(buffer, &response)
+
+		if err != nil {
+			c.l.Error("Failed to deserialize Response")
+			continue
 		}
+
+		c.l.Info(fmt.Sprintf("received response ok (%t) errorString (%s) level (%t) voltage (%f)", response.Ok, *response.Error, response.GetRead().GetValue().GetDigital(), response.GetRead().GetValue().GetAnalogVoltage()))
 	}
 }
 
 func main() {
+	fmt.Printf("starting")
 	loggerConfig := zap.NewDevelopmentConfig()
 	logger, _ := loggerConfig.Build()
 
@@ -105,9 +149,25 @@ func main() {
 		}
 		fmt.Printf("Read indicator button is %t", level)
 
-		setLedRequest := serializeSetRequest("DemoProject", "IndicatorLed", signals.SIGNAL_TYPEDIGITAL, signals.SIGNAL_DIRECTIONINPUT, 0.0, level)
+		setLedRequest := signals.Request{
+			Signal: led(),
+			Request: &signals.Request_Set{
+				Set: &signals.SetRequest{
+					Value: &signals.SignalValue{
+						Value: &signals.SignalValue_Digital{
+							Digital: level,
+						},
+					}},
+			},
+		}
+
+		bytes, err := proto.Marshal(&setLedRequest)
+		if err != nil {
+			fmt.Println("Error sending data:", err)
+		}
+
 		// Send data to the server
-		_, err = conn.Write(setLedRequest)
+		_, err = conn.Write(bytes)
 		if err != nil {
 			fmt.Println("Error sending data:", err)
 		}

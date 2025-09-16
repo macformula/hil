@@ -1,4 +1,4 @@
-syntax = "proto3";
+edition = "2023";
 
 package signals;
 
@@ -18,17 +18,9 @@ enum SignalDirection {
 }
 
 message SignalValue {
-  message Digital {
-    bool value = 1;
-  }
-
-  message Analog {
-    float voltage = 1;
-  }
-
   oneof value {
-    Digital digital = 1;
-    Analog analog = 2;
+    bool digital = 1;
+    float analog_voltage = 2;
   }
 }
 
@@ -56,25 +48,18 @@ message SetRequest {
 }
 
 message Response {
+  bool ok = 1; // TODO: is this needed?
+  string error = 2; // TODO: is this needed?
   oneof response {
-    ReadResponse read = 1;
-    SetResponse set = 2;
-    RegisterResponse register = 3;
+    ReadResponse read = 3;
+    SetResponse set = 4;
+    RegisterResponse register = 5;
   }
 }
 
 message ReadResponse {
-  bool ok = 1;
-  SignalValue value = 2;
-  string error = 3; // todo: is this needed?
+  SignalValue value = 1;
 }
 
-message SetResponse {
-  bool ok = 1;
-  string error = 2;
-}
-
-message RegisterResponse {
-  bool ok = 1;
-  string error = 2;
-}
+message SetResponse {}
+message RegisterResponse {}
