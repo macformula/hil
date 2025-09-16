@@ -9,13 +9,8 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	flatbuffers "github.com/google/flatbuffers/go"
-	signals "github.com/macformula/hil/iocontrol/sil/signals"
-)
-
-const (
-	_unsetDigitalValue = false
-	_unsetAnalogValue  = 0.0
+	signals "github.com/macformula/hil/cmd/basicio/signals"
+	"google.golang.org/protobuf/proto"
 )
 
 //go:generate protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/signals.proto
@@ -36,7 +31,7 @@ func NewController(port int, l *zap.Logger, digitalInputs []*DigitalPin, digital
 }
 
 func (c *Controller) Open(ctx context.Context) error {
-	c.l.Info("opening sil FbController")
+	c.l.Info("opening sil Controller")
 
 	addr := fmt.Sprintf("localhost:%v", c.port)
 
@@ -76,144 +71,171 @@ func (c *Controller) handleConnection(conn net.Conn) {
 			}
 			break
 		}
-		request := signals.GetRootAsRequest(buffer, 0)
 
-		unionTable := new(flatbuffers.Table)
-		if request.Request(unionTable) {
-			requestType := request.RequestType()
-			switch requestType {
-			case signals.RequestTypeReadRequest:
-				ecu, sigName, sigType, sigDirection := deserializeReadRequest(unionTable)
+		var request signals.Request
+		err = proto.Unmarshal(buffer, &request)
 
-				switch sigType {
-				case signals.SIGNAL_TYPEDIGITAL:
-					switch sigDirection {
-					case signals.SIGNAL_DIRECTIONINPUT:
-						pin := NewDigitalInputPin(ecu, sigName)
-						level, err := c.Pins.ReadDigitalInput(pin)
-						if err != nil {
-							c.l.Error(fmt.Sprintf("read digital input ecu (%s) signal name (%s) error: %s", ecu, sigName, err))
+		if err != nil {
+			c.l.Error(fmt.Sprintf("deserialize error: %v", err))
+			break
+		}
 
-							response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, _unsetAnalogValue, false, fmt.Sprintf("read digital input ecu (%s) signal name (%s) error: %s", ecu, sigName, err))
-							_, err = conn.Write(response)
-							if err != nil {
-								c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
-							}
+		signal := request.Signal
+		var response *signals.Response = nil
+
+		switch action := request.GetRequest().(type) {
+		case *signals.Request_Read:
+			switch signal.Type {
+			case signals.SignalType_SIGNAL_TYPE_DIGITAL:
+				pin := &DigitalPin{EcuName: signal.EcuName, SigName: signal.SignalName}
+
+				switch signal.Direction {
+				case signals.SignalDirection_SIGNAL_DIRECTION_INPUT:
+					level, err := c.Pins.ReadDigitalInput(pin)
+					if err == nil {
+						response = &signals.Response{
+							Response: &signals.Response_Read{
+								Read: &signals.ReadResponse{Value: &signals.SignalValue{
+									Value: &signals.SignalValue_Digital{Digital: level}},
+								},
+							},
+							Ok:    true,
+							Error: "",
 						}
+					} else {
+						err_s := fmt.Sprintf("read digital input (%s) error: %s", pin_str(pin), err)
+						c.l.Error(err_s)
 
-						response := serializeReadResponse(signals.SignalValueDigital, level, _unsetAnalogValue, true, "")
-						_, err = conn.Write(response)
-						if err != nil {
-							c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
-						}
-					case signals.SIGNAL_DIRECTIONOUTPUT:
-						pin := NewDigitalOutputPin(ecu, sigName)
-						level, err := c.Pins.ReadDigitalOutput(pin)
-						if err != nil {
-							c.l.Error(fmt.Sprintf("read digital output ecu (%s) signal name (%s)", ecu, sigName))
-
-							response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, _unsetAnalogValue, false, fmt.Sprintf("read digital output ecu (%s) signal name (%s)", ecu, sigName))
-							_, err = conn.Write(response)
-							if err != nil {
-								c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
-							}
-						}
-
-						response := serializeReadResponse(signals.SignalValueDigital, level, _unsetAnalogValue, true, "")
-						_, err = conn.Write(response)
-						if err != nil {
-							c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
+						response = &signals.Response{
+							Response: nil,
+							Ok:       false,
+							Error:    err_s,
 						}
 					}
-				case signals.SIGNAL_TYPEANALOG:
-					switch sigDirection {
-					case signals.SIGNAL_DIRECTIONINPUT:
-						pin := NewAnalogInputPin(ecu, sigName)
-						voltage, err := c.Pins.ReadAnalogInput(pin)
-						if err != nil {
-							c.l.Error(fmt.Sprintf("read analog input ecu (%s) signal name (%s)", ecu, sigName))
 
-							response := serializeReadResponse(signals.SignalValueAnalog, _unsetDigitalValue, _unsetAnalogValue, false, fmt.Sprintf("read digital output ecu (%s) signal name (%s)", ecu, sigName))
-							_, err = conn.Write(response)
-							if err != nil {
-								c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
-							}
+				case signals.SignalDirection_SIGNAL_DIRECTION_OUTPUT:
+					level, err := c.Pins.ReadDigitalOutput(pin)
+					if err == nil {
+						response = &signals.Response{
+							Response: &signals.Response_Read{
+								Read: &signals.ReadResponse{Value: &signals.SignalValue{
+									Value: &signals.SignalValue_Digital{Digital: level}},
+								},
+							},
+							Ok:    true,
+							Error: "",
 						}
+					} else {
+						err_s := fmt.Sprintf("read digital output %s", pin_str(pin))
+						c.l.Error(err_s)
 
-						response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, voltage, true, "")
-						_, err = conn.Write(response)
-						if err != nil {
-							c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
-						}
-					case signals.SIGNAL_DIRECTIONOUTPUT:
-						pin := NewAnalogOutputPin(ecu, sigName)
-						voltage, err := c.Pins.ReadAnalogOutput(pin)
-						if err != nil {
-							c.l.Error(fmt.Sprintf("read analog output ecu (%s) signal name (%s)", ecu, sigName))
-
-							response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, _unsetAnalogValue, false, fmt.Sprintf("read analog output ecu (%s) signal name (%s)", ecu, sigName))
-							_, err = conn.Write(response)
-							if err != nil {
-								c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
-							}
-						}
-
-						response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, voltage, true, "")
-						_, err = conn.Write(response)
-						if err != nil {
-							c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
+						response = &signals.Response{
+							Response: nil,
+							Ok:       false,
+							Error:    err_s,
 						}
 					}
 				}
-			case signals.RequestTypeSetRequest:
-				ecu, sigName, sigType, sigDirection, value, voltage := deserializeSetRequest(unionTable)
 
-				switch sigType {
-				case signals.SIGNAL_TYPEDIGITAL:
-					switch sigDirection {
-					case signals.SIGNAL_DIRECTIONINPUT:
-						pin := NewDigitalInputPin(ecu, sigName)
-						c.Pins.SetDigitalInput(pin, value)
-					case signals.SIGNAL_DIRECTIONOUTPUT:
-						pin := NewDigitalOutputPin(ecu, sigName)
-						c.Pins.SetDigitalOutput(pin, value)
-					}
-				case signals.SIGNAL_TYPEANALOG:
-					switch sigDirection {
-					case signals.SIGNAL_DIRECTIONINPUT:
-						pin := NewAnalogInputPin(ecu, sigName)
-						c.Pins.SetAnalogInput(pin, voltage)
-					case signals.SIGNAL_DIRECTIONOUTPUT:
-						pin := NewAnalogOutputPin(ecu, sigName)
-						c.Pins.SetAnalogOutput(pin, voltage)
-					}
-				}
+			case signals.SIGNAL_TYPEANALOG:
+				switch sigDirection {
+				case signals.SIGNAL_DIRECTIONINPUT:
+					pin := NewAnalogInputPin(ecu, sigName)
+					voltage, err := c.Pins.ReadAnalogInput(pin)
+					if err != nil {
+						c.l.Error(fmt.Sprintf("read analog input ecu (%s) signal name (%s)", ecu, sigName))
 
-			case signals.RequestTypeRegisterRequest:
-				ecu, sigName, sigType, sigDirection := deserializeRegisterRequest(unionTable)
-
-				switch sigType {
-				case signals.SIGNAL_TYPEDIGITAL:
-					switch sigDirection {
-					case signals.SIGNAL_DIRECTIONINPUT:
-						pin := NewDigitalInputPin(ecu, sigName)
-						c.Pins.RegisterDigitalInput(pin)
-					case signals.SIGNAL_DIRECTIONOUTPUT:
-						pin := NewDigitalOutputPin(ecu, sigName)
-						c.Pins.RegisterDigitalOutput(pin)
+						response := serializeReadResponse(signals.SignalValueAnalog, _unsetDigitalValue, _unsetAnalogValue, false, fmt.Sprintf("read digital output ecu (%s) signal name (%s)", ecu, sigName))
+						_, err = conn.Write(response)
+						if err != nil {
+							c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
+						}
 					}
-				case signals.SIGNAL_TYPEANALOG:
-					switch sigDirection {
-					case signals.SIGNAL_DIRECTIONINPUT:
-						pin := NewAnalogInputPin(ecu, sigName)
-						c.Pins.RegisterAnalogInput(pin)
-					case signals.SIGNAL_DIRECTIONOUTPUT:
-						pin := NewAnalogOutputPin(ecu, sigName)
-						c.Pins.RegisterAnalogOutput(pin)
+
+					response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, voltage, true, "")
+					_, err = conn.Write(response)
+					if err != nil {
+						c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
+					}
+				case signals.SIGNAL_DIRECTIONOUTPUT:
+					pin := NewAnalogOutputPin(ecu, sigName)
+					voltage, err := c.Pins.ReadAnalogOutput(pin)
+					if err != nil {
+						c.l.Error(fmt.Sprintf("read analog output ecu (%s) signal name (%s)", ecu, sigName))
+
+						response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, _unsetAnalogValue, false, fmt.Sprintf("read analog output ecu (%s) signal name (%s)", ecu, sigName))
+						_, err = conn.Write(response)
+						if err != nil {
+							c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
+						}
+					}
+
+					response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, voltage, true, "")
+					_, err = conn.Write(response)
+					if err != nil {
+						c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
 					}
 				}
 			}
+		case *signals.Request_Set:
 
+			ecu, sigName, sigType, sigDirection, value, voltage := deserializeSetRequest(unionTable)
+
+			switch sigType {
+			case signals.SIGNAL_TYPEDIGITAL:
+				switch sigDirection {
+				case signals.SIGNAL_DIRECTIONINPUT:
+					pin := NewDigitalInputPin(ecu, sigName)
+					c.Pins.SetDigitalInput(pin, value)
+				case signals.SIGNAL_DIRECTIONOUTPUT:
+					pin := NewDigitalOutputPin(ecu, sigName)
+					c.Pins.SetDigitalOutput(pin, value)
+				}
+			case signals.SIGNAL_TYPEANALOG:
+				switch sigDirection {
+				case signals.SIGNAL_DIRECTIONINPUT:
+					pin := NewAnalogInputPin(ecu, sigName)
+					c.Pins.SetAnalogInput(pin, voltage)
+				case signals.SIGNAL_DIRECTIONOUTPUT:
+					pin := NewAnalogOutputPin(ecu, sigName)
+					c.Pins.SetAnalogOutput(pin, voltage)
+				}
+			}
+
+		case *signals.Request_Register:
+
+			ecu, sigName, sigType, sigDirection := deserializeRegisterRequest(unionTable)
+
+			switch sigType {
+			case signals.SIGNAL_TYPEDIGITAL:
+				switch sigDirection {
+				case signals.SIGNAL_DIRECTIONINPUT:
+					pin := NewDigitalInputPin(ecu, sigName)
+					c.Pins.RegisterDigitalInput(pin)
+				case signals.SIGNAL_DIRECTIONOUTPUT:
+					pin := NewDigitalOutputPin(ecu, sigName)
+					c.Pins.RegisterDigitalOutput(pin)
+				}
+			case signals.SIGNAL_TYPEANALOG:
+				switch sigDirection {
+				case signals.SIGNAL_DIRECTIONINPUT:
+					pin := NewAnalogInputPin(ecu, sigName)
+					c.Pins.RegisterAnalogInput(pin)
+				case signals.SIGNAL_DIRECTIONOUTPUT:
+					pin := NewAnalogOutputPin(ecu, sigName)
+					c.Pins.RegisterAnalogOutput(pin)
+				}
+			}
+		}
+
+		bytes, err := proto.Marshal(response)
+		if err != nil {
+			c.l.Error(fmt.Sprintf("Failed to serialize response (%s)", err.Error()))
+		}
+
+		_, err = conn.Write(bytes)
+		if err != nil {
+			c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
 		}
 	}
 }
@@ -226,6 +248,10 @@ func (c *Controller) WriteCurrent(_ *AnalogPin, _ float64) error {
 // ReadCurrent returns the current of a SIL analog pin (unimplemented for SIL).
 func (c *Controller) ReadCurrent(_ *AnalogPin) (float64, error) {
 	return 0.00, errors.New("unimplemented function on sil FbController")
+}
+
+func pin_str(pin *DigitalPin) string {
+	return fmt.Sprintf("ecu (%s) signal name (%s)", pin.EcuName, pin.SigName)
 }
 
 func deserializeReadRequest(unionTable *flatbuffers.Table) (string, string, signals.SIGNAL_TYPE, signals.SIGNAL_DIRECTION) {
@@ -278,38 +304,6 @@ func deserializeRegisterRequest(unionTable *flatbuffers.Table) (string, string, 
 	sigDirection := unionRequest.SignalDirection()
 
 	return ecu, sigName, sigType, sigDirection
-}
-
-func serializeReadResponse(sigType signals.SignalValue, level bool, voltage float64, ok bool, err string) []byte {
-	builder := flatbuffers.NewBuilder(1024)
-	errorString := builder.CreateString(err)
-
-	var sigVal flatbuffers.UOffsetT
-	if sigType == signals.SignalValueDigital {
-		signals.DigitalStart(builder)
-		signals.DigitalAddValue(builder, level)
-		sigVal = signals.DigitalEnd(builder)
-
-	} else if sigType == signals.SignalValueAnalog {
-		signals.AnalogStart(builder)
-		signals.AnalogAddVoltage(builder, voltage)
-		sigVal = signals.AnalogEnd(builder)
-	}
-
-	signals.ReadResponseStart(builder)
-	signals.ReadResponseAddSignalValueType(builder, sigType)
-	signals.ReadResponseAddSignalValue(builder, sigVal)
-	signals.ReadResponseAddOk(builder, ok)
-	signals.ReadResponseAddError(builder, errorString)
-	readResponse := signals.ReadResponseEnd(builder)
-
-	signals.ResponseStart(builder)
-	signals.ResponseAddResponseType(builder, signals.ResponseTypeReadResponse)
-	signals.ResponseAddResponse(builder, readResponse)
-	response := signals.ResponseEnd(builder)
-	builder.Finish(response)
-
-	return builder.FinishedBytes()
 }
 
 // Keep these last two functions. Depending on how firmware interacts with sil. It might not listen for a response back.
