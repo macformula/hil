@@ -45,7 +45,7 @@ func (c *BasicIo) WaitForResponse(conn net.Conn) (bool, error) {
 		}
 	}
 
-	// Deserilize server's response
+	// Deserialize server's response
 	response := signals.GetRootAsResponse(buffer, 0)
 	unionTable := new(flatbuffers.Table)
 	if response.Response(unionTable) {
@@ -54,7 +54,7 @@ func (c *BasicIo) WaitForResponse(conn net.Conn) (bool, error) {
 			c.l.Error("Request was not ok!")
 			return false, errors.Wrap(err, "")
 		}
-		c.l.Info(fmt.Sprintf("recieved response ok (%t) errorString (%s) level (%t) voltage (%f)", ok, errorString, level, voltage))
+		c.l.Info(fmt.Sprintf("received response ok (%t) errorString (%s) level (%t) voltage (%f)", ok, errorString, level, voltage))
 		return level, nil
 	}
 	return false, errors.Errorf("Read reponse could not fit in table.")
@@ -73,7 +73,7 @@ func (c *BasicIo) Listen(conn net.Conn) {
 		unionTable := new(flatbuffers.Table)
 		if response.Response(unionTable) {
 			ok, errorString, level, voltage := deserializeReadResponse(unionTable)
-			c.l.Info(fmt.Sprintf("recieved response ok (%t) errorString (%s) level (%t) voltage (%f)", ok, errorString, level, voltage))
+			c.l.Info(fmt.Sprintf("received response ok (%t) errorString (%s) level (%t) voltage (%f)", ok, errorString, level, voltage))
 		}
 	}
 }

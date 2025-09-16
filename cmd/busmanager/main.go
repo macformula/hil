@@ -61,6 +61,7 @@ func main() {
 	loggerConfig := zap.NewDevelopmentConfig()
 	logger, err := loggerConfig.Build()
 
+	// TODO: interface shouldn't be hardcoded. how would vcan1 work
 	conn, err := socketcan.DialContext(context.Background(), "can", "vcan0")
 	if err != nil {
 		logger.Error("failed to create socket can connection",

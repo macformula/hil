@@ -1,5 +1,6 @@
 namespace signals;
 
+// TODO: These enums should be defined in a common file for all boards to use
 enum SIGNAL_TYPE: byte { DIGITAL = 0, ANALOG = 1 }
 enum SIGNAL_DIRECTION: byte { INPUT = 0, OUTPUT = 1 }
 
