@@ -1,2 +1,5 @@
 # ignore executable
 basicio
+
+# ignore generated code
+signals/
