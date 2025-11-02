@@ -1,10 +1,12 @@
 package raspi
 
 // AnalogPin defines an analog pin for the Raspberry Pi
-type AnalogPin struct{}
+type AnalogPin struct{
+	id string
+}
 
-func NewAnalogPin() *AnalogPin {
-	return &AnalogPin{}
+func NewAnalogPin(idx string) *AnalogPin {
+	return &AnalogPin{id: idx}
 }
 
 // String returns the pin type
