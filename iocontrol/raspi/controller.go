@@ -2,11 +2,8 @@ package raspi
 
 import (
 	"context"
-	"os/exec"
 	"strings"
 	"sync"
-	"time"
-	"strings"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -16,80 +13,42 @@ import (
 )
 
 const (
-	_loggerName   = "raspi_controller"
-	_startCommand = "start"
-	_stopCommand  = "stop"
+	_loggerName = "raspi_controller"
 )
+
+var _availableGPIO = [...]uint8{
+	3, 5, 7, 8, 10, 11, 12, 13, 15, 16, 18, 19, 21, 22, 23, 24,
+	26, 27, 28, 29, 31, 32, 33, 35, 36, 37, 38, 40,
+}
 
 // Controller provides control for various Raspberry Pi pins
 type Controller struct {
-	addr string
 	l *zap.Logger
-	opened bool
-
-	digital [_digitalArraySize]bool
-	analog [_analogInputCount + _analogOutputCount]float64
 	mu sync.Mutex
-
-	autoload bool
-	scriptPath string
-	piSSH string
-	piPassword string
-}
-
-type RaspiOption func(*Controller)
-
-// automatically loads given script onto raspi
-func withScriptAutoload(scriptPath, piSSH, piPassword string) RaspiOption {
-	return func(c *Controller) {
-		c.autoload = true
-		c.scriptPath = scriptPath
-		c.piSSH = piSSH
-		c.piPassword = piPassword
-	}
+	opened bool
+	
+	// autoload bool
+	// scriptPath string
+	// piSSH string
+	// piPassword string
 }
 
 // NewController returns a new Raspberry Pi controller
-func NewController(l *zap.Logger, address string, opts ...RaspiOption) *Controller {
-	pi := &Controller {
-		addr: address,
+func NewController(l *zap.Logger) *Controller {
+	return &Controller{
 		l: l.Named(_loggerName),
 	}
-
-	for _, o := range opts {
-		o(pi)
-	}
-
-	return pi
-}
-
-func (c*Controller) runPiScript(script string, args ...string) error {
-	cmdArgs := append([]string{script}, args...)
-	cmd := exec.Command("/bin/sh", cmdArgs...)
-
-	err := cmd.Run()
-	if err != nil {
-		return errors.Wrap(err, "cmd run")
-	}
-
-	return nil
 }
 
 // Open configures the controller
 func (c *Controller) Open(_ context.Context) error {
-	c.l.Info("opening raspi controller")
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	if c.opened {return nil}
 
 	// initialize periph io
-    if _, err := host.Init(); err != nil {
-        return errors.Wrap(err, "periph host init")
-    }
-
-	if c.autoload {
-		err := c.runPiScript(c.scriptPath, c.piSSH, c.piPassword, _startCommand)
-		if err != nil {
-			return errors.Wrap(err, "run raspi script")
-		}
+	if _, err := host.Init(); err != nil {
+		return errors.Wrap(err, "periph host init")
 	}
 
 	c.opened = true
@@ -98,45 +57,39 @@ func (c *Controller) Open(_ context.Context) error {
 
 func (c *Controller) Close() error {
 	c.l.Info("closing raspberry pi controller")
-
-	if c.autoload {
-		err := c.runPiScript(c.scriptPath, c.piSSH, c.piPassword, _stopCommand)
-		if err != nil {
-			return errors.Wrap(err, "run raspi script")
-		}
-	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	c.opened = false
 	return nil
 }
 
 // SetDigital sets an output digital pin for a Raspberry Pi digital pin
-func (c *Controller) SetDigital(output *DigitalPin, b bool) error {
-    pin := gpioreg.ByName(strings.ToUpper(id))
-    if pin == nil {
-        return errors.Errorf("unknown pin %q", output.id)
-    }
-    // configure output mode
-    if err := pin.Out(gpio.Low); err != nil {
-        return errors.Wrap(err, "set output mode")
-    }
-	// set pin level
-    if b {
-        return errors.Wrap(pin.Out(gpio.High), "write high")
-    }
-    return errors.Wrap(pin.Out(gpio.Low), "write low")
+func (c *Controller) SetDigital(output *DigitalPin, high bool) error {
+	pin, err := resolvePin(output)
+	if err != nil {return err}
+
+	// configure as output, then write
+	if err := pin.Out(gpio.Low)
+	err != nil {
+		return errors.Wrap(err, "set output mode")
+	}
+	if high {
+		return errors.Wrap(pin.Out(gpio.High), "write high")
+	}
+	return errors.Wrap(pin.Out(gpio.Low), "write low")
 }
 
 // ReadDigital returns the level of a Raspberry Pi digital pin
-func (c *Controller) ReadDigital(output *DigitalPin) (bool, error) {
-    pin := gpioreg.ByName(strings.ToUpper(id))
-    if pin == nil {
-        return false, errors.Errorf("unknown pin %q", input.id)
-    }
-    if err := pin.In(gpio.Float, gpio.NoEdge); err != nil {
-        return false, errors.Wrap(err, "set input mode")
-    }
-    return pin.Read() == gpio.High, nil
+func (c *Controller) ReadDigital(input *DigitalPin) (bool, error) {
+	pin, err := resolvePin(input)
+	if err != nil {return false, err}
+
+	if err := pin.In(gpio.Float, gpio.NoEdge)
+	err != nil {
+		return false, errors.Wrap(err, "set input mode")
+	}
+	return pin.Read() == gpio.High, nil
 }
 
 // WriteVoltage sets the voltage of a Raspberry Pi analog pin
@@ -157,4 +110,30 @@ func (c *Controller) WriteCurrent(output *AnalogPin, current float64) error {
 // ReadCurrent returns the current of a Raspberry Pi analog pin
 func (c *Controller) ReadCurrent(output *AnalogPin) (float64, error) {
 	return 0.00, errors.New("currently unsupported on raspi")
+}
+
+// helpers
+func resolvePin(pin *DigitalPin) (gpio.PinIO, error) {
+	if pin.id < 1 || pin.id > 40 {
+		return nil, errors.Errorf("invalid board pin %d", pin.id)
+	}
+
+	// check if pin is in the available GPIO list
+	valid := false
+	for _, v := range _availableGPIO {
+		if v == pin.id {
+			valid = true
+			break
+		}
+	}
+	if !valid {
+		return nil, errors.Errorf("board pin %d is not a usable GPIO", pin.id)
+	}
+
+	name := fmt.Sprintf("P1-%d", pin.id) // periph header naming
+	p := gpioreg.ByName(name)
+	if p == nil {
+		return nil, errors.Errorf("GPIO for board pin %d unavailable", pin.id)
+	}
+	return p, nil
 }

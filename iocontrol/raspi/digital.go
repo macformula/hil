@@ -2,10 +2,10 @@ package raspi
 
 // DigitalPin defines a digital pin for the Raspberry Pi
 type DigitalPin struct {
-	id string
+	id uint8
 }
 
-func NewDigitalPin(idx string) *DigitalPin {
+func NewDigitalPin(idx uint8) *DigitalPin {
 	return &DigitalPin{id: idx}
 }
 
