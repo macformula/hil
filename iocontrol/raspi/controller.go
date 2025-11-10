@@ -2,35 +2,33 @@ package raspi
 
 import (
 	"context"
-	"strings"
+	"fmt"
 	"sync"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"periph.io/x/conn/v3/gpio"
 	"periph.io/x/host/v3"
-	"periph.io/x/host/v3/gpio/gpioreg"
+	"periph.io/x/conn/v3/gpio/gpioreg"
 )
 
 const (
 	_loggerName = "raspi_controller"
 )
 
+// Pins reference by board number (1-40)
+// CAN HAT uses 15, 19, 21, 23, 24, 26, 33
+// HAT EEPROM uses 27, 28
+// UART 8, 10 and I2C 3, 5 are optional
 var _availableGPIO = [...]uint8{
-	3, 5, 7, 8, 10, 11, 12, 13, 15, 16, 18, 19, 21, 22, 23, 24,
-	26, 27, 28, 29, 31, 32, 33, 35, 36, 37, 38, 40,
+	7, 11, 12, 13, 16, 18, 22, 29, 31, 32, 35, 36, 37, 38, 40,
 }
 
 // Controller provides control for various Raspberry Pi pins
 type Controller struct {
-	l *zap.Logger
-	mu sync.Mutex
+	l      *zap.Logger
+	mu     sync.Mutex
 	opened bool
-	
-	// autoload bool
-	// scriptPath string
-	// piSSH string
-	// piPassword string
 }
 
 // NewController returns a new Raspberry Pi controller
@@ -44,7 +42,9 @@ func NewController(l *zap.Logger) *Controller {
 func (c *Controller) Open(_ context.Context) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.opened {return nil}
+	if c.opened {
+		return errors.New("raspberry pi controller already opened")
+	}
 
 	// initialize periph io
 	if _, err := host.Init(); err != nil {
@@ -55,26 +55,27 @@ func (c *Controller) Open(_ context.Context) error {
 	return nil
 }
 
+// Closes the controller instance
 func (c *Controller) Close() error {
 	c.l.Info("closing raspberry pi controller")
 	c.mu.Lock()
 	defer c.mu.Unlock()
-
 	c.opened = false
 	return nil
 }
 
 // SetDigital sets an output digital pin for a Raspberry Pi digital pin
-func (c *Controller) SetDigital(output *DigitalPin, high bool) error {
+func (c *Controller) SetDigital(output *DigitalPin, level bool) error {
 	pin, err := resolvePin(output)
-	if err != nil {return err}
+	if err != nil {
+		return err
+	}
 
 	// configure as output, then write
-	if err := pin.Out(gpio.Low)
-	err != nil {
+	if err := pin.Out(gpio.Low); err != nil {
 		return errors.Wrap(err, "set output mode")
 	}
-	if high {
+	if level {
 		return errors.Wrap(pin.Out(gpio.High), "write high")
 	}
 	return errors.Wrap(pin.Out(gpio.Low), "write low")
@@ -83,10 +84,11 @@ func (c *Controller) SetDigital(output *DigitalPin, high bool) error {
 // ReadDigital returns the level of a Raspberry Pi digital pin
 func (c *Controller) ReadDigital(input *DigitalPin) (bool, error) {
 	pin, err := resolvePin(input)
-	if err != nil {return false, err}
+	if err != nil {
+		return false, err
+	}
 
-	if err := pin.In(gpio.Float, gpio.NoEdge)
-	err != nil {
+	if err := pin.In(gpio.Float, gpio.NoEdge); err != nil {
 		return false, errors.Wrap(err, "set input mode")
 	}
 	return pin.Read() == gpio.High, nil
