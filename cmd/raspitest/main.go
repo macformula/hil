@@ -14,12 +14,13 @@ import (
 	"github.com/macformula/hil/iocontrol/raspi"
 )
 
-const (
-	helpText = "commands: high | low | read | help | exit"
-)
+const helpText = "commands: high | low | read | help | exit"
 
 func main() {
 	boardPin := flag.Uint("pin", 0, "Raspberry Pi board pin number (1-40)")
+	// one-shot mode (optional)
+	oneSet := flag.String("set", "", "one-shot: set pin: high|low")
+	oneGet := flag.Bool("get", false, "one-shot: read pin")
 	flag.Parse()
 
 	if *boardPin == 0 || *boardPin > 40 {
@@ -33,9 +34,7 @@ func main() {
 	defer logger.Sync()
 
 	ctrl := raspi.NewController(logger)
-
-	ctx := context.Background()
-	if err := ctrl.Open(ctx); err != nil {
+	if err := ctrl.Open(context.Background()); err != nil {
 		log.Fatalf("open raspi controller: %v", err)
 	}
 	defer func() {
@@ -46,11 +45,50 @@ func main() {
 
 	pin := raspi.NewDigitalPin(uint8(*boardPin))
 
+	// One-shot path
+	if *oneSet != "" || *oneGet {
+		switch {
+		case *oneSet != "":
+			switch strings.ToLower(*oneSet) {
+			case "high", "1", "on":
+				if err := ctrl.SetDigital(pin, true); err != nil {
+					log.Fatalf("set high: %v", err)
+				}
+				fmt.Printf("P1-%d -> HIGH\n", *boardPin)
+			case "low", "0", "off":
+				if err := ctrl.SetDigital(pin, false); err != nil {
+					log.Fatalf("set low: %v", err)
+				}
+				fmt.Printf("P1-%d -> LOW\n", *boardPin)
+			default:
+				log.Fatalf("unknown --set value: %q (use high|low)", *oneSet)
+			}
+		case *oneGet:
+			level, err := ctrl.ReadDigital(pin)
+			if err != nil {
+				log.Fatalf("read: %v", err)
+			}
+			if level {
+				fmt.Printf("P1-%d <- HIGH\n", *boardPin)
+			} else {
+				fmt.Printf("P1-%d <- LOW\n", *boardPin)
+			}
+		}
+		return
+	}
+
+	// Interactive path: read from the controlling TTY
+	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	if err != nil {
+		log.Fatalf("open /dev/tty: %v", err)
+	}
+	defer tty.Close()
+
 	fmt.Printf("raspitest ready on pin P1-%d\n%s\n", *boardPin, helpText)
 
-	reader := bufio.NewScanner(os.Stdin)
+	reader := bufio.NewScanner(tty)
 	for {
-		fmt.Printf("P1-%d> ", *boardPin)
+		fmt.Fprintf(tty, "P1-%d> ", *boardPin)
 		if !reader.Scan() {
 			break
 		}
@@ -62,38 +100,38 @@ func main() {
 		switch cmd {
 		case "high", "1", "on":
 			if err := ctrl.SetDigital(pin, true); err != nil {
-				fmt.Printf("error setting HIGH: %v\n", err)
+				fmt.Fprintf(tty, "error setting HIGH: %v\n", err)
 				continue
 			}
-			fmt.Println("-> HIGH")
+			fmt.Fprintln(tty, "-> HIGH")
 		case "low", "0", "off":
 			if err := ctrl.SetDigital(pin, false); err != nil {
-				fmt.Printf("error setting LOW: %v\n", err)
+				fmt.Fprintf(tty, "error setting LOW: %v\n", err)
 				continue
 			}
-			fmt.Println("-> LOW")
+			fmt.Fprintln(tty, "-> LOW")
 		case "read", "get":
 			level, err := ctrl.ReadDigital(pin)
 			if err != nil {
-				fmt.Printf("error reading pin: %v\n", err)
+				fmt.Fprintf(tty, "error reading pin: %v\n", err)
 				continue
 			}
-			state := "LOW"
 			if level {
-				state = "HIGH"
+				fmt.Fprintln(tty, "<- HIGH")
+			} else {
+				fmt.Fprintln(tty, "<- LOW")
 			}
-			fmt.Printf("<- %s\n", state)
 		case "help", "?":
-			fmt.Println(helpText)
+			fmt.Fprintln(tty, helpText)
 		case "exit", "quit":
-			fmt.Println("bye")
+			fmt.Fprintln(tty, "bye")
 			return
 		default:
-			fmt.Printf("unknown command %q (%s)\n", cmd, helpText)
+			fmt.Fprintf(tty, "unknown command %q (%s)\n", cmd, helpText)
 		}
 	}
 
 	if err := reader.Err(); err != nil {
-		log.Fatalf("stdin read error: %v", err)
+		log.Fatalf("tty read error: %v", err)
 	}
 }
