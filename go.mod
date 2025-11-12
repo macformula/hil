@@ -21,12 +21,7 @@ require (
 	google.golang.org/grpc v1.60.1
 	google.golang.org/protobuf v1.32.0
 	gopkg.in/yaml.v3 v3.0.1
-)
-
-require (
-	github.com/dmarkham/enumer v1.6.1 // indirect
-	github.com/pascaldekloe/name v1.0.0 // indirect
-	periph.io/x/conn/v3 v3.7.2 // indirect
+	periph.io/x/conn/v3 v3.7.2
 )
 
 require (

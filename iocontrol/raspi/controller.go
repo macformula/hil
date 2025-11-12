@@ -20,8 +20,9 @@ const (
 // CAN HAT uses 15, 19, 21, 23, 24, 26, 33
 // HAT EEPROM uses 27, 28
 // UART 8, 10 and I2C 3, 5 are optional
-var _availableGPIO = [...]uint8{
-	7, 11, 12, 13, 16, 18, 22, 29, 31, 32, 35, 36, 37, 38, 40,
+var boardToBCM = map[uint8]int{
+	7: 4, 11: 17, 12: 18, 13: 27, 16: 23, 18: 24, 22: 25,
+	29: 5, 31: 6, 32: 12, 35: 19, 36: 16, 37: 26, 38: 20, 40: 21,
 }
 
 // Controller provides control for various Raspberry Pi pins
@@ -120,22 +121,18 @@ func resolvePin(pin *DigitalPin) (gpio.PinIO, error) {
 		return nil, errors.Errorf("invalid board pin %d", pin.id)
 	}
 
-	// check if pin is in the available GPIO list
-	valid := false
-	for _, v := range _availableGPIO {
-		if v == pin.id {
-			valid = true
-			break
-		}
-	}
-	if !valid {
-		return nil, errors.Errorf("board pin %d is not a usable GPIO", pin.id)
+	if p := gpioreg.ByName(fmt.Sprintf("P1-%d", pin.id)); p != nil {
+		return p, nil
 	}
 
-	name := fmt.Sprintf("P1-%d", pin.id) // periph header naming
-	p := gpioreg.ByName(name)
-	if p == nil {
-		return nil, errors.Errorf("GPIO for board pin %d unavailable", pin.id)
+	bcm, ok := boardToBCM[pin.id]
+	if !ok {
+		return nil, errors.Errorf("no BCM mapping for board pin %d", pin.id)
 	}
-	return p, nil
+
+	if p := gpioreg.ByName(fmt.Sprintf("GPIO%d", bcm)); p != nil {
+		return p, nil
+	}
+
+	return nil, errors.Errorf("GPIO for board pin %d unavailable", pin.id)
 }
