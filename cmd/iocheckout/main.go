@@ -62,7 +62,7 @@ func main() {
 	}
 
 	if *useRaspi {
-		rp := raspi.NewController()
+		rp := raspi.NewController(logger)
 		ioControlOpts = append(ioControlOpts, iocontrol.WithRaspi(rp))
 	}
 

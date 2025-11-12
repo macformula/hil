@@ -8,8 +8,8 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"periph.io/x/conn/v3/gpio"
-	"periph.io/x/host/v3"
 	"periph.io/x/conn/v3/gpio/gpioreg"
+	"periph.io/x/host/v3"
 )
 
 const (
