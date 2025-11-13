@@ -1,6 +1,7 @@
 package raspi
 
 // DigitalPin defines a digital pin for the Raspberry Pi
+// Works with physical board pin numbering (1-40)
 type DigitalPin struct {
 	id uint8
 }

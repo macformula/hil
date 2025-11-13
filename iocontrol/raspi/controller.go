@@ -16,10 +16,9 @@ const (
 	_loggerName = "raspi_controller"
 )
 
-// Pins reference by board number (1-40)
-// CAN HAT uses 15, 19, 21, 23, 24, 26, 33
-// HAT EEPROM uses 27, 28
-// UART 8, 10 and I2C 3, 5 are optional
+// Mapping from board pins (1-40) to their corresponding BCM GPIO numbers
+// CAN HAT uses 8, 10, 3, 5, 15, 19, 21, 23, 24, 26, 27, 28, 33 (https://www.waveshare.com/wiki/2-CH_CAN_HAT)
+// Remaining pins are listed below (see https://pinout.xyz/pinout/pin7_gpio4/)
 var boardToBCM = map[uint8]int{
 	7: 4, 11: 17, 12: 18, 13: 27, 16: 23, 18: 24, 22: 25,
 	29: 5, 31: 6, 32: 12, 35: 19, 36: 16, 37: 26, 38: 20, 40: 21,
@@ -56,7 +55,7 @@ func (c *Controller) Open(_ context.Context) error {
 	return nil
 }
 
-// Closes the controller instance
+// Close tears down the controller instance
 func (c *Controller) Close() error {
 	c.l.Info("closing raspberry pi controller")
 	c.mu.Lock()
@@ -117,14 +116,6 @@ func (c *Controller) ReadCurrent(output *AnalogPin) (float64, error) {
 
 // helpers
 func resolvePin(pin *DigitalPin) (gpio.PinIO, error) {
-	if pin.id < 1 || pin.id > 40 {
-		return nil, errors.Errorf("invalid board pin %d", pin.id)
-	}
-
-	if p := gpioreg.ByName(fmt.Sprintf("P1-%d", pin.id)); p != nil {
-		return p, nil
-	}
-
 	bcm, ok := boardToBCM[pin.id]
 	if !ok {
 		return nil, errors.Errorf("no BCM mapping for board pin %d", pin.id)
