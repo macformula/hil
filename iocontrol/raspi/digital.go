@@ -1,11 +1,13 @@
 package raspi
 
 // DigitalPin defines a digital pin for the Raspberry Pi
+// Works with physical board pin numbering (1-40)
 type DigitalPin struct {
+	id uint8
 }
 
-func NewDigitalPin() *DigitalPin {
-	return &DigitalPin{}
+func NewDigitalPin(idx uint8) *DigitalPin {
+	return &DigitalPin{id: idx}
 }
 
 // String returns the pin type

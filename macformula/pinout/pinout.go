@@ -2,7 +2,7 @@ package pinout
 
 import (
 	"github.com/macformula/hil/iocontrol"
-	"github.com/macformula/hil/iocontrol/raspi"
+	// "github.com/macformula/hil/iocontrol/raspi"
 	"github.com/macformula/hil/iocontrol/sil"
 	"github.com/macformula/hil/iocontrol/speedgoat"
 	"github.com/pkg/errors"
@@ -54,7 +54,7 @@ var _revisionDigitalOutputPinout = map[Revision]DigitalPinout{
 		HvilDisable:  speedgoat.NewDigitalPin(10),
 	},
 	MockTest: {
-		StartButtonN: raspi.NewDigitalPin(),
+		// StartButtonN: raspi.NewDigitalPin(),
 	},
 	Sil: {
 		IndicatorButton:  sil.NewDigitalOutputPin("DemoProject", IndicatorButton.String()),
@@ -76,7 +76,7 @@ var _revisionAnalogInputPinout = map[Revision]AnalogPinout{
 		FrontController3v3RefVoltage: speedgoat.NewAnalogPin(2),
 	},
 	MockTest: {
-		LvController3v3RefVoltage: raspi.NewAnalogPin(),
+		// LvController3v3RefVoltage: raspi.NewAnalogPin(),
 	},
 	Sil: {
 		HvilFeedback: sil.NewAnalogInputPin("FrontController", HvilFeedback.String()),
@@ -92,9 +92,9 @@ var _revisionAnalogOutputPinout = map[Revision]AnalogPinout{
 		AccelPedalPosition2: speedgoat.NewAnalogPin(11),
 	},
 	MockTest: {
-		AccelPedalPosition1: raspi.NewAnalogPin(),
-		AccelPedalPosition2: raspi.NewAnalogPin(),
-		HvCurrentSense:      raspi.NewAnalogPin(),
+		// AccelPedalPosition1: raspi.NewAnalogPin(),
+		// AccelPedalPosition2: raspi.NewAnalogPin(),
+		// HvCurrentSense:      raspi.NewAnalogPin(),
 	},
 	Sil: {
 		AccelPedalPosition1: sil.NewAnalogOutputPin("FrontController", AccelPedalPosition1.String()),
