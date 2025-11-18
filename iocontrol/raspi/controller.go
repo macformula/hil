@@ -1,5 +1,10 @@
 package raspi
 
+// ### NOTE ###
+// This driver currently requires permissions (sudo) to access the GPIO pins. Running HIL stack on root is not recommended.
+// Need to add udev rule to allow gpio group to access /dev/gpiomem and related device nodes without sudo.
+// Once the Ansible script is updated to install the udev rule, permissions will no longer be required.
+
 import (
 	"context"
 	"fmt"
