@@ -2,8 +2,9 @@ package macformula
 
 import (
 	"context"
-	"github.com/macformula/hil/macformula/pinout"
 	"strconv"
+
+	"github.com/macformula/hil/macformula/pinout"
 
 	"github.com/fatih/color"
 	"github.com/macformula/hil/iocontrol"
@@ -46,7 +47,7 @@ var (
 type IoCheckout struct {
 	l         *zap.Logger
 	rev       pinout.Revision
-	ioControl *iocontrol.IOControl
+	ioControl iocontrol.IOController
 
 	diPins pinout.DigitalPinout
 	doPins pinout.DigitalPinout
@@ -62,7 +63,7 @@ type IoCheckout struct {
 }
 
 // NewIoCheckout returns a pointer to an IoCheckout object.
-func NewIoCheckout(rev pinout.Revision, ioControl *iocontrol.IOControl, l *zap.Logger) *IoCheckout {
+func NewIoCheckout(rev pinout.Revision, ioControl iocontrol.IOController, l *zap.Logger) *IoCheckout {
 	return &IoCheckout{
 		l:            l.Named(_loggerName),
 		rev:          rev,
@@ -353,7 +354,7 @@ func (io *IoCheckout) handleDigitalOutputSelect() error {
 		return errors.Wrap(err, "high to low bool")
 	}
 
-	err = io.ioControl.SetDigital(digitalOut, lvl)
+	err = io.ioControl.WriteDigital(digitalOut, lvl)
 	if err != nil {
 		return errors.Wrap(err, "set digital")
 	}

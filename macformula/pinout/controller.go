@@ -14,7 +14,7 @@ const _controllerName = "pinout_controller"
 // Controller allows for easy control of the I/O's given the current pinout Revision.
 type Controller struct {
 	l            *zap.Logger
-	ioController *iocontrol.IOControl
+	ioController iocontrol.IOController
 	rev          Revision
 
 	digitalOutputs DigitalPinout
@@ -24,7 +24,7 @@ type Controller struct {
 }
 
 // NewController creates a new pinout controller.
-func NewController(rev Revision, ioController *iocontrol.IOControl, l *zap.Logger) *Controller {
+func NewController(rev Revision, ioController iocontrol.IOController, l *zap.Logger) *Controller {
 	return &Controller{
 		l:            l.Named(_controllerName),
 		ioController: ioController,
@@ -67,7 +67,7 @@ func (c *Controller) SetDigitalLevel(out PhysicalIo, level bool) error {
 			out.String(), c.rev.String())
 	}
 
-	err := c.ioController.SetDigital(digitalOutput, level)
+	err := c.ioController.WriteDigital(digitalOutput, level)
 	if err != nil {
 		return errors.Wrap(err, "set digital")
 	}

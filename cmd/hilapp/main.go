@@ -153,20 +153,17 @@ func main() {
 			canlink.WithFileName(_ptCan),
 		)
 	}
-
 	// Get controllers
-	var ioOpts = make([]iocontrol.IOControlOption, 0)
+
+	var ioController iocontrol.IOController
 
 	switch rev {
 	case pinout.Sil:
 		silController = sil.NewController(cfg.SilPort, logger, utils.GetValues(pinout.SilDigitalInputPins), utils.GetValues(pinout.SilDigitalOutputPins), utils.GetValues(pinout.SilAnalogInputPins), utils.GetValues(pinout.SilAnalogOutputPins))
-		ioOpts = append(ioOpts, iocontrol.WithSil(silController))
+		ioController = silController
 	default:
 		panic("unconfigured revision")
 	}
-
-	// Create io controller.
-	ioController := iocontrol.NewIOControl(logger, ioOpts...)
 
 	err = ioController.Open(ctx)
 	if err != nil {

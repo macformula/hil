@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	flatbuffers "github.com/google/flatbuffers/go"
+	"github.com/macformula/hil/iocontrol"
 	signals "github.com/macformula/hil/iocontrol/sil/signals"
 )
 
@@ -49,6 +50,14 @@ func (c *Controller) Open(ctx context.Context) error {
 
 	c.l.Info(fmt.Sprintf("sil listening on %s", addr))
 
+	go c.RunServer()
+
+	c.l.Info("Started server")
+
+	return nil
+}
+
+func (c *Controller) RunServer() {
 	for {
 		conn, err := c.listener.Accept()
 		if err != nil {
@@ -62,6 +71,42 @@ func (c *Controller) Close() error {
 	c.l.Info("closing sil FbController")
 	c.listener.Close()
 	return nil
+}
+
+func (c *Controller) ReadDigital(pin iocontrol.DigitalPin) (bool, error) {
+	switch p := pin.(type) {
+	case *DigitalPin:
+		return c.Pins.ReadDigitalInput(p)
+	default:
+		return false, errors.Errorf("Invalid pin type")
+	}
+}
+
+func (c *Controller) WriteDigital(pin iocontrol.DigitalPin, b bool) error {
+	switch p := pin.(type) {
+	case *DigitalPin:
+		return c.Pins.SetDigitalInput(p, b)
+	default:
+		return errors.Errorf("Invalid pin type")
+	}
+}
+
+func (c *Controller) ReadVoltage(pin iocontrol.AnalogPin) (float64, error) {
+	switch p := pin.(type) {
+	case *AnalogPin:
+		return c.Pins.ReadAnalogInput(p)
+	default:
+		return 0.0, errors.Errorf("Invalid pin type")
+	}
+}
+
+func (c *Controller) WriteVoltage(pin iocontrol.AnalogPin, v float64) error {
+	switch p := pin.(type) {
+	case *AnalogPin:
+		return c.Pins.SetAnalogInput(p, v)
+	default:
+		return errors.Errorf("Invalid pin type")
+	}
 }
 
 func (c *Controller) handleConnection(conn net.Conn) {
@@ -216,16 +261,6 @@ func (c *Controller) handleConnection(conn net.Conn) {
 
 		}
 	}
-}
-
-// WriteCurrent sets the current of a SIL analog pin (unimplemented for SIL).
-func (c *Controller) WriteCurrent(_ *AnalogPin, _ float64) error {
-	return errors.New("unimplemented function on sil FbController")
-}
-
-// ReadCurrent returns the current of a SIL analog pin (unimplemented for SIL).
-func (c *Controller) ReadCurrent(_ *AnalogPin) (float64, error) {
-	return 0.00, errors.New("unimplemented function on sil FbController")
 }
 
 func deserializeReadRequest(unionTable *flatbuffers.Table) (string, string, signals.SIGNAL_TYPE, signals.SIGNAL_DIRECTION) {

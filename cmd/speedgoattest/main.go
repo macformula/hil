@@ -27,10 +27,10 @@ func main() {
 	}
 
 	pin := speedgoat.NewDigitalPin(8) // First digital output pin (idx 8-15)
-	controller.SetDigital(pin, true)
+	controller.WriteDigital(pin, true)
 
 	pin2 := speedgoat.NewDigitalPin(15) // Last digital output pin
-	controller.SetDigital(pin2, true)
+	controller.WriteDigital(pin2, true)
 
 	pin3 := speedgoat.NewAnalogPin(8) // First analog output pin (idx 8-11)
 	controller.WriteVoltage(pin3, 2.5)
@@ -39,7 +39,7 @@ func main() {
 
 	// Verify that these change on the Speedgoat via Simulink or LED
 	// If they don't change (or take a while), verify that the Simulink TCP server has a sufficiently small sample time
-	err = controller.SetDigital(pin2, false)
+	err = controller.WriteDigital(pin2, false)
 	if err != nil {
 		panic(err)
 	}

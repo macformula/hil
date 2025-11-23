@@ -51,12 +51,12 @@ func main() {
 		case *oneSet != "":
 			switch strings.ToLower(*oneSet) {
 			case "high", "1", "on":
-				if err := ctrl.SetDigital(pin, true); err != nil {
+				if err := ctrl.WriteDigital(pin, true); err != nil {
 					log.Fatalf("set high: %v", err)
 				}
 				fmt.Printf("P1-%d -> HIGH\n", *boardPin)
 			case "low", "0", "off":
-				if err := ctrl.SetDigital(pin, false); err != nil {
+				if err := ctrl.WriteDigital(pin, false); err != nil {
 					log.Fatalf("set low: %v", err)
 				}
 				fmt.Printf("P1-%d -> LOW\n", *boardPin)
@@ -99,13 +99,13 @@ func main() {
 
 		switch cmd {
 		case "high", "1", "on":
-			if err := ctrl.SetDigital(pin, true); err != nil {
+			if err := ctrl.WriteDigital(pin, true); err != nil {
 				fmt.Fprintf(tty, "error setting HIGH: %v\n", err)
 				continue
 			}
 			fmt.Fprintln(tty, "-> HIGH")
 		case "low", "0", "off":
-			if err := ctrl.SetDigital(pin, false); err != nil {
+			if err := ctrl.WriteDigital(pin, false); err != nil {
 				fmt.Fprintf(tty, "error setting LOW: %v\n", err)
 				continue
 			}
