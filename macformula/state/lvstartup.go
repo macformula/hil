@@ -11,6 +11,7 @@ import (
 	"github.com/macformula/hil/macformula/config"
 	"github.com/macformula/hil/macformula/ecu/frontcontroller"
 	"github.com/macformula/hil/macformula/ecu/lvcontroller"
+	"github.com/macformula/hil/macformula/pinout"
 	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
 )
@@ -75,55 +76,55 @@ func (l *lvStartup) Run(ctx context.Context) error {
 
 	r[tags.PowerCycledTestBench] = true
 
-	r[tags.TsalEnabled], r[tags.TsalTimeToEnableMs], err = pollMs(ctx, l.lv.ReadTsalEn, _lvStartupPollTimeout)
+	r[tags.TsalEnabled], r[tags.TsalTimeToEnableMs], err = pollPinMs(ctx, *l.lv, pinout.TsalEn, _lvStartupPollTimeout)
 	if err != nil {
 		return errors.Wrap(err, "poll read tsal on")
 	}
 
-	r[tags.RaspiEnabled], r[tags.RaspiTimeToEnableMs], err = pollMs(ctx, l.lv.ReadRaspiOn, _lvStartupPollTimeout)
+	r[tags.RaspiEnabled], r[tags.RaspiTimeToEnableMs], err = pollPinMs(ctx, *l.lv, pinout.RaspiEn, _lvStartupPollTimeout)
 	if err != nil {
 		return errors.Wrap(err, "poll read raspi on")
 	}
 
 	r[tags.FrontControllerEnabled], r[tags.FrontControllerTimeToEnableMs], err =
-		pollMs(ctx, l.lv.ReadFrontControllerOn, _lvStartupPollTimeout)
+		pollPinMs(ctx, *l.lv, pinout.FrontControllerEn, _lvStartupPollTimeout)
 	if err != nil {
 		return errors.Wrap(err, "poll read front controller on")
 	}
 
 	r[tags.SpeedgoatEnabled], r[tags.SpeedgoatTimeToEnableMs], err =
-		pollMs(ctx, l.lv.ReadSpeedgoatOn, _lvStartupPollTimeout)
+		pollPinMs(ctx, *l.lv, pinout.SpeedgoatEn, _lvStartupPollTimeout)
 	if err != nil {
 		return errors.Wrap(err, "poll read speedgoat on")
 	}
 
 	r[tags.AccumulatorEnabled], r[tags.AccumulatorTimeToEnableMs], err =
-		pollMs(ctx, l.lv.ReadAccumulatorOn, _lvStartupPollTimeout)
+		pollPinMs(ctx, *l.lv, pinout.AccumulatorEn, _lvStartupPollTimeout)
 	if err != nil {
 		return errors.Wrap(err, "poll read accumulator on")
 	}
 
 	r[tags.MotorPrechageEnabled], r[tags.MotorPrechargeTimeToEnableMs], err =
-		pollMs(ctx, l.lv.ReadMotorControllerPrechargeOn, _lvStartupPollTimeout)
+		pollPinMs(ctx, *l.lv, pinout.MotorControllerPrechargeEn, _lvStartupPollTimeout)
 	if err != nil {
 		return errors.Wrap(err, "poll read motor controller precharge on")
 	}
 
 	r[tags.MotorControllerEnabled], r[tags.MotorControllerTimeToEnable], err =
-		pollMs(ctx, l.lv.ReadMotorControllerOn, _lvStartupPollTimeout)
+		pollPinMs(ctx, *l.lv, pinout.MotorControllerEn, _lvStartupPollTimeout)
 	if err != nil {
 		return errors.Wrap(err, "poll read motor controller on")
 	}
 
 	r[tags.MotorPrechargeDisabled], r[tags.MotorPrechargeTimeToDisableMs], err =
-		pollMs(ctx, l.lv.ReadMotorControllerPrechargeOn, _lvStartupPollTimeout, utils.CheckForFalse())
+		pollPinMs(ctx, *l.lv, pinout.MotorControllerPrechargeEn, _lvStartupPollTimeout, utils.CheckForFalse())
 	if err != nil {
 		return errors.Wrap(err, "poll read motor controller precharge on")
 	}
 
 	time.Sleep(2 * time.Second)
 
-	shutdownOn, err := l.lv.ReadShutdownCircuitOn()
+	shutdownOn, err := l.lv.ReadDigital(pinout.ShutdownCircuitEn)
 	if err != nil {
 		return errors.Wrap(err, "read shutdown circuit on")
 	}
@@ -134,7 +135,7 @@ func (l *lvStartup) Run(ctx context.Context) error {
 		r[tags.ShutdownCircuitEnabledBeforeCan] = false
 	}
 
-	inverterOn, err := l.lv.ReadInverterSwitchOn()
+	inverterOn, err := l.lv.ReadDigital(pinout.InverterSwitchEn)
 	if err != nil {
 		return errors.Wrap(err, "read inverter switch on")
 	}
@@ -163,7 +164,7 @@ func (l *lvStartup) Run(ctx context.Context) error {
 		return errors.Wrap(err, "send contactor command check shutdown on")
 	}
 
-	inverterOn, err = l.lv.ReadInverterSwitchOn()
+	inverterOn, err = l.lv.ReadDigital(pinout.InverterSwitchEn)
 	if err != nil {
 		return errors.Wrap(err, "read inverter switch on")
 	}
@@ -174,7 +175,7 @@ func (l *lvStartup) Run(ctx context.Context) error {
 		r[tags.InverterSwitchEnabledBeforeClosedContactors] = false
 	}
 
-	dcdcEnabled, err := l.lv.ReadDcdcOn()
+	dcdcEnabled, err := l.lv.ReadDigital(pinout.DcdcEn)
 	if err != nil {
 		return errors.Wrap(err, "read dcdc on")
 	}
@@ -192,7 +193,7 @@ func (l *lvStartup) Run(ctx context.Context) error {
 
 	time.Sleep(1 * time.Second)
 
-	r[tags.DcdcEnabledAfterContactorsClosed], err = l.lv.ReadDcdcOn()
+	r[tags.DcdcEnabledAfterContactorsClosed], err = l.lv.ReadDigital(pinout.DcdcEn)
 	if err != nil {
 		return errors.Wrap(err, "read dcdc on")
 	}
@@ -202,7 +203,7 @@ func (l *lvStartup) Run(ctx context.Context) error {
 		return errors.Wrap(err, "set dcdc valid")
 	}
 
-	inverterOn, err = l.lv.ReadInverterSwitchOn()
+	inverterOn, err = l.lv.ReadDigital(pinout.InverterSwitchEn)
 	if err != nil {
 		return errors.Wrap(err, "read inverter switch on")
 	}
@@ -218,8 +219,8 @@ func (l *lvStartup) Run(ctx context.Context) error {
 		return errors.Wrap(err, "command inverter")
 	}
 
-	r[tags.InverterSwitchEnabled], r[tags.InverterSwitchTimeToEnable], err = pollMs(
-		ctx, l.lv.ReadInverterSwitchOn, _lvStartupPollTimeout)
+	r[tags.InverterSwitchEnabled], r[tags.InverterSwitchTimeToEnable], err = pollPinMs(
+		ctx, *l.lv, pinout.InverterSwitchEn, _lvStartupPollTimeout)
 	if err != nil {
 		return errors.Wrap(err, "poll read inverter switch on")
 	}
@@ -261,7 +262,7 @@ func (l *lvStartup) sendContactorCommandCheckShutdownOn(ctx context.Context,
 				return false, errors.Wrap(err, "command contactors")
 			}
 
-			lvl, err := l.lv.ReadShutdownCircuitOn()
+			lvl, err := l.lv.ReadDigital(pinout.ShutdownCircuitEn)
 			if err != nil {
 				return false, errors.Wrap(err, "read shutdown circuit on")
 			}
@@ -281,4 +282,17 @@ func pollMs(ctx context.Context,
 	opts ...utils.PollOption) (bool, int, error) {
 	valid, duration, err := utils.Poll(ctx, checkFunc, timeout, opts...)
 	return valid, int(duration.Milliseconds()), errors.Wrap(err, "poll")
+}
+
+func pollPinMs(ctx context.Context,
+	client lvcontroller.Client,
+	pin pinout.PhysicalIo,
+	timeout time.Duration,
+	opts ...utils.PollOption) (bool, int, error) {
+
+	checkFunc := func() (bool, error) {
+		return client.ReadDigital(pin)
+	}
+
+	return pollMs(ctx, checkFunc, timeout, opts...)
 }
