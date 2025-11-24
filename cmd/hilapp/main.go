@@ -25,7 +25,6 @@ import (
 	"github.com/macformula/hil/macformula/state"
 	"github.com/macformula/hil/orchestrator"
 	"github.com/macformula/hil/results"
-	"github.com/macformula/hil/utils"
 	"github.com/pkg/errors"
 )
 
@@ -52,6 +51,20 @@ var (
 	version     = flag.Bool("version", false, "Displays commit and date built")
 	logLevelStr = flag.String("log", _defaultLogLevel.String(), "Changes the log level (debug, info, warn, error)")
 )
+
+func CastPins[T_IO any, T_SIL any](m map[pinout.PhysicalIo]T_IO) ([]*T_SIL, error) {
+	out := make([]*T_SIL, 0, len(m))
+
+	for _, v := range m {
+		impl, ok := any(v).(*T_SIL)
+		if !ok {
+			return nil, fmt.Errorf("Expected a sil.DigitalPin (got %T)", v)
+		}
+		out = append(out, impl)
+	}
+
+	return out, nil
+}
 
 func main() {
 	// Parse command-line flags before accessing them.
@@ -153,20 +166,39 @@ func main() {
 			canlink.WithFileName(_ptCan),
 		)
 	}
-
 	// Get controllers
-	var ioOpts = make([]iocontrol.IOControlOption, 0)
+
+	var ioController iocontrol.IOController
 
 	switch rev {
 	case pinout.Sil:
-		silController = sil.NewController(cfg.SilPort, logger, utils.GetValues(pinout.SilDigitalInputPins), utils.GetValues(pinout.SilDigitalOutputPins), utils.GetValues(pinout.SilAnalogInputPins), utils.GetValues(pinout.SilAnalogOutputPins))
-		ioOpts = append(ioOpts, iocontrol.WithSil(silController))
+		pinout := pinout.Pinouts[pinout.Sil]
+
+		// Yes this casting is ugly. It will change soon (bfreer)
+		diPins, err := CastPins[iocontrol.DigitalPin, sil.DigitalPin](pinout.DigitalInputs)
+		if err != nil {
+			panic("Invalid SIL pins")
+		}
+		doPins, err := CastPins[iocontrol.DigitalPin, sil.DigitalPin](pinout.DigitalOutputs)
+		if err != nil {
+			panic("Invalid SIL pins")
+		}
+
+		aiPins, err := CastPins[iocontrol.AnalogPin, sil.AnalogPin](pinout.AnalogInputs)
+		if err != nil {
+			panic("Invalid SIL pins")
+		}
+
+		aoPins, err := CastPins[iocontrol.AnalogPin, sil.AnalogPin](pinout.AnalogOutputs)
+		if err != nil {
+			panic("Invalid SIL pins")
+		}
+
+		silController = sil.NewController(cfg.SilPort, logger, diPins, doPins, aiPins, aoPins)
+		ioController = silController
 	default:
 		panic("unconfigured revision")
 	}
-
-	// Create io controller.
-	ioController := iocontrol.NewIOControl(logger, ioOpts...)
 
 	err = ioController.Open(ctx)
 	if err != nil {

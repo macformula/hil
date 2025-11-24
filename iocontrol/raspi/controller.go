@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/macformula/hil/iocontrol"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"periph.io/x/conn/v3/gpio"
@@ -70,52 +71,54 @@ func (c *Controller) Close() error {
 }
 
 // SetDigital sets an output digital pin for a Raspberry Pi digital pin
-func (c *Controller) SetDigital(output *DigitalPin, level bool) error {
-	pin, err := resolvePin(output)
-	if err != nil {
-		return err
-	}
+func (c *Controller) WriteDigital(output iocontrol.DigitalPin, level bool) error {
+	switch p := output.(type) {
+	case *DigitalPin:
+		pin, err := resolvePin(p)
+		if err != nil {
+			return err
+		}
 
-	// configure as output, then write
-	if err := pin.Out(gpio.Low); err != nil {
-		return errors.Wrap(err, "set output mode")
+		// configure as output, then write
+		if err := pin.Out(gpio.Low); err != nil {
+			return errors.Wrap(err, "set output mode")
+		}
+		if level {
+			return errors.Wrap(pin.Out(gpio.High), "write high")
+		}
+		return errors.Wrap(pin.Out(gpio.Low), "write low")
+
+	default:
+		return errors.Errorf("Invalid pin type")
 	}
-	if level {
-		return errors.Wrap(pin.Out(gpio.High), "write high")
-	}
-	return errors.Wrap(pin.Out(gpio.Low), "write low")
 }
 
 // ReadDigital returns the level of a Raspberry Pi digital pin
-func (c *Controller) ReadDigital(input *DigitalPin) (bool, error) {
-	pin, err := resolvePin(input)
-	if err != nil {
-		return false, err
+func (c *Controller) ReadDigital(input iocontrol.DigitalPin) (bool, error) {
+	switch p := input.(type) {
+	case *DigitalPin:
+		pin, err := resolvePin(p)
+		if err != nil {
+			return false, err
+		}
+
+		if err := pin.In(gpio.Float, gpio.NoEdge); err != nil {
+			return false, errors.Wrap(err, "set input mode")
+		}
+		return pin.Read() == gpio.High, nil
+	default:
+		return false, errors.Errorf("Invalid pin type")
 	}
 
-	if err := pin.In(gpio.Float, gpio.NoEdge); err != nil {
-		return false, errors.Wrap(err, "set input mode")
-	}
-	return pin.Read() == gpio.High, nil
 }
 
 // WriteVoltage sets the voltage of a Raspberry Pi analog pin
-func (c *Controller) WriteVoltage(output *AnalogPin, voltage float64) error {
+func (c *Controller) WriteVoltage(output iocontrol.AnalogPin, voltage float64) error {
 	return errors.New("currently unsupported on raspi")
 }
 
 // ReadVoltage returns the voltage of a Raspberry Pi analog pin
-func (c *Controller) ReadVoltage(output *AnalogPin) (float64, error) {
-	return 0.00, errors.New("currently unsupported on raspi")
-}
-
-// WriteCurrent sets the current of a Raspberry Pi analog pin
-func (c *Controller) WriteCurrent(output *AnalogPin, current float64) error {
-	return errors.New("currently unsupported on raspi")
-}
-
-// ReadCurrent returns the current of a Raspberry Pi analog pin
-func (c *Controller) ReadCurrent(output *AnalogPin) (float64, error) {
+func (c *Controller) ReadVoltage(output iocontrol.AnalogPin) (float64, error) {
 	return 0.00, errors.New("currently unsupported on raspi")
 }
 

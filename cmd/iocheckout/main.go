@@ -9,6 +9,7 @@ import (
 
 	"github.com/macformula/hil/iocontrol"
 	"github.com/macformula/hil/iocontrol/raspi"
+
 	// "github.com/macformula/hil/iocontrol/sil"
 	"github.com/macformula/hil/iocontrol/speedgoat"
 	"github.com/macformula/hil/macformula"
@@ -54,24 +55,22 @@ func main() {
 
 	logger.Info("starting iocheckout", zap.String("revision", revision.String()))
 
-	var ioControlOpts []iocontrol.IOControlOption
+	var ioControl iocontrol.IOController
 
 	if *useSpeedgoat {
 		sg := speedgoat.NewController(logger, _speedgoatAddr, speedgoat.WithModelAutoload(_speedgoatScriptPath, _speedgoatPw, _speedgoatAddrFromPi, _speedgoatModelName))
-		ioControlOpts = append(ioControlOpts, iocontrol.WithSpeedgoat(sg))
+		ioControl = sg
 	}
 
 	if *useRaspi {
 		rp := raspi.NewController(logger)
-		ioControlOpts = append(ioControlOpts, iocontrol.WithRaspi(rp))
+		ioControl = rp
 	}
 
 	// if *useSil {
 	// 	s := sil.NewController(_silPort, logger)
 	// 	ioControlOpts = append(ioControlOpts, iocontrol.WithSil(s))
 	// }
-
-	ioControl := iocontrol.NewIOControl(logger, ioControlOpts...)
 
 	iocheckout := macformula.NewIoCheckout(revision, ioControl, logger)
 

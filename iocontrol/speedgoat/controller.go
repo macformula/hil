@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/macformula/hil/iocontrol"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
@@ -130,65 +131,75 @@ func (c *Controller) Close() error {
 }
 
 // SetDigital sets an output digital pin for a Speedgoat digital pin.
-func (c *Controller) SetDigital(output *DigitalPin, b bool) error {
-	c.muDigital.Lock()
-	defer c.muDigital.Unlock()
+func (c *Controller) WriteDigital(output iocontrol.DigitalPin, b bool) error {
+	switch p := output.(type) {
+	case *DigitalPin:
+		c.muDigital.Lock()
+		defer c.muDigital.Unlock()
 
-	if output.index >= _digitalArraySize || output.index < _digitalOutputStartIndex {
-		return errors.Errorf("invalid output index (%d)", output.index)
+		if p.index >= _digitalArraySize || p.index < _digitalOutputStartIndex {
+			return errors.Errorf("invalid output index (%d)", p.index)
+		}
+
+		c.digital[p.index] = b
+
+		return nil
+	default:
+		return errors.Errorf("Invalid pin type")
 	}
-
-	c.digital[output.index] = b
-
-	return nil
 }
 
 // ReadDigital returns the level of a Speedgoat digital pin.
-func (c *Controller) ReadDigital(input *DigitalPin) (bool, error) {
-	c.muDigital.Lock()
-	defer c.muDigital.Unlock()
+func (c *Controller) ReadDigital(input iocontrol.DigitalPin) (bool, error) {
+	switch p := input.(type) {
+	case *DigitalPin:
+		c.muDigital.Lock()
+		defer c.muDigital.Unlock()
 
-	if input.index >= _digitalArraySize || input.index < _digitalInputStartIndex {
-		return false, errors.Errorf("invalid input index (%d)", input.index)
+		if p.index >= _digitalArraySize || p.index < _digitalInputStartIndex {
+			return false, errors.Errorf("invalid input index (%d)", p.index)
+		}
+
+		return c.digital[p.index], nil
+	default:
+		return false, errors.Errorf("Invalid pin type")
 	}
-
-	return c.digital[input.index], nil
 }
 
 // WriteVoltage sets the voltage of a Speedgoat analog pin.
-func (c *Controller) WriteVoltage(output *AnalogPin, voltage float64) error {
-	c.muAnalog.Lock()
-	defer c.muAnalog.Unlock()
+func (c *Controller) WriteVoltage(output iocontrol.AnalogPin, voltage float64) error {
+	switch p := output.(type) {
+	case *AnalogPin:
+		c.muAnalog.Lock()
+		defer c.muAnalog.Unlock()
 
-	if output.index >= _analogArraySize || output.index < _analogOutputStartIndex {
-		return errors.Errorf("invalid output index (%d)", output.index)
+		if p.index >= _analogArraySize || p.index < _analogOutputStartIndex {
+			return errors.Errorf("invalid output index (%d)", p.index)
+		}
+
+		c.analog[p.index] = voltage
+
+		return nil
+	default:
+		return errors.Errorf("Invalid pin type")
 	}
-
-	c.analog[output.index] = voltage
-
-	return nil
 }
 
 // ReadVoltage returns the voltage of a Speedgoat analog pin.
-func (c *Controller) ReadVoltage(input *AnalogPin) (float64, error) {
-	c.muAnalog.Lock()
-	defer c.muAnalog.Unlock()
+func (c *Controller) ReadVoltage(input iocontrol.AnalogPin) (float64, error) {
+	switch p := input.(type) {
+	case *AnalogPin:
+		c.muAnalog.Lock()
+		defer c.muAnalog.Unlock()
 
-	if input.index >= _analogArraySize || input.index < _analogInputStartIndex {
-		return 0.0, errors.Errorf("invalid input index (%d)", input.index)
+		if p.index >= _analogArraySize || p.index < _analogInputStartIndex {
+			return 0.0, errors.Errorf("invalid input index (%d)", p.index)
+		}
+
+		return c.analog[p.index], nil
+	default:
+		return 0.0, errors.Errorf("Invalid pin type")
 	}
-
-	return c.analog[input.index], nil
-}
-
-// WriteCurrent sets the current of a Speedgoat analog pin (unimplemented for Speedgoat).
-func (c *Controller) WriteCurrent(_ *AnalogPin, _ float64) error {
-	return errors.New("unimplemented function on speedgoat controller")
-}
-
-// ReadCurrent returns the current of a Speedgoat analog pin (unimplemented for Speedgoat).
-func (c *Controller) ReadCurrent(_ *AnalogPin) (float64, error) {
-	return 0.0, errors.New("unimplemented function on speedgoat controller")
 }
 
 // tickOutputs transmits the packed data for the digital and analog outputs to the Speedgoat at a set time interval.

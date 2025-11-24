@@ -2,8 +2,9 @@ package macformula
 
 import (
 	"context"
-	"github.com/macformula/hil/macformula/pinout"
 	"strconv"
+
+	"github.com/macformula/hil/macformula/pinout"
 
 	"github.com/fatih/color"
 	"github.com/macformula/hil/iocontrol"
@@ -46,7 +47,7 @@ var (
 type IoCheckout struct {
 	l         *zap.Logger
 	rev       pinout.Revision
-	ioControl *iocontrol.IOControl
+	ioControl iocontrol.IOController
 
 	diPins pinout.DigitalPinout
 	doPins pinout.DigitalPinout
@@ -62,7 +63,7 @@ type IoCheckout struct {
 }
 
 // NewIoCheckout returns a pointer to an IoCheckout object.
-func NewIoCheckout(rev pinout.Revision, ioControl *iocontrol.IOControl, l *zap.Logger) *IoCheckout {
+func NewIoCheckout(rev pinout.Revision, ioControl iocontrol.IOController, l *zap.Logger) *IoCheckout {
 	return &IoCheckout{
 		l:            l.Named(_loggerName),
 		rev:          rev,
@@ -77,25 +78,14 @@ func (io *IoCheckout) Open(ctx context.Context) error {
 		return errors.Wrap(err, "iocontrol open")
 	}
 
-	io.diPins, err = pinout.GetDigitalInputs(io.rev)
-	if err != nil {
-		return errors.Wrap(err, "get digital inputs")
+	po, ok := pinout.Pinouts[io.rev]
+	if !ok {
+		return errors.Errorf("Invalid revision %s", io.rev.String())
 	}
-
-	io.doPins, err = pinout.GetDigitalOutputs(io.rev)
-	if err != nil {
-		return errors.Wrap(err, "get digital outputs")
-	}
-
-	io.aiPins, err = pinout.GetAnalogInputs(io.rev)
-	if err != nil {
-		return errors.Wrap(err, "get analog inputs")
-	}
-
-	io.aoPins, err = pinout.GetAnalogOutputs(io.rev)
-	if err != nil {
-		return errors.Wrap(err, "get analog outputs")
-	}
+	io.diPins = po.DigitalInputs
+	io.doPins = po.DigitalOutputs
+	io.aiPins = po.AnalogInputs
+	io.aoPins = po.AnalogOutputs
 
 	return nil
 }
@@ -353,7 +343,7 @@ func (io *IoCheckout) handleDigitalOutputSelect() error {
 		return errors.Wrap(err, "high to low bool")
 	}
 
-	err = io.ioControl.SetDigital(digitalOut, lvl)
+	err = io.ioControl.WriteDigital(digitalOut, lvl)
 	if err != nil {
 		return errors.Wrap(err, "set digital")
 	}
