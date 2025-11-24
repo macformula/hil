@@ -78,25 +78,14 @@ func (io *IoCheckout) Open(ctx context.Context) error {
 		return errors.Wrap(err, "iocontrol open")
 	}
 
-	io.diPins, err = pinout.GetDigitalInputs(io.rev)
-	if err != nil {
-		return errors.Wrap(err, "get digital inputs")
+	po, ok := pinout.Pinouts[io.rev]
+	if !ok {
+		return errors.Errorf("Invalid revision %s", io.rev.String())
 	}
-
-	io.doPins, err = pinout.GetDigitalOutputs(io.rev)
-	if err != nil {
-		return errors.Wrap(err, "get digital outputs")
-	}
-
-	io.aiPins, err = pinout.GetAnalogInputs(io.rev)
-	if err != nil {
-		return errors.Wrap(err, "get analog inputs")
-	}
-
-	io.aoPins, err = pinout.GetAnalogOutputs(io.rev)
-	if err != nil {
-		return errors.Wrap(err, "get analog outputs")
-	}
+	io.diPins = po.DigitalInputs
+	io.doPins = po.DigitalOutputs
+	io.aiPins = po.AnalogInputs
+	io.aoPins = po.AnalogOutputs
 
 	return nil
 }

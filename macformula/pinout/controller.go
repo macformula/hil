@@ -17,10 +17,7 @@ type Controller struct {
 	ioController iocontrol.IOController
 	rev          Revision
 
-	digitalOutputs DigitalPinout
-	digitalInputs  DigitalPinout
-	analogOutputs  AnalogPinout
-	analogInputs   AnalogPinout
+	pins Pinout
 }
 
 // NewController creates a new pinout controller.
@@ -34,34 +31,20 @@ func NewController(rev Revision, ioController iocontrol.IOController, l *zap.Log
 
 // Open opens the controller and initializes the digital and analog I/O's.
 func (c *Controller) Open(_ context.Context) error {
-	var err error
+	po, ok := Pinouts[c.rev]
 
-	c.digitalOutputs, err = GetDigitalOutputs(c.rev)
-	if err != nil {
-		return errors.Wrap(err, "get digital outputs")
+	if !ok {
+		return errors.Errorf("Invalid revision %s", c.rev.String())
 	}
 
-	c.digitalInputs, err = GetDigitalInputs(c.rev)
-	if err != nil {
-		return errors.Wrap(err, "get digital inputs")
-	}
-
-	c.analogOutputs, err = GetAnalogOutputs(c.rev)
-	if err != nil {
-		return errors.Wrap(err, "get analog outputs")
-	}
-
-	c.analogInputs, err = GetAnalogInputs(c.rev)
-	if err != nil {
-		return errors.Wrap(err, "get analog inputs")
-	}
+	c.pins = po
 
 	return nil
 }
 
 // SetDigitalLevel sets the digital level of the given output.
 func (c *Controller) SetDigitalLevel(out PhysicalIo, level bool) error {
-	digitalOutput, ok := c.digitalOutputs[out]
+	digitalOutput, ok := c.pins.DigitalOutputs[out]
 	if !ok {
 		return errors.Errorf("no digital output for physical io (%s) in revision (%s)",
 			out.String(), c.rev.String())
@@ -77,7 +60,7 @@ func (c *Controller) SetDigitalLevel(out PhysicalIo, level bool) error {
 
 // ReadDigitalLevel reads the digital level of the given input.
 func (c *Controller) ReadDigitalLevel(in PhysicalIo) (bool, error) {
-	digitalInput, ok := c.digitalInputs[in]
+	digitalInput, ok := c.pins.DigitalInputs[in]
 	if !ok {
 		return false, errors.Errorf("no digital input for physical io (%s) in revision (%s)",
 			in.String(), c.rev.String())
@@ -93,7 +76,7 @@ func (c *Controller) ReadDigitalLevel(in PhysicalIo) (bool, error) {
 
 // SetVoltage sets the voltage of the given output.
 func (c *Controller) SetVoltage(out PhysicalIo, voltage float64) error {
-	analogOutput, ok := c.analogOutputs[out]
+	analogOutput, ok := c.pins.AnalogOutputs[out]
 	if !ok {
 		return errors.Errorf("no analog output for physical io (%s) in revision (%s)",
 			out.String(), c.rev.String())
@@ -109,7 +92,7 @@ func (c *Controller) SetVoltage(out PhysicalIo, voltage float64) error {
 
 // ReadVoltage reads the voltage of the given input.
 func (c *Controller) ReadVoltage(in PhysicalIo) (float64, error) {
-	analogInput, ok := c.analogInputs[in]
+	analogInput, ok := c.pins.AnalogInputs[in]
 	if !ok {
 		return 0.0, errors.Errorf("no analog inputs for physical io (%s) in revision (%s)",
 			in.String(), c.rev.String())
