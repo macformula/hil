@@ -9,7 +9,6 @@ import (
 
 	"github.com/macformula/hil/iocontrol"
 	"github.com/macformula/hil/iocontrol/raspi"
-	"github.com/macformula/hil/iocontrol/sil"
 	"github.com/macformula/hil/iocontrol/speedgoat"
 	"github.com/macformula/hil/macformula"
 	"github.com/macformula/hil/macformula/pinout"
@@ -67,8 +66,8 @@ func main() {
 	}
 
 	if *useSil {
-		s := sil.NewController(_silPort, logger)
-		ioControlOpts = append(ioControlOpts, iocontrol.WithSil(s))
+		//s := sil.NewController(_silPort, logger)
+		//ioControlOpts = append(ioControlOpts, iocontrol.WithSil(s))
 	}
 
 	ioControl := iocontrol.NewIOControl(logger, ioControlOpts...)

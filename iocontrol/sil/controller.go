@@ -5,11 +5,15 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"time"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 
 	flatbuffers "github.com/google/flatbuffers/go"
+	cobs "github.com/justincpresley/go-cobs/src"
+	pb "github.com/macformula/hil/iocontrol/sil/gotobuf"
 	signals "github.com/macformula/hil/iocontrol/sil/signals"
 )
 
@@ -19,23 +23,68 @@ const (
 )
 
 //go:generate protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/signals.proto
+type CircularBuffer struct {
+	buffer     []byte
+	size       int
+	write_head int
+	full       bool
+}
+
+func NewCircularBuffer(size int) *CircularBuffer {
+	return &CircularBuffer{
+		buffer: make([]byte, size),
+		size:   size,
+	}
+}
+func (b *CircularBuffer) Add(entry byte) {
+	b.buffer[b.write_head] = entry
+	b.write_head++
+	if b.write_head == b.size {
+		if !b.full {
+			b.full = true
+		}
+		b.write_head = 0
+	}
+}
+func (b *CircularBuffer) Get() (int, []byte) {
+	return_buffer := make([]byte, b.size)
+	len := 0
+	if b.full {
+		len = b.size
+	} else {
+		len = b.write_head
+	}
+	for i := range b.size {
+		return_buffer[i] = b.buffer[(b.write_head+b.size-i-1)%b.size]
+	}
+
+	return len, return_buffer
+}
+
 type Controller struct {
 	l        *zap.Logger
 	port     int
 	listener net.Listener
 	Pins     *PinModel
+	inputs   *pb.Input
+	outputs  *pb.Output
+	//Inputs   lvcontroller_inputs
+	//Outputs  lvcontroller_outputs // find what these should be called
 }
 
 // NewController returns a new SIL Controller.
 func NewController(port int, l *zap.Logger, digitalInputs []*DigitalPin, digitalOutputs []*DigitalPin, analogInputs []*AnalogPin, analogOutputs []*AnalogPin) *Controller {
 	return &Controller{
-		l:    l,
-		port: port,
-		Pins: NewPinModel(l, digitalInputs, digitalOutputs, analogInputs, analogOutputs),
+		l:       l,
+		port:    port,
+		Pins:    NewPinModel(l, digitalInputs, digitalOutputs, analogInputs, analogOutputs),
+		inputs:  &pb.Input{},
+		outputs: &pb.Output{},
 	}
 }
 
 func (c *Controller) Open(ctx context.Context) error {
+
 	c.l.Info("opening sil FbController")
 
 	addr := fmt.Sprintf("localhost:%v", c.port)
@@ -65,157 +114,95 @@ func (c *Controller) Close() error {
 }
 
 func (c *Controller) handleConnection(conn net.Conn) {
-	defer conn.Close()
+	WriteEncoder, err := cobs.NewEncoder(cobs.Config{
+		SpecialByte: 0x00,
+		Delimiter:   true,
+		EndingSave:  true,
+		Type:        cobs.Native,
+	})
+	if err != nil {
+		c.l.Info(fmt.Sprintf("Error in creating the write encoder: %v", err))
+	}
+	ReadEncoder, err := cobs.NewEncoder(cobs.Config{
+		SpecialByte: 0x00,
+		Delimiter:   true,
+		EndingSave:  true,
+		Type:        cobs.ReversedNative,
+	})
+	if err != nil {
+		c.l.Info(fmt.Sprintf("Error in creating the read encoder: %v", err))
+	}
+	go c.Writer(conn, WriteEncoder)
+	go c.Reader(conn, ReadEncoder)
+}
 
-	buffer := make([]byte, 2024)
+func (c *Controller) Reader(conn net.Conn, encoder cobs.Encoder) {
+	defer conn.Close()
+	c.l.Info("Beginning reader thread")
+	c.l.Sync()
+	buffer := NewCircularBuffer(40)
+	output := &pb.Output{}
+
 	for {
-		_, err := conn.Read(buffer)
+		readbuf := make([]byte, 2048)
+		bytes_read, err := conn.Read(readbuf)
 		if err != nil {
 			if err != io.EOF {
 				c.l.Error(fmt.Sprintf("read error: %s", err))
 			}
-			break
 		}
-		request := signals.GetRootAsRequest(buffer, 0)
+		c.l.Sync()
+		for i := range bytes_read {
+			buffer.Add(readbuf[i])
+		}
 
-		unionTable := new(flatbuffers.Table)
-		if request.Request(unionTable) {
-			requestType := request.RequestType()
-			switch requestType {
-			case signals.RequestTypeReadRequest:
-				ecu, sigName, sigType, sigDirection := deserializeReadRequest(unionTable)
-
-				switch sigType {
-				case signals.SIGNAL_TYPEDIGITAL:
-					switch sigDirection {
-					case signals.SIGNAL_DIRECTIONINPUT:
-						pin := NewDigitalInputPin(ecu, sigName)
-						level, err := c.Pins.ReadDigitalInput(pin)
-						if err != nil {
-							c.l.Error(fmt.Sprintf("read digital input ecu (%s) signal name (%s) error: %s", ecu, sigName, err))
-
-							response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, _unsetAnalogValue, false, fmt.Sprintf("read digital input ecu (%s) signal name (%s) error: %s", ecu, sigName, err))
-							_, err = conn.Write(response)
-							if err != nil {
-								c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
-							}
-						}
-
-						response := serializeReadResponse(signals.SignalValueDigital, level, _unsetAnalogValue, true, "")
-						_, err = conn.Write(response)
-						if err != nil {
-							c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
-						}
-					case signals.SIGNAL_DIRECTIONOUTPUT:
-						pin := NewDigitalOutputPin(ecu, sigName)
-						level, err := c.Pins.ReadDigitalOutput(pin)
-						if err != nil {
-							c.l.Error(fmt.Sprintf("read digital output ecu (%s) signal name (%s)", ecu, sigName))
-
-							response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, _unsetAnalogValue, false, fmt.Sprintf("read digital output ecu (%s) signal name (%s)", ecu, sigName))
-							_, err = conn.Write(response)
-							if err != nil {
-								c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
-							}
-						}
-
-						response := serializeReadResponse(signals.SignalValueDigital, level, _unsetAnalogValue, true, "")
-						_, err = conn.Write(response)
-						if err != nil {
-							c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
-						}
-					}
-				case signals.SIGNAL_TYPEANALOG:
-					switch sigDirection {
-					case signals.SIGNAL_DIRECTIONINPUT:
-						pin := NewAnalogInputPin(ecu, sigName)
-						voltage, err := c.Pins.ReadAnalogInput(pin)
-						if err != nil {
-							c.l.Error(fmt.Sprintf("read analog input ecu (%s) signal name (%s)", ecu, sigName))
-
-							response := serializeReadResponse(signals.SignalValueAnalog, _unsetDigitalValue, _unsetAnalogValue, false, fmt.Sprintf("read digital output ecu (%s) signal name (%s)", ecu, sigName))
-							_, err = conn.Write(response)
-							if err != nil {
-								c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
-							}
-						}
-
-						response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, voltage, true, "")
-						_, err = conn.Write(response)
-						if err != nil {
-							c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
-						}
-					case signals.SIGNAL_DIRECTIONOUTPUT:
-						pin := NewAnalogOutputPin(ecu, sigName)
-						voltage, err := c.Pins.ReadAnalogOutput(pin)
-						if err != nil {
-							c.l.Error(fmt.Sprintf("read analog output ecu (%s) signal name (%s)", ecu, sigName))
-
-							response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, _unsetAnalogValue, false, fmt.Sprintf("read analog output ecu (%s) signal name (%s)", ecu, sigName))
-							_, err = conn.Write(response)
-							if err != nil {
-								c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
-							}
-						}
-
-						response := serializeReadResponse(signals.SignalValueDigital, _unsetDigitalValue, voltage, true, "")
-						_, err = conn.Write(response)
-						if err != nil {
-							c.l.Error(fmt.Sprintf("write sil response (%s)", err.Error()))
-						}
-					}
-				}
-			case signals.RequestTypeSetRequest:
-				ecu, sigName, sigType, sigDirection, value, voltage := deserializeSetRequest(unionTable)
-
-				switch sigType {
-				case signals.SIGNAL_TYPEDIGITAL:
-					switch sigDirection {
-					case signals.SIGNAL_DIRECTIONINPUT:
-						pin := NewDigitalInputPin(ecu, sigName)
-						c.Pins.SetDigitalInput(pin, value)
-					case signals.SIGNAL_DIRECTIONOUTPUT:
-						pin := NewDigitalOutputPin(ecu, sigName)
-						c.Pins.SetDigitalOutput(pin, value)
-					}
-				case signals.SIGNAL_TYPEANALOG:
-					switch sigDirection {
-					case signals.SIGNAL_DIRECTIONINPUT:
-						pin := NewAnalogInputPin(ecu, sigName)
-						c.Pins.SetAnalogInput(pin, voltage)
-					case signals.SIGNAL_DIRECTIONOUTPUT:
-						pin := NewAnalogOutputPin(ecu, sigName)
-						c.Pins.SetAnalogOutput(pin, voltage)
-					}
-				}
-
-			case signals.RequestTypeRegisterRequest:
-				ecu, sigName, sigType, sigDirection := deserializeRegisterRequest(unionTable)
-
-				switch sigType {
-				case signals.SIGNAL_TYPEDIGITAL:
-					switch sigDirection {
-					case signals.SIGNAL_DIRECTIONINPUT:
-						pin := NewDigitalInputPin(ecu, sigName)
-						c.Pins.RegisterDigitalInput(pin)
-					case signals.SIGNAL_DIRECTIONOUTPUT:
-						pin := NewDigitalOutputPin(ecu, sigName)
-						c.Pins.RegisterDigitalOutput(pin)
-					}
-				case signals.SIGNAL_TYPEANALOG:
-					switch sigDirection {
-					case signals.SIGNAL_DIRECTIONINPUT:
-						pin := NewAnalogInputPin(ecu, sigName)
-						c.Pins.RegisterAnalogInput(pin)
-					case signals.SIGNAL_DIRECTIONOUTPUT:
-						pin := NewAnalogOutputPin(ecu, sigName)
-						c.Pins.RegisterAnalogOutput(pin)
-					}
-				}
+		start_index := -1
+		end_index := -1
+		buf_len, msg_buf := buffer.Get()
+		for i := range buf_len {
+			if start_index != -1 && msg_buf[i] == 0 {
+				end_index = i + 1
+				break
 			}
-
+			if msg_buf[i] == 0 {
+				start_index = i + 1
+			}
 		}
+		if end_index != -1 {
+			read_slice := msg_buf[start_index:end_index]
+			cobs_decoded := encoder.Decode(read_slice)
+			for i := 0; i < len(cobs_decoded)/2; i++ {
+				cobs_decoded[i], cobs_decoded[len(cobs_decoded)-1-i] =
+					cobs_decoded[len(cobs_decoded)-1-i], cobs_decoded[i]
+			}
+			err = proto.Unmarshal(cobs_decoded, output)
+			c.l.Info(fmt.Sprintf("This is the proto: %v", output))
+			if err != nil {
+				c.l.Info(fmt.Sprintf("unmarshal error: %s", err))
+			}
+			c.l.Sync()
+		}
+		time.Sleep(time.Millisecond * 50)
 	}
+}
+func (c *Controller) Writer(conn net.Conn, encoder cobs.Encoder) {
+	defer conn.Close()
+	//write
+	for {
+		c.inputs.ImdFault = !c.inputs.ImdFault
+		c.inputs.BmsFault = !c.inputs.BmsFault
+		proto_encoded, err := proto.Marshal(c.inputs)
+		if err != nil {
+			c.l.Info(fmt.Sprintf("marshalling error: %v", err))
+		}
+		cobs_encoded := encoder.Encode(proto_encoded)
+		_, err = conn.Write(cobs_encoded)
+		if err != nil {
+			c.l.Info(fmt.Sprintf("write error: %s", err))
+		}
+		time.Sleep(time.Millisecond * 2000)
+	}
+
 }
 
 // WriteCurrent sets the current of a SIL analog pin (unimplemented for SIL).

@@ -248,7 +248,7 @@ func (io *IOControl) ReadVoltage(input AnalogPin) (float64, error) {
 }
 
 // WriteCurrent sets the current of a specified output analog pin
-func (io *IOControl) WriteCurrent(output AnalogPin, current float64) error {
+/*func (io *IOControl) WriteCurrent(output AnalogPin, current float64) error {
 	var err error
 
 	switch pin := output.(type) {
@@ -284,10 +284,10 @@ func (io *IOControl) WriteCurrent(output AnalogPin, current float64) error {
 	}
 
 	return nil
-}
+}*/
 
 // ReadCurrent returns the current of a specified input analog pin
-func (io *IOControl) ReadCurrent(input AnalogPin) (float64, error) {
+/*func (io *IOControl) ReadCurrent(input AnalogPin) (float64, error) {
 	var (
 		current float64
 		err     error
@@ -326,7 +326,7 @@ func (io *IOControl) ReadCurrent(input AnalogPin) (float64, error) {
 	}
 
 	return current, nil
-}
+}*/
 
 func (io *IOControl) Close() error {
 	if io.rp != nil {
