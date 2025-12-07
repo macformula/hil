@@ -1,6 +1,6 @@
 module github.com/macformula/hil
 
-go 1.22.0
+go 1.22.6
 
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
@@ -21,11 +21,7 @@ require (
 	google.golang.org/grpc v1.60.1
 	google.golang.org/protobuf v1.32.0
 	gopkg.in/yaml.v3 v3.0.1
-)
-
-require (
-	github.com/dmarkham/enumer v1.6.1 // indirect
-	github.com/pascaldekloe/name v1.0.0 // indirect
+	periph.io/x/conn/v3 v3.7.2
 )
 
 require (
@@ -58,4 +54,5 @@ require (
 	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/tools v0.30.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240108191215-35c7eff3a6b1 // indirect
+	periph.io/x/host/v3 v3.8.5
 )
