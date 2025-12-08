@@ -138,7 +138,6 @@ func (c *Controller) handleConnection(conn net.Conn) {
 
 func (c *Controller) Reader(conn net.Conn, encoder cobs.Encoder) {
 	defer conn.Close()
-	c.l.Info("Beginning reader thread")
 	c.l.Sync()
 	buffer := NewCircularBuffer(40)
 	output := &pb.Output{}
@@ -176,7 +175,6 @@ func (c *Controller) Reader(conn net.Conn, encoder cobs.Encoder) {
 					cobs_decoded[len(cobs_decoded)-1-i], cobs_decoded[i]
 			}
 			err = proto.Unmarshal(cobs_decoded, output)
-			c.l.Info(fmt.Sprintf("This is the proto: %v", output))
 			if err != nil {
 				c.l.Info(fmt.Sprintf("unmarshal error: %s", err))
 			}
