@@ -10,6 +10,7 @@ require (
 	github.com/ethereum/go-ethereum v1.13.5
 	github.com/fatih/color v1.15.0
 	github.com/google/uuid v1.3.1
+	github.com/justincpresley/go-cobs v1.6.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.2
