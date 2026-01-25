@@ -21,6 +21,58 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type PWM struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FrequencyHz   float32                `protobuf:"fixed32,1,opt,name=frequency_hz,json=frequencyHz,proto3" json:"frequency_hz,omitempty"`
+	DutyCycle     float32                `protobuf:"fixed32,2,opt,name=duty_cycle,json=dutyCycle,proto3" json:"duty_cycle,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PWM) Reset() {
+	*x = PWM{}
+	mi := &file_lvcontroller_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PWM) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PWM) ProtoMessage() {}
+
+func (x *PWM) ProtoReflect() protoreflect.Message {
+	mi := &file_lvcontroller_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PWM.ProtoReflect.Descriptor instead.
+func (*PWM) Descriptor() ([]byte, []int) {
+	return file_lvcontroller_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *PWM) GetFrequencyHz() float32 {
+	if x != nil {
+		return x.FrequencyHz
+	}
+	return 0
+}
+
+func (x *PWM) GetDutyCycle() float32 {
+	if x != nil {
+		return x.DutyCycle
+	}
+	return 0
+}
+
 type Output struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Tractive system status indicator
@@ -28,11 +80,11 @@ type Output struct {
 	TssiRedSignal   bool `protobuf:"varint,2,opt,name=tssi_red_signal,json=tssiRedSignal,proto3" json:"tssi_red_signal,omitempty"`
 	TssiGreenSignal bool `protobuf:"varint,3,opt,name=tssi_green_signal,json=tssiGreenSignal,proto3" json:"tssi_green_signal,omitempty"`
 	// Powertrain cooling
-	PowertrainPump1En bool    `protobuf:"varint,4,opt,name=powertrain_pump1_en,json=powertrainPump1En,proto3" json:"powertrain_pump1_en,omitempty"`
-	PowertrainPump2En bool    `protobuf:"varint,5,opt,name=powertrain_pump2_en,json=powertrainPump2En,proto3" json:"powertrain_pump2_en,omitempty"`
-	PowertrainFan1En  bool    `protobuf:"varint,6,opt,name=powertrain_fan1_en,json=powertrainFan1En,proto3" json:"powertrain_fan1_en,omitempty"`
-	PowertrainFan2En  bool    `protobuf:"varint,7,opt,name=powertrain_fan2_en,json=powertrainFan2En,proto3" json:"powertrain_fan2_en,omitempty"`
-	PowertrainFanPwm  float32 `protobuf:"fixed32,8,opt,name=powertrain_fan_pwm,json=powertrainFanPwm,proto3" json:"powertrain_fan_pwm,omitempty"`
+	PowertrainPump1En bool `protobuf:"varint,4,opt,name=powertrain_pump1_en,json=powertrainPump1En,proto3" json:"powertrain_pump1_en,omitempty"`
+	PowertrainPump2En bool `protobuf:"varint,5,opt,name=powertrain_pump2_en,json=powertrainPump2En,proto3" json:"powertrain_pump2_en,omitempty"`
+	PowertrainFan1En  bool `protobuf:"varint,6,opt,name=powertrain_fan1_en,json=powertrainFan1En,proto3" json:"powertrain_fan1_en,omitempty"`
+	PowertrainFan2En  bool `protobuf:"varint,7,opt,name=powertrain_fan2_en,json=powertrainFan2En,proto3" json:"powertrain_fan2_en,omitempty"`
+	PowertrainFanPwm  *PWM `protobuf:"bytes,8,opt,name=powertrain_fan_pwm,json=powertrainFanPwm,proto3" json:"powertrain_fan_pwm,omitempty"`
 	// Motor Controller
 	MotorControllerEn    bool `protobuf:"varint,9,opt,name=motor_controller_en,json=motorControllerEn,proto3" json:"motor_controller_en,omitempty"`
 	MotorCtrlPrechargeEn bool `protobuf:"varint,10,opt,name=motor_ctrl_precharge_en,json=motorCtrlPrechargeEn,proto3" json:"motor_ctrl_precharge_en,omitempty"`
@@ -53,7 +105,7 @@ type Output struct {
 
 func (x *Output) Reset() {
 	*x = Output{}
-	mi := &file_lvcontroller_proto_msgTypes[0]
+	mi := &file_lvcontroller_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -65,7 +117,7 @@ func (x *Output) String() string {
 func (*Output) ProtoMessage() {}
 
 func (x *Output) ProtoReflect() protoreflect.Message {
-	mi := &file_lvcontroller_proto_msgTypes[0]
+	mi := &file_lvcontroller_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -78,7 +130,7 @@ func (x *Output) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Output.ProtoReflect.Descriptor instead.
 func (*Output) Descriptor() ([]byte, []int) {
-	return file_lvcontroller_proto_rawDescGZIP(), []int{0}
+	return file_lvcontroller_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Output) GetTssiEn() bool {
@@ -130,11 +182,11 @@ func (x *Output) GetPowertrainFan2En() bool {
 	return false
 }
 
-func (x *Output) GetPowertrainFanPwm() float32 {
+func (x *Output) GetPowertrainFanPwm() *PWM {
 	if x != nil {
 		return x.PowertrainFanPwm
 	}
-	return 0
+	return nil
 }
 
 func (x *Output) GetMotorControllerEn() bool {
@@ -222,7 +274,7 @@ type Input struct {
 
 func (x *Input) Reset() {
 	*x = Input{}
-	mi := &file_lvcontroller_proto_msgTypes[1]
+	mi := &file_lvcontroller_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -234,7 +286,7 @@ func (x *Input) String() string {
 func (*Input) ProtoMessage() {}
 
 func (x *Input) ProtoReflect() protoreflect.Message {
-	mi := &file_lvcontroller_proto_msgTypes[1]
+	mi := &file_lvcontroller_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -247,7 +299,7 @@ func (x *Input) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Input.ProtoReflect.Descriptor instead.
 func (*Input) Descriptor() ([]byte, []int) {
-	return file_lvcontroller_proto_rawDescGZIP(), []int{1}
+	return file_lvcontroller_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Input) GetImdFault() bool {
@@ -289,7 +341,11 @@ var File_lvcontroller_proto protoreflect.FileDescriptor
 
 const file_lvcontroller_proto_rawDesc = "" +
 	"\n" +
-	"\x12lvcontroller.proto\"\x87\x06\n" +
+	"\x12lvcontroller.proto\x12\flvcontroller\"G\n" +
+	"\x03PWM\x12!\n" +
+	"\ffrequency_hz\x18\x01 \x01(\x02R\vfrequencyHz\x12\x1d\n" +
+	"\n" +
+	"duty_cycle\x18\x02 \x01(\x02R\tdutyCycle\"\x9a\x06\n" +
 	"\x06Output\x12\x17\n" +
 	"\atssi_en\x18\x01 \x01(\bR\x06tssiEn\x12&\n" +
 	"\x0ftssi_red_signal\x18\x02 \x01(\bR\rtssiRedSignal\x12*\n" +
@@ -297,8 +353,8 @@ const file_lvcontroller_proto_rawDesc = "" +
 	"\x13powertrain_pump1_en\x18\x04 \x01(\bR\x11powertrainPump1En\x12.\n" +
 	"\x13powertrain_pump2_en\x18\x05 \x01(\bR\x11powertrainPump2En\x12,\n" +
 	"\x12powertrain_fan1_en\x18\x06 \x01(\bR\x10powertrainFan1En\x12,\n" +
-	"\x12powertrain_fan2_en\x18\a \x01(\bR\x10powertrainFan2En\x12,\n" +
-	"\x12powertrain_fan_pwm\x18\b \x01(\x02R\x10powertrainFanPwm\x12.\n" +
+	"\x12powertrain_fan2_en\x18\a \x01(\bR\x10powertrainFan2En\x12?\n" +
+	"\x12powertrain_fan_pwm\x18\b \x01(\v2\x11.lvcontroller.PWMR\x10powertrainFanPwm\x12.\n" +
 	"\x13motor_controller_en\x18\t \x01(\bR\x11motorControllerEn\x125\n" +
 	"\x17motor_ctrl_precharge_en\x18\n" +
 	" \x01(\bR\x14motorCtrlPrechargeEn\x12/\n" +
@@ -331,17 +387,19 @@ func file_lvcontroller_proto_rawDescGZIP() []byte {
 	return file_lvcontroller_proto_rawDescData
 }
 
-var file_lvcontroller_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_lvcontroller_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_lvcontroller_proto_goTypes = []any{
-	(*Output)(nil), // 0: Output
-	(*Input)(nil),  // 1: Input
+	(*PWM)(nil),    // 0: lvcontroller.PWM
+	(*Output)(nil), // 1: lvcontroller.Output
+	(*Input)(nil),  // 2: lvcontroller.Input
 }
 var file_lvcontroller_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0, // 0: lvcontroller.Output.powertrain_fan_pwm:type_name -> lvcontroller.PWM
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_lvcontroller_proto_init() }
@@ -355,7 +413,7 @@ func file_lvcontroller_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_lvcontroller_proto_rawDesc), len(file_lvcontroller_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

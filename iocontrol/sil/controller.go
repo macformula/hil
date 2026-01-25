@@ -12,7 +12,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	flatbuffers "github.com/google/flatbuffers/go"
-	cobs "github.com/justincpresley/go-cobs/src"
+	cobs "github.com/justincpresley/go-cobs"
 	pb "github.com/macformula/hil/iocontrol/sil/gotobuf"
 	signals "github.com/macformula/hil/iocontrol/sil/signals"
 )
