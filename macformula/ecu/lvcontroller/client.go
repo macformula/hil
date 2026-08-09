@@ -26,7 +26,7 @@ func NewClient(pc *pinout.Controller, l *zap.Logger) *Client {
 }
 
 func (c *Client) ReadDigital(pin pinout.PhysicalIo) (bool, error) {
-	lvl, err := c.pinController.ReadDigitalLevel(pinout.TsalEn)
+	lvl, err := c.pinController.ReadDigitalLevel(pin)
 	if err != nil {
 		return false, errors.Wrap(err, "read digital level")
 	}
